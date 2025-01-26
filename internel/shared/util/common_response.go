@@ -5,13 +5,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SuccessResponse 调用此函数，通过中间件统一成功返回
-func SuccessResponse(c *gin.Context, data interface{}) {
-	c.Set("data", data)
-	c.Next()
+// NormalResponse 调用此函数，通过中间件统一成功返回
+func NormalResponse(c *gin.Context, data interface{}) {
+	c.JSON(200, entity.OK.WithData(data))
 }
 
-// ErrorResponse 调用此函数，中断并返回格式化错误
-func ErrorResponse(c *gin.Context, code int, msg string) {
-	c.AbortWithStatusJSON(code, entity.ERR.WithCode(code).WithMsg(msg))
+// CustomErrorResponse 调用此函数，中断并返回格式化错误
+func CustomErrorResponse(c *gin.Context, code int, msg string) {
+	c.AbortWithStatusJSON(500, entity.ERR.WithCode(code).WithMsg(msg))
+}
+
+// HttpErrorResponse 调用此函数，中断并返回错误，error 必须为 constant.ErrStatusMap 中的 key
+func HttpErrorResponse(c *gin.Context, err error) {
+	responseEntity := entity.ERR.WithError(err)
+	c.AbortWithStatusJSON(responseEntity.Code, responseEntity)
 }

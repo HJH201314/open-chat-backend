@@ -12,7 +12,7 @@ const (
 
 // UserClaims 用户凭证
 type UserClaims struct {
-	ID   int32    `json:"id"`
+	ID   uint64   `json:"id"`
 	Type UserType `json:"type"`
 	jwt.RegisteredClaims
 }

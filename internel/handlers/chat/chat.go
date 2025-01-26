@@ -15,29 +15,52 @@ import (
 	"strings"
 )
 
-type ChatHandler struct {
+type Handler struct {
 	store *storage.GormStore
 }
 
-func NewChatHandler(store *storage.GormStore) *ChatHandler {
-	return &ChatHandler{store: store}
+func NewChatHandler(store *storage.GormStore) *Handler {
+	return &Handler{store: store}
 }
 
 // CreateSession 创建会话
-func (h *ChatHandler) CreateSession(c *gin.Context) {
+func (h *Handler) CreateSession(c *gin.Context) {
 	session := models.Session{
-		UserID:        "test",
+		UserID:        util.GetUserId(c),
 		EnableContext: true, // 默认开启上下文
 	}
 	if err := h.store.CreateSession(&session); err != nil {
-		util.ErrorResponse(c, http.StatusInternalServerError, "failed to create session")
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create session")
 		return
 	}
-	util.SuccessResponse(c, session.ID)
+	util.NormalResponse(c, session.ID)
+}
+
+// DeleteSession 删除会话
+func (h *Handler) DeleteSession(c *gin.Context) {
+	var uri struct {
+		SessionId string `uri:"session_id" binding:"required"`
+	}
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		return
+	}
+	// 验证用户对会话的所有权
+	var session models.Session
+	if err := h.store.Db.Where("id = ? AND user_id = ?", uri.SessionId, util.GetUserId(c)).First(&session).Error; err != nil {
+		util.HttpErrorResponse(c, constant.ErrUnauthorized)
+		return
+	}
+	// 执行删除操作
+	if err := h.store.DeleteSession(uri.SessionId); err != nil {
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to delete session")
+		return
+	}
+	util.NormalResponse(c, true)
 }
 
 // CompletionStream 流式输出聊天
-func (h *ChatHandler) CompletionStream(c *gin.Context) {
+func (h *Handler) CompletionStream(c *gin.Context) {
 	// 设置流式响应头
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
@@ -61,16 +84,18 @@ func (h *ChatHandler) CompletionStream(c *gin.Context) {
 	// 获取会话配置
 	var session models.Session
 	if err := h.store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
-		util.ErrorResponse(c, http.StatusNotFound, "session not found")
+		util.CustomErrorResponse(c, http.StatusNotFound, "session not found")
 		return
 	}
 
 	// 获取上下文消息 (当启用时)
 	var contextMessages []models.Message
+	// 强制关闭上下文
+	session.EnableContext = false
 	if session.EnableContext {
 		messages, err := h.store.GetLatestMessages(session.ID, 50)
 		if err != nil {
-			util.ErrorResponse(c, http.StatusInternalServerError, "failed to load context")
+			util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to load context")
 			return
 		}
 		contextMessages = messages

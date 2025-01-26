@@ -12,13 +12,23 @@ func InitRouter(r *gin.Engine, store *storage.GormStore) {
 	chatHandler := chat.NewChatHandler(store)
 	chatGroup := r.Group("/chat")
 	{
-		chatGroup.POST("/completion/stream/:session_id", chatHandler.CompletionStream)
-		chatGroup.GET("/session/new", chatHandler.CreateSession)
+		chatSessionGroup := chatGroup.Group("/session")
+		{
+			chatSessionGroup.GET("/new", chatHandler.CreateSession)
+			chatSessionGroup.POST("/del/:session_id", chatHandler.DeleteSession)
+		}
+		chatCompletionGroup := chatGroup.Group("/completion")
+		{
+			chatCompletionGroup.POST("/stream/:session_id", chatHandler.CompletionStream)
+		}
 	}
 
 	// router for user
+	userHandler := user.NewUserHandler(store)
 	userGroup := r.Group("/user")
 	{
 		userGroup.POST("/ping", user.Ping)
+		userGroup.POST("/login", userHandler.Login)
+		userGroup.POST("/register", userHandler.Register)
 	}
 }
