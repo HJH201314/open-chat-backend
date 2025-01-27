@@ -70,13 +70,14 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		SessionId string `uri:"session_id" binding:"required"`
 	}
 	var request struct {
-		Question string `json:"question"`
+		Question      string `json:"question" binding:"required"`
+		EnableContext *bool  `json:"enable_context" binding:"-"`
 	}
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
 		_ = c.Error(constant.ErrBadRequest)
 		return
 	}
-	if err := c.BindJSON(&request); err != nil || request.Question == "" {
+	if err := c.ShouldBindJSON(&request); err != nil || request.Question == "" {
 		_ = c.Error(constant.ErrBadRequest)
 		return
 	}
@@ -88,11 +89,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		return
 	}
 
-	// 获取上下文消息 (当启用时)
+	// 若启用（会话配置或现式传入），获取上下文消息
 	var contextMessages []models.Message
-	// 强制关闭上下文
-	session.EnableContext = false
-	if session.EnableContext {
+	if (request.EnableContext == nil && session.EnableContext) || (request.EnableContext != nil && *request.EnableContext) {
 		messages, err := h.store.GetLatestMessages(session.ID, 50)
 		if err != nil {
 			util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to load context")
@@ -112,12 +111,20 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	chatMessages = append(chatMessages, openai.UserMessage(request.Question))
 
 	// 初始化 OpenAI 客户端
-	client := openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_DEEPSEEK")), option.WithBaseURL("https://api.deepseek.com"))
+	var client *openai.Client
+	var modelName string
+	if len(chatMessages) > 1 {
+		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_GPT")), option.WithBaseURL("https://api.chatanywhere.tech"))
+		modelName = "gpt-4o"
+	} else {
+		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_DEEPSEEK")), option.WithBaseURL("https://api.deepseek.com"))
+		modelName = "deepseek-chat"
+	}
 
 	// 创建流式请求
 	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: openai.F(chatMessages),
-		Model:    openai.F("deepseek-chat"),
+		Model:    openai.F(modelName),
 	})
 
 	acc := openai.ChatCompletionAccumulator{}

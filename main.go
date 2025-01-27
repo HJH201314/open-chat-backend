@@ -19,6 +19,7 @@ func main() {
 	routers.InitRouter(r, store)
 
 	os.Setenv("API_KEY_DEEPSEEK", "")
+	os.Setenv("API_KEY_GPT", "")
 	os.Setenv("AUTH_SECRET", "auth-secret")
 
 	// 在 8080 端口启动服务
