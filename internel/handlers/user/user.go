@@ -21,13 +21,17 @@ func NewUserHandler(store *storage.GormStore) *Handler {
 }
 
 func Ping(c *gin.Context) {
-	util.NormalResponse(c, "pong")
+	if util.GetUserId(c) > 0 {
+		util.NormalResponse(c, "pong")
+	} else {
+		util.NormalResponse(c, "boom")
+	}
 }
 
-func signJwtTokenIntoHeader(c *gin.Context) {
+func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
 	// 1. 创建 Claims
 	claims := entity.UserClaims{
-		ID: util.GetUserId(c),
+		ID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 过期时间
 			IssuedAt:  jwt.NewNumericDate(time.Now()),                     // 签发时间
@@ -65,7 +69,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	signJwtTokenIntoHeader(c)
+	signJwtTokenIntoHeader(c, &userRes)
 	util.NormalResponse(c, userRes)
 }
 
