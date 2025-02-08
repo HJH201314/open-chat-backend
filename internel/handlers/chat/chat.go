@@ -70,8 +70,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		SessionId string `uri:"session_id" binding:"required"`
 	}
 	var request struct {
-		Question      string `json:"question" binding:"required"`
-		EnableContext *bool  `json:"enable_context" binding:"-"`
+		Question      string  `json:"question" binding:"required"`
+		EnableContext *bool   `json:"enable_context" binding:"-"`
+		Provider      *string `json:"provider" binding:"-"` // DeepSeek or OpenAI
 	}
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
 		_ = c.Error(constant.ErrBadRequest)
@@ -89,7 +90,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		return
 	}
 
-	// 若启用（会话配置或现式传入），获取上下文消息
+	// 若启用（会话配置或显式传入），获取上下文消息
 	var contextMessages []models.Message
 	if (request.EnableContext == nil && session.EnableContext) || (request.EnableContext != nil && *request.EnableContext) {
 		messages, err := h.store.GetLatestMessages(session.ID, 50)
@@ -103,9 +104,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	for _, msg := range contextMessages {
 		switch msg.Role {
 		case "user":
-			chatMessages = append(chatMessages, openai.UserMessage(msg.Content))
+			chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "user", Content: msg.Content})
 		case "assistant":
-			chatMessages = append(chatMessages, openai.AssistantMessage(msg.Content))
+			chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "assistant", Content: msg.Content})
 		}
 	}
 	chatMessages = append(chatMessages, openai.UserMessage(request.Question))
@@ -113,7 +114,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	// 初始化 OpenAI 客户端
 	var client *openai.Client
 	var modelName string
-	if len(chatMessages) > 1 {
+	if request.Provider != nil && *request.Provider == "OpenAI" {
 		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_GPT")), option.WithBaseURL("https://api.chatanywhere.tech"))
 		modelName = "gpt-4o"
 	} else {
@@ -145,14 +146,14 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		}
 
 		// 清理资源，1. 发送[DONE]告知前端响应已完成 2. 关闭通道以结束当前连接 3. 关闭 OpenAI 的数据流
-		eventChan <- "[DONE]"
-		close(eventChan)
 		if err := stream.Close(); err != nil {
 			return
 		}
 		if err := stream.Err(); err != nil {
-			panic(err)
+			eventChan <- "Sorry, we met some problems. Please try again later."
 		}
+		eventChan <- "[DONE]"
+		close(eventChan)
 
 		// 保存用户输入和响应结果
 		if len(acc.Choices) > 0 {
