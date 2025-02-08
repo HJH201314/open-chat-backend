@@ -61,7 +61,7 @@ func (s *GormStore) ToggleContext(sessionID string, enable bool) error {
 func (s *GormStore) GetLatestMessages(sessionID string, limit int) ([]models.Message, error) {
 	var messages []models.Message
 	err := s.Db.Where("session_id = ?", sessionID).
-		Order("created_at DESC").
+		Order("created_at ASC").
 		Limit(limit).
 		Find(&messages).Error
 	return messages, err
