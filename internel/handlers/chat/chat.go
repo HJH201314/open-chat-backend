@@ -101,6 +101,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		contextMessages = messages
 	}
 	var chatMessages []openai.ChatCompletionMessageParamUnion
+	// 系统提示
+	const systemMessage = "当且仅当聊天主题发生变化时，将聊天内容总结为一个标题（十个字左右），添加到你回复的开头，格式为[title:总结出的标题]；主题未变化时不输出。"
+	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: systemMessage})
 	for _, msg := range contextMessages {
 		switch msg.Role {
 		case "user":
@@ -157,20 +160,11 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 		// 保存用户输入和响应结果
 		if len(acc.Choices) > 0 {
-			userMsg := models.Message{
-				SessionID: session.ID,
-				Role:      "user",
-				Content:   request.Question,
+			messages := []models.Message{
+				{SessionID: session.ID, Role: "user", Content: request.Question},
+				{SessionID: session.ID, Role: "assistant", Content: acc.Choices[0].Message.Content},
 			}
-			assistantMsg := models.Message{
-				SessionID: session.ID,
-				Role:      "assistant",
-				Content:   acc.Choices[0].Message.Content,
-			}
-			if err := h.store.SaveMessage(&userMsg); err != nil {
-				return
-			}
-			if err := h.store.SaveMessage(&assistantMsg); err != nil {
+			if err := h.store.SaveMessages(&messages); err != nil {
 				return
 			}
 		}
