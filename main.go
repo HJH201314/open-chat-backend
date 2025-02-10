@@ -22,8 +22,8 @@ func main() {
 	os.Setenv("API_KEY_GPT", "")
 	os.Setenv("AUTH_SECRET", "auth-secret")
 
-	// 在 8080 端口启动服务
-	if err := r.Run(); err != nil {
+	// 在 9033 端口启动服务
+	if err := r.Run("0.0.0.0:9033"); err != nil {
 		panic("failed to run server")
 	}
 }
