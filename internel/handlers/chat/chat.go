@@ -72,7 +72,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var request struct {
 		Question      string  `json:"question" binding:"required"`
 		EnableContext *bool   `json:"enable_context" binding:"-"`
-		Provider      *string `json:"provider" binding:"-"` // DeepSeek or OpenAI
+		Provider      *string `json:"provider" binding:"-"`      // DeepSeek or OpenAI
+		ModelName     *string `json:"model_name" binding:"-"`    // 准确的模型名称
+		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
 		_ = c.Error(constant.ErrBadRequest)
@@ -102,8 +104,15 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	var chatMessages []openai.ChatCompletionMessageParamUnion
 	// 系统提示
-	const systemMessage = "当且仅当聊天主题发生变化时，将聊天内容总结为一个标题（十个字左右），添加到你回复的开头，格式为[title:总结出的标题]；主题未变化时不输出。"
-	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: systemMessage})
+	var systemPrompt string
+	if request.SystemPrompt != nil {
+		systemPrompt = *request.SystemPrompt
+	} else {
+		systemPrompt = "您正在与一名用户进行对话。请执行以下任务：理解用户的输入，提供相关和有���助的回应。确保对话自然流畅，帮助用户找到答案或解决问题。"
+	}
+	const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
+	fullSystemPrompt := systemPrompt + titlePrompt
+	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: fullSystemPrompt})
 	for _, msg := range contextMessages {
 		switch msg.Role {
 		case "user":
@@ -123,6 +132,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	} else {
 		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_DEEPSEEK")), option.WithBaseURL("https://api.deepseek.com"))
 		modelName = "deepseek-chat"
+	}
+	if request.ModelName != nil {
+		modelName = *request.ModelName
 	}
 
 	// 创建流式请求
@@ -153,7 +165,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			return
 		}
 		if err := stream.Err(); err != nil {
-			eventChan <- "Sorry, we met some problems. Please try again later."
+			eventChan <- "[ERROR: API response error]"
 		}
 		eventChan <- "[DONE]"
 		close(eventChan)
