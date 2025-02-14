@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -105,14 +106,16 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var chatMessages []openai.ChatCompletionMessageParamUnion
 	// 系统提示
 	var systemPrompt string
-	if request.SystemPrompt != nil {
+	if request.SystemPrompt != nil && *request.SystemPrompt != "" {
 		systemPrompt = *request.SystemPrompt
 	} else {
-		systemPrompt = "您正在与一名用户进行对话。请执行以下任务：理解用户的输入，提供相关和有���助的回应。确保对话自然流畅，帮助用户找到答案或解决问题。"
+		systemPrompt = ""
 	}
 	const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
 	fullSystemPrompt := systemPrompt + titlePrompt
 	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: fullSystemPrompt})
+	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "user", Content: "你好，我想问一个问题。"})
+	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "assistant", Content: "[title:用户提问]你好，我能帮你什么？"})
 	for _, msg := range contextMessages {
 		switch msg.Role {
 		case "user":
@@ -122,6 +125,16 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		}
 	}
 	chatMessages = append(chatMessages, openai.UserMessage(request.Question))
+
+	// 预先插入新对话，获取消息 ID
+	messages := []models.Message{
+		{SessionID: session.ID, Role: "user"},
+		{SessionID: session.ID, Role: "assistant"},
+	}
+	if err := h.store.CreateMessages(&messages); err != nil {
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create messages")
+		return
+	}
 
 	// 初始化 OpenAI 客户端
 	var client *openai.Client
@@ -143,12 +156,15 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		Model:    openai.F(modelName),
 	})
 
-	acc := openai.ChatCompletionAccumulator{}
-
 	// 创建一个通道来发送事件
 	eventChan := make(chan string)
 
+	acc := openai.ChatCompletionAccumulator{}
+
 	go func() {
+		// 发送消息 ID 给前端
+		eventChan <- "[ID:" + strconv.FormatUint(messages[0].ID, 10) + "," + strconv.FormatUint(messages[1].ID, 10) + "]"
+
 		// 流式传输 OpenAI 的响应
 		for stream.Next() {
 			chunk := stream.Current()
@@ -172,10 +188,8 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 		// 保存用户输入和响应结果
 		if len(acc.Choices) > 0 {
-			messages := []models.Message{
-				{SessionID: session.ID, Role: "user", Content: request.Question},
-				{SessionID: session.ID, Role: "assistant", Content: acc.Choices[0].Message.Content},
-			}
+			messages[0].Content = request.Question
+			messages[1].Content = acc.Choices[0].Message.Content
 			if err := h.store.SaveMessages(&messages); err != nil {
 				return
 			}
