@@ -27,7 +27,7 @@ func InitRouter(r *gin.Engine, store *storage.GormStore) {
 	userHandler := user.NewUserHandler(store)
 	userGroup := r.Group("/user")
 	{
-		userGroup.POST("/ping", user.Ping)
+		userGroup.POST("/ping", userHandler.Ping)
 		userGroup.POST("/login", userHandler.Login)
 		userGroup.POST("/register", userHandler.Register)
 	}

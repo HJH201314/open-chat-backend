@@ -32,10 +32,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			if c.FullPath() == "/user/ping" {
-				util.NormalResponse(c, "boom")
-				return
-			}
 			util.HttpErrorResponse(c, constant.ErrUnauthorized)
 			return
 		}

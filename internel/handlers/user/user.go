@@ -20,9 +20,13 @@ func NewUserHandler(store *storage.GormStore) *Handler {
 	return &Handler{store: store}
 }
 
-func Ping(c *gin.Context) {
-	if util.GetUserId(c) > 0 {
-		util.NormalResponse(c, "pong")
+func (h *Handler) Ping(c *gin.Context) {
+	if userId := util.GetUserId(c); userId > 0 {
+		if user, err := h.store.GetUser(userId); err == nil {
+			util.NormalResponse(c, user)
+		} else {
+			util.CustomErrorResponse(c, 404, "user not found")
+		}
 	} else {
 		util.NormalResponse(c, "boom")
 	}
