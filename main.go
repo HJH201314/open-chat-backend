@@ -3,14 +3,14 @@ package main
 import (
 	"github.com/fcraft/open-chat/internel/middlewares"
 	"github.com/fcraft/open-chat/internel/routers"
-	"github.com/fcraft/open-chat/internel/storage"
+	"github.com/fcraft/open-chat/internel/storage/gorm"
 	"github.com/gin-gonic/gin"
 	"os"
 )
 
 func main() {
 	// 初始化数据库
-	store := storage.InitGormStore()
+	store := gorm.InitGormStore()
 
 	r := gin.Default()
 	// 初始化中间件

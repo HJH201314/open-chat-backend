@@ -2,10 +2,10 @@ package chat
 
 import (
 	"context"
+	"github.com/fcraft/open-chat/internel/handlers"
 	"github.com/fcraft/open-chat/internel/models"
 	"github.com/fcraft/open-chat/internel/shared/constant"
 	"github.com/fcraft/open-chat/internel/shared/util"
-	"github.com/fcraft/open-chat/internel/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -17,11 +17,11 @@ import (
 )
 
 type Handler struct {
-	store *storage.GormStore
+	*handlers.BaseHandler
 }
 
-func NewChatHandler(store *storage.GormStore) *Handler {
-	return &Handler{store: store}
+func NewChatHandler(h *handlers.BaseHandler) *Handler {
+	return &Handler{BaseHandler: h}
 }
 
 // CreateSession 创建会话
@@ -30,7 +30,7 @@ func (h *Handler) CreateSession(c *gin.Context) {
 		UserID:        util.GetUserId(c),
 		EnableContext: true, // 默认开启上下文
 	}
-	if err := h.store.CreateSession(&session); err != nil {
+	if err := h.Store.CreateSession(&session); err != nil {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create session")
 		return
 	}
@@ -48,12 +48,12 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	var session models.Session
-	if err := h.store.Db.Where("id = ? AND user_id = ?", uri.SessionId, util.GetUserId(c)).First(&session).Error; err != nil {
+	if err := h.Store.Db.Where("id = ? AND user_id = ?", uri.SessionId, util.GetUserId(c)).First(&session).Error; err != nil {
 		util.HttpErrorResponse(c, constant.ErrUnauthorized)
 		return
 	}
 	// 执行删除操作
-	if err := h.store.DeleteSession(uri.SessionId); err != nil {
+	if err := h.Store.DeleteSession(uri.SessionId); err != nil {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to delete session")
 		return
 	}
@@ -88,7 +88,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 	// 获取会话配置
 	var session models.Session
-	if err := h.store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
+	if err := h.Store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
 		util.CustomErrorResponse(c, http.StatusNotFound, "session not found")
 		return
 	}
@@ -96,7 +96,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	// 若启用（会话配置或显式传入），获取上下文消息
 	var contextMessages []models.Message
 	if (request.EnableContext == nil && session.EnableContext) || (request.EnableContext != nil && *request.EnableContext) {
-		messages, err := h.store.GetLatestMessages(session.ID, 50)
+		messages, err := h.Store.GetLatestMessages(session.ID, 50)
 		if err != nil {
 			util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to load context")
 			return
@@ -105,7 +105,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	var chatMessages []openai.ChatCompletionMessageParamUnion
 	// 系统提示
-	var systemPrompt string
+	/*var systemPrompt = ""
 	if request.SystemPrompt != nil && *request.SystemPrompt != "" {
 		systemPrompt = *request.SystemPrompt
 	} else {
@@ -113,9 +113,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
 	fullSystemPrompt := systemPrompt + titlePrompt
-	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: fullSystemPrompt})
-	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "user", Content: "你好，我想问一个问题。"})
-	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "assistant", Content: "[title:用户提问]你好，我能帮你什么？"})
+	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: fullSystemPrompt})*/
 	for _, msg := range contextMessages {
 		switch msg.Role {
 		case "user":
@@ -131,7 +129,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		{SessionID: session.ID, Role: "user"},
 		{SessionID: session.ID, Role: "assistant"},
 	}
-	if err := h.store.CreateMessages(&messages); err != nil {
+	if err := h.Store.CreateMessages(&messages); err != nil {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create messages")
 		return
 	}
@@ -152,8 +150,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 	// 创建流式请求
 	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F(chatMessages),
-		Model:    openai.F(modelName),
+		Messages:    openai.F(chatMessages),
+		Model:       openai.F(modelName),
+		Temperature: openai.F(0.6),
 	})
 
 	// 创建一个通道来发送事件
@@ -176,12 +175,12 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			}
 		}
 
+		if err := stream.Err(); err != nil {
+			eventChan <- "[ERROR: API response error]"
+		}
 		// 清理资源，1. 发送[DONE]告知前端响应已完成 2. 关闭通道以结束当前连接 3. 关闭 OpenAI 的数据流
 		if err := stream.Close(); err != nil {
 			return
-		}
-		if err := stream.Err(); err != nil {
-			eventChan <- "[ERROR: API response error]"
 		}
 		eventChan <- "[DONE]"
 		close(eventChan)
@@ -190,7 +189,12 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		if len(acc.Choices) > 0 {
 			messages[0].Content = request.Question
 			messages[1].Content = acc.Choices[0].Message.Content
-			if err := h.store.SaveMessages(&messages); err != nil {
+			if err := h.Store.SaveMessages(&messages); err != nil {
+				return
+			}
+		} else {
+			// 如果没有响应，删除预先保存的消息
+			if err := h.Store.DeleteMessages(session.ID, []uint64{messages[0].ID, messages[1].ID}); err != nil {
 				return
 			}
 		}

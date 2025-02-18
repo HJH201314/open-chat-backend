@@ -1,11 +1,11 @@
 package user
 
 import (
+	"github.com/fcraft/open-chat/internel/handlers"
 	"github.com/fcraft/open-chat/internel/models"
 	"github.com/fcraft/open-chat/internel/shared/constant"
 	"github.com/fcraft/open-chat/internel/shared/entity"
 	"github.com/fcraft/open-chat/internel/shared/util"
-	"github.com/fcraft/open-chat/internel/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
@@ -13,16 +13,16 @@ import (
 )
 
 type Handler struct {
-	store *storage.GormStore
+	*handlers.BaseHandler
 }
 
-func NewUserHandler(store *storage.GormStore) *Handler {
-	return &Handler{store: store}
+func NewUserHandler(h *handlers.BaseHandler) *Handler {
+	return &Handler{BaseHandler: h}
 }
 
 func (h *Handler) Ping(c *gin.Context) {
 	if userId := util.GetUserId(c); userId > 0 {
-		if user, err := h.store.GetUser(userId); err == nil {
+		if user, err := h.Store.GetUser(userId); err == nil {
 			util.NormalResponse(c, user)
 		} else {
 			util.CustomErrorResponse(c, 404, "user not found")
@@ -68,7 +68,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 	var userRes models.User
-	if err := h.store.Db.Where("username = ? AND password = ?", req.Username, req.Password).First(&userRes).Error; err != nil {
+	if err := h.Store.Db.Where("username = ? AND password = ?", req.Username, req.Password).First(&userRes).Error; err != nil {
 		util.CustomErrorResponse(c, 401, "username or password is incorrect")
 		return
 	}
@@ -88,7 +88,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 	var userRes models.User
-	if err := h.store.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
+	if err := h.Store.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
 		util.NormalResponse(c, false)
 		return
 	}
@@ -96,7 +96,7 @@ func (h *Handler) Register(c *gin.Context) {
 		Username: req.Username,
 		Password: req.Password,
 	}
-	if err := h.store.CreateUser(&user); err != nil {
+	if err := h.Store.CreateUser(&user); err != nil {
 		util.HttpErrorResponse(c, constant.ErrInternal)
 		return
 	}
