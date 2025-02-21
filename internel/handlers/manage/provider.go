@@ -56,7 +56,7 @@ func (h *Handler) UpdateProvider(c *gin.Context) {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to update provider")
 		return
 	}
-	util.NormalResponse(c, provider)
+	util.NormalResponse(c, true)
 }
 
 func (h *Handler) DeleteProvider(c *gin.Context) {
@@ -129,7 +129,7 @@ func (h *Handler) UpdateModel(c *gin.Context) {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to update model")
 		return
 	}
-	util.NormalResponse(c, model)
+	util.NormalResponse(c, true)
 }
 
 func (h *Handler) DeleteModel(c *gin.Context) {

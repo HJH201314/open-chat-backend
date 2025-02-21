@@ -12,7 +12,7 @@ func (s *GormStore) AddProvider(provider *models.Provider) error {
 
 // UpdateProvider 更新提供商
 func (s *GormStore) UpdateProvider(provider *models.Provider) error {
-	return s.Db.Save(provider).Error
+	return s.Db.Model(provider).Updates(provider).Error
 }
 
 // GetProvider 获取提供商
@@ -46,7 +46,7 @@ func (s *GormStore) AddModel(model *models.Model) error {
 
 // UpdateModel 更新模型
 func (s *GormStore) UpdateModel(model *models.Model) error {
-	return s.Db.Save(model).Error
+	return s.Db.Model(model).Updates(model).Error
 }
 
 // GetModel 获取模型
