@@ -1,7 +1,7 @@
 package gorm
 
 import (
-	"github.com/fcraft/open-chat/internel/models"
+	"github.com/fcraft/open-chat/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

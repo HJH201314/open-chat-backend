@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/fcraft/open-chat/internel/shared/entity"
+	"github.com/fcraft/open-chat/internal/shared/entity"
 	"github.com/gin-gonic/gin"
 )
 

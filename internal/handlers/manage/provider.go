@@ -1,9 +1,9 @@
 package manage
 
 import (
-	"github.com/fcraft/open-chat/internel/models"
-	"github.com/fcraft/open-chat/internel/shared/constant"
-	"github.com/fcraft/open-chat/internel/shared/util"
+	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/shared/constant"
+	"github.com/fcraft/open-chat/internal/shared/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

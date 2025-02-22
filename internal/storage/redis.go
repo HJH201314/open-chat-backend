@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 	"encoding/json"
-	"github.com/fcraft/open-chat/internel/models"
+	"github.com/fcraft/open-chat/internal/models"
 	"github.com/redis/go-redis/v9"
 	"time"
 )

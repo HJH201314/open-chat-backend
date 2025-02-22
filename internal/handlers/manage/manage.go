@@ -1,7 +1,7 @@
 package manage
 
 import (
-	"github.com/fcraft/open-chat/internel/handlers"
+	"github.com/fcraft/open-chat/internal/handlers"
 )
 
 type Handler struct {

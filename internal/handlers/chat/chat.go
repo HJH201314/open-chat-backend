@@ -2,10 +2,11 @@ package chat
 
 import (
 	"context"
-	"github.com/fcraft/open-chat/internel/handlers"
-	"github.com/fcraft/open-chat/internel/models"
-	"github.com/fcraft/open-chat/internel/shared/constant"
-	"github.com/fcraft/open-chat/internel/shared/util"
+	"github.com/fcraft/open-chat/internal/handlers"
+	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/shared/constant"
+	_ "github.com/fcraft/open-chat/internal/shared/entity"
+	"github.com/fcraft/open-chat/internal/shared/util"
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -24,7 +25,15 @@ func NewChatHandler(h *handlers.BaseHandler) *Handler {
 	return &Handler{BaseHandler: h}
 }
 
-// CreateSession 创建会话
+// CreateSession
+//
+//	@Summary		创建会话
+//	@Description	创建会话
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entity.CommonResponse[string]
+//	@Router			/chat/session/new [post]
 func (h *Handler) CreateSession(c *gin.Context) {
 	session := models.Session{
 		UserID:        util.GetUserId(c),
@@ -37,7 +46,16 @@ func (h *Handler) CreateSession(c *gin.Context) {
 	util.NormalResponse(c, session.ID)
 }
 
-// DeleteSession 删除会话
+// DeleteSession
+//
+//	@Summary		删除会话
+//	@Description	删除会话
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string	true	"会话 ID"
+//	@Success		200			{object}	entity.CommonResponse[bool]
+//	@Router			/chat/session/del/{session_id} [post]
 func (h *Handler) DeleteSession(c *gin.Context) {
 	var uri struct {
 		SessionId string `uri:"session_id" binding:"required"`
@@ -60,7 +78,16 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	util.NormalResponse(c, true)
 }
 
-// CompletionStream 流式输出聊天
+// CompletionStream
+//
+//	@Summary		流式输出聊天
+//	@Description	流式输出聊天
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		text/event-stream
+//	@Param			session_id	path	string							true	"会话 ID"
+//	@Param			request		body	chat.CompletionStream.userInput	true	"用户输入及参数"
+//	@Router			/chat/completion/stream/{session_id} [post]
 func (h *Handler) CompletionStream(c *gin.Context) {
 	// 设置流式响应头
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -70,13 +97,14 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var uri struct {
 		SessionId string `uri:"session_id" binding:"required"`
 	}
-	var request struct {
+	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
 		EnableContext *bool   `json:"enable_context" binding:"-"`
 		Provider      *string `json:"provider" binding:"-"`      // DeepSeek or OpenAI
 		ModelName     *string `json:"model_name" binding:"-"`    // 准确的模型名称
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
+	var request userInput
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
 		_ = c.Error(constant.ErrBadRequest)
 		return

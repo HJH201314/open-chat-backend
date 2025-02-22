@@ -1,13 +1,17 @@
 package util
 
 import (
-	"github.com/fcraft/open-chat/internel/shared/entity"
+	"github.com/fcraft/open-chat/internal/shared/entity"
 	"github.com/gin-gonic/gin"
 )
 
-// NormalResponse 调用此函数，通过中间件统一成功返回
-func NormalResponse(c *gin.Context, data interface{}) {
-	c.JSON(200, entity.OK.WithData(data))
+// NormalResponse 调用此函数，统一成功返回
+func NormalResponse[T any](c *gin.Context, data T) {
+	c.JSON(200, entity.CommonResponse[T]{
+		Code: 200,
+		Msg:  "success",
+		Data: data,
+	})
 }
 
 // CustomErrorResponse 调用此函数，中断并返回格式化错误

@@ -16,11 +16,11 @@ type AutoCreateUpdateAt struct {
 
 type AutoCreateDeleteAt struct {
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"` // 软删除
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at" swaggerignore:"true"` // 软删除
 }
 
 type AutoCreateUpdateDeleteAt struct {
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"` // 软删除
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at" swaggerignore:"true"` // 软删除
 }

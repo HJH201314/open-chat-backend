@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/fcraft/open-chat/internel/middlewares"
-	"github.com/fcraft/open-chat/internel/routers"
-	"github.com/fcraft/open-chat/internel/storage/gorm"
+	"github.com/fcraft/open-chat/internal/middlewares"
+	"github.com/fcraft/open-chat/internal/routers"
+	"github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/gin-gonic/gin"
 	"os"
 )

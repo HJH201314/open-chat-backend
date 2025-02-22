@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"github.com/fcraft/open-chat/internel/shared/constant"
-	"github.com/fcraft/open-chat/internel/shared/entity"
-	"github.com/fcraft/open-chat/internel/shared/util"
+	"github.com/fcraft/open-chat/internal/shared/constant"
+	"github.com/fcraft/open-chat/internal/shared/entity"
+	"github.com/fcraft/open-chat/internal/shared/util"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"os"

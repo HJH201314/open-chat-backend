@@ -1,12 +1,15 @@
 package routers
 
 import (
-	"github.com/fcraft/open-chat/internel/handlers"
-	"github.com/fcraft/open-chat/internel/handlers/chat"
-	"github.com/fcraft/open-chat/internel/handlers/manage"
-	"github.com/fcraft/open-chat/internel/handlers/user"
-	"github.com/fcraft/open-chat/internel/storage/gorm"
+	_ "github.com/fcraft/open-chat/docs"
+	"github.com/fcraft/open-chat/internal/handlers"
+	"github.com/fcraft/open-chat/internal/handlers/chat"
+	"github.com/fcraft/open-chat/internal/handlers/manage"
+	"github.com/fcraft/open-chat/internal/handlers/user"
+	"github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Router struct {
@@ -14,6 +17,8 @@ type Router struct {
 }
 
 func InitRouter(r *gin.Engine, store *gorm.GormStore) Router {
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DeepLinking(true)))
+
 	baseHandler := &handlers.BaseHandler{Store: store}
 
 	// routes for chat completion
