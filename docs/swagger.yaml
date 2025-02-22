@@ -1,0 +1,203 @@
+definitions:
+  chat.CompletionStream.userInput:
+    properties:
+      enable_context:
+        type: boolean
+      model_name:
+        description: 准确的模型名称
+        type: string
+      provider:
+        description: DeepSeek or OpenAI
+        type: string
+      question:
+        type: string
+      system_prompt:
+        description: 系统提示词
+        type: string
+    required:
+      - question
+    type: object
+  entity.CommonResponse-any:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-bool:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        type: boolean
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-models_User:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/models.User'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-string:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        type: string
+      msg:
+        description: 消息
+        type: string
+    type: object
+  models.Permission:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 权限描述
+        type: string
+      id:
+        type: integer
+      name:
+        description: 权限名称
+        type: string
+      path:
+        description: 权限路径（一般与名称相同）
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Role:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 角色描述
+        type: string
+      id:
+        type: integer
+      name:
+        description: 角色名称
+        type: string
+      permissions:
+        description: 多对多关联
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      roles:
+        description: 用户与角色之间的多对多关系
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: { }
+paths:
+  /chat/completion/stream/{session_id}:
+    post:
+      consumes:
+        - application/json
+      description: 流式输出聊天
+      parameters:
+        - description: 会话 ID
+          in: path
+          name: session_id
+          required: true
+          type: string
+        - description: 用户输入及参数
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/chat.CompletionStream.userInput'
+      produces:
+        - text/event-stream
+      responses: { }
+      summary: 流式输出聊天
+      tags:
+        - Chat
+  /chat/session/del/{session_id}:
+    post:
+      consumes:
+        - application/json
+      description: 删除会话
+      parameters:
+        - description: 会话 ID
+          in: path
+          name: session_id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 删除会话
+      tags:
+        - Session
+  /chat/session/new:
+    post:
+      consumes:
+        - application/json
+      description: 创建会话
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-string'
+      summary: 创建会话
+      tags:
+        - Session
+  /user/ping:
+    post:
+      consumes:
+        - application/json
+      description: 检测客户端登录态
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: user is online
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-models_User'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-any'
+      summary: 检测客户端登录态
+      tags:
+        - User
+swagger: "2.0"
