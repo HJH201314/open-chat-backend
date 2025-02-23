@@ -7,14 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"slices"
 	"strings"
 )
+
+var ignorePaths = []string{"/swagger", "/user/login", "/user/register"}
 
 // AuthMiddleware 鉴权中间件
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 登录和注册接口不需要鉴权
-		if c.FullPath() == "/user/login" || c.FullPath() == "/user/register" {
+		// 部分路径不需要鉴权
+		if slices.ContainsFunc(ignorePaths, func(path string) bool {
+			return strings.HasPrefix(c.FullPath(), path)
+		}) {
 			c.Next()
 			return
 		}

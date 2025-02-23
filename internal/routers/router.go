@@ -57,6 +57,11 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore) Router {
 			manageProviderGroup.POST("/update", manageHandler.UpdateProvider)
 			manageProviderGroup.POST("/delete/:provider_id", manageHandler.DeleteProvider)
 		}
+		manageApiKeyGroup := manageGroup.Group("/key")
+		{
+			manageApiKeyGroup.POST("/create", manageHandler.CreateAPIKey)
+			manageApiKeyGroup.POST("/delete/:key_id", manageHandler.DeleteAPIKey)
+		}
 		manageModelGroup := manageGroup.Group("/model")
 		{
 			manageModelGroup.POST("/create", manageHandler.CreateModel)

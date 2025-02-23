@@ -119,6 +119,26 @@ definitions:
       username:
         type: string
     type: object
+  user.Login.loginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+      - password
+      - username
+    type: object
+  user.Register.registerRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+      - password
+      - username
+    type: object
 info:
   contact: { }
 paths:
@@ -181,6 +201,28 @@ paths:
       summary: 创建会话
       tags:
         - Session
+  /user/login:
+    post:
+      consumes:
+        - application/json
+      description: 用户登录
+      parameters:
+        - description: 登录请求
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/user.Login.loginRequest'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: login successfully
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-models_User'
+      summary: 用户登录
+      tags:
+        - User
   /user/ping:
     post:
       consumes:
@@ -198,6 +240,28 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-any'
       summary: 检测客户端登录态
+      tags:
+        - User
+  /user/register:
+    post:
+      consumes:
+        - application/json
+      description: 用户注册
+      parameters:
+        - description: 注册请求
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/user.Register.registerRequest'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: register successfully
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 用户注册
       tags:
         - User
 swagger: "2.0"

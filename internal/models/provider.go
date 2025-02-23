@@ -1,7 +1,7 @@
 package models
 
 type Provider struct {
-	ID          uint     `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID          uint64   `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name        string   `gorm:"not null;unique" json:"name"`           // 提供商名称
 	DisplayName string   `gorm:"" json:"display_name"`                  // 对外展示提供商名称
 	BaseURL     string   `gorm:"not null" json:"base_url"`              // API 的基本 URL
@@ -12,15 +12,15 @@ type Provider struct {
 }
 
 type APIKey struct {
-	ID         uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID         uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
 	Key        string `gorm:"not null" json:"key"`         // API 密钥
-	ProviderID uint   `gorm:"not null" json:"provider_id"` // 外键，指向 Provider
+	ProviderID uint64 `gorm:"not null" json:"provider_id"` // 外键，指向 Provider
 	AutoCreateAt
 }
 
 type Model struct {
-	ID          uint        `gorm:"primaryKey;autoIncrement" json:"id"`
-	ProviderID  uint        `gorm:"not null" json:"provider_id"`             // 关联的 Provider ID
+	ID          uint64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	ProviderID  uint64      `gorm:"not null" json:"provider_id"`             // 关联的 Provider ID
 	Name        string      `gorm:"not null" json:"name"`                    // 模型名称
 	DisplayName string      `gorm:"" json:"display_name"`                    // 对外展示模型名称
 	Description string      `gorm:"" json:"description"`                     // 额外模型描述

@@ -104,6 +104,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/login": {
+            "post": {
+                "description": "用户登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "description": "登录请求",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.Login.loginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "login successfully",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-models_User"
+                        }
+                    }
+                }
+            }
+        },
         "/user/ping": {
             "post": {
                 "description": "检测客户端登录态",
@@ -128,6 +162,40 @@ const docTemplate = `{
                         "description": "user not found",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/register": {
+            "post": {
+                "description": "用户注册",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册请求",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.Register.registerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "register successfully",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -304,6 +372,36 @@ const docTemplate = `{
                     }
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.Login.loginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.Register.registerRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
                     "type": "string"
                 },
                 "username": {

@@ -28,7 +28,7 @@ func NewUserHandler(h *handlers.BaseHandler) *Handler {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	entity.CommonResponse[models.User]	"user is online"
-//	@Failure		404	{object}	entity.CommonResponse[any]				"user not found"
+//	@Failure		404	{object}	entity.CommonResponse[any]			"user not found"
 //	@Router			/user/ping [post]
 func (h *Handler) Ping(c *gin.Context) {
 	if userId := util.GetUserId(c); userId > 0 {
@@ -67,12 +67,22 @@ func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
 	c.Writer.Header().Set("OC-Auth-Token", tokenString)
 }
 
-// Login 登录
+// Login
+//
+//	@Summary		用户登录
+//	@Description	用户登录
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	body		user.Login.loginRequest				true	"登录请求"
+//	@Success		200	{object}	entity.CommonResponse[models.User]	"login successfully"
+//	@Router			/user/login [post]
 func (h *Handler) Login(c *gin.Context) {
-	var req struct {
+	type loginRequest struct {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
+	var req loginRequest
 	if err := c.BindJSON(&req); err != nil {
 		util.HttpErrorResponse(c, constant.ErrBadRequest)
 		return
@@ -87,12 +97,22 @@ func (h *Handler) Login(c *gin.Context) {
 	util.NormalResponse(c, userRes)
 }
 
-// Register 注册
+// Register
+//
+//	@Summary		用户注册
+//	@Description	用户注册
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	body		user.Register.registerRequest	true	"注册请求"
+//	@Success		200	{object}	entity.CommonResponse[bool]		"register successfully"
+//	@Router			/user/register [post]
 func (h *Handler) Register(c *gin.Context) {
-	var req struct {
+	type registerRequest struct {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
+	var req registerRequest
 	if err := c.BindJSON(&req); err != nil {
 		util.HttpErrorResponse(c, constant.ErrBadRequest)
 		return

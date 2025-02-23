@@ -39,6 +39,19 @@ func (s *GormStore) DeleteProvider(providerId uint64) error {
 	})
 }
 
+// AddAPIKey 为供应商添加密钥
+func (s *GormStore) AddAPIKey(providerId uint64, apiKey string) error {
+	return s.Db.Create(&models.APIKey{
+		ProviderID: providerId,
+		Key:        apiKey,
+	}).Error
+}
+
+// DeleteAPIKey 为供应商删除密钥
+func (s *GormStore) DeleteAPIKey(apiKeyId uint64) error {
+	return s.Db.Where("id = ?", apiKeyId).Delete(&models.APIKey{}).Error
+}
+
 // AddModel 添加模型
 func (s *GormStore) AddModel(model *models.Model) error {
 	return s.Db.Create(model).Error

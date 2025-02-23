@@ -74,6 +74,34 @@ func (h *Handler) DeleteProvider(c *gin.Context) {
 	util.NormalResponse(c, true)
 }
 
+func (h *Handler) CreateAPIKey(c *gin.Context) {
+	var apiKey models.APIKey
+	if err := c.ShouldBindJSON(&apiKey); err != nil {
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		return
+	}
+	if err := h.Store.AddAPIKey(apiKey.ProviderID, apiKey.Key); err != nil {
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create key")
+		return
+	}
+	util.NormalResponse(c, true)
+}
+
+func (h *Handler) DeleteAPIKey(c *gin.Context) {
+	var uri struct {
+		KeyId uint64 `uri:"key_id" binding:"required"`
+	}
+	if err := c.BindUri(&uri); err != nil || uri.KeyId == 0 {
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		return
+	}
+	if err := h.Store.DeleteAPIKey(uri.KeyId); err != nil {
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to delete key")
+		return
+	}
+	util.NormalResponse(c, true)
+}
+
 func (h *Handler) CreateModel(c *gin.Context) {
 	var model models.Model
 	if err := c.ShouldBindJSON(&model); err != nil {
