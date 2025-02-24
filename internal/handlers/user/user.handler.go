@@ -88,7 +88,11 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 	var userRes models.User
-	if err := h.Store.Db.Where("username = ? AND password = ?", req.Username, req.Password).First(&userRes).Error; err != nil {
+	if err := h.Store.Db.Where(
+		"username = ? AND password = ?",
+		req.Username,
+		req.Password,
+	).First(&userRes).Error; err != nil {
 		util.CustomErrorResponse(c, 401, "username or password is incorrect")
 		return
 	}

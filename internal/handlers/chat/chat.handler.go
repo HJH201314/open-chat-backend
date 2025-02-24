@@ -66,7 +66,11 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	var session models.Session
-	if err := h.Store.Db.Where("id = ? AND user_id = ?", uri.SessionId, util.GetUserId(c)).First(&session).Error; err != nil {
+	if err := h.Store.Db.Where(
+		"id = ? AND user_id = ?",
+		uri.SessionId,
+		util.GetUserId(c),
+	).First(&session).Error; err != nil {
 		util.HttpErrorResponse(c, constant.ErrUnauthorized)
 		return
 	}
@@ -91,7 +95,7 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 func (h *Handler) CompletionStream(c *gin.Context) {
 	// 设置流式响应头
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
-	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Cache-Control", "no-redis")
 
 	// 从 query 和 body 中获取用户输入
 	var uri struct {
@@ -122,8 +126,12 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 若启用（会话配置或显式传入），获取上下文消息
+	enableContext := session.EnableContext // 默认使用会话配置
+	if request.EnableContext != nil {
+		enableContext = *request.EnableContext // 请求参数优先
+	}
 	var contextMessages []models.Message
-	if (request.EnableContext == nil && session.EnableContext) || (request.EnableContext != nil && *request.EnableContext) {
+	if enableContext {
 		messages, err := h.Store.GetLatestMessages(session.ID, 50)
 		if err != nil {
 			util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to load context")
@@ -163,25 +171,23 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 初始化 OpenAI 客户端
-	var client *openai.Client
-	var modelName string
-	if request.Provider != nil && *request.Provider == "OpenAI" {
-		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_GPT")), option.WithBaseURL("https://api.chatanywhere.tech"))
-		modelName = "gpt-4o"
-	} else {
-		client = openai.NewClient(option.WithAPIKey(os.Getenv("API_KEY_DEEPSEEK")), option.WithBaseURL("https://api.deepseek.com"))
-		modelName = "deepseek-chat"
-	}
+	client := openai.NewClient(
+		option.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
+		option.WithBaseURL(os.Getenv("OPENAI_BASE_PATH")),
+	)
+	modelName := os.Getenv("OPENAI_MODEL")
 	if request.ModelName != nil {
 		modelName = *request.ModelName
 	}
 
 	// 创建流式请求
-	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
-		Messages:    openai.F(chatMessages),
-		Model:       openai.F(modelName),
-		Temperature: openai.F(0.6),
-	})
+	stream := client.Chat.Completions.NewStreaming(
+		context.TODO(), openai.ChatCompletionNewParams{
+			Messages:    openai.F(chatMessages),
+			Model:       openai.F(modelName),
+			Temperature: openai.F(0.6),
+		},
+	)
 
 	// 创建一个通道来发送事件
 	eventChan := make(chan string)
@@ -190,7 +196,10 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 	go func() {
 		// 发送消息 ID 给前端
-		eventChan <- "[ID:" + strconv.FormatUint(messages[0].ID, 10) + "," + strconv.FormatUint(messages[1].ID, 10) + "]"
+		eventChan <- "[ID:" + strconv.FormatUint(messages[0].ID, 10) + "," + strconv.FormatUint(
+			messages[1].ID,
+			10,
+		) + "]"
 
 		// 流式传输 OpenAI 的响应
 		for stream.Next() {
@@ -228,19 +237,21 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		}
 	}()
 
-	c.Stream(func(w io.Writer) bool {
-		if event, ok := <-eventChan; ok {
-			// 显式传输换行符，避免前端处理异常
-			event = strings.ReplaceAll(event, "\n", "\\n")
-			// 按照 SSE 规范输出内容
-			_, err := w.Write([]byte("data: " + event + "\n\n"))
+	c.Stream(
+		func(w io.Writer) bool {
+			if event, ok := <-eventChan; ok {
+				// 显式传输换行符，避免前端处理异常
+				event = strings.ReplaceAll(event, "\n", "\\n")
+				// 按照 SSE 规范输出内容
+				_, err := w.Write([]byte("data: " + event + "\n\n"))
 
-			if err != nil {
-				return false
+				if err != nil {
+					return false
+				}
+				// 返回 true 说明还要等待下一个事件，Stream 会进入下一次迭代
+				return true
 			}
-			// 返回 true 说明还要等待下一个事件，Stream 会进入下一次迭代
-			return true
-		}
-		return false
-	})
+			return false
+		},
+	)
 }

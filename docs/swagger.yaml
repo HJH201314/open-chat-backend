@@ -28,6 +28,20 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-array_models_Provider:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        items:
+          $ref: '#/definitions/models.Provider'
+        type: array
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-bool:
     properties:
       code:
@@ -36,6 +50,19 @@ definitions:
       data:
         description: 数据
         type: boolean
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-models_Provider:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/models.Provider'
+        description: 数据
       msg:
         description: 消息
         type: string
@@ -65,6 +92,59 @@ definitions:
         description: 消息
         type: string
     type: object
+  models.APIKey:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      key:
+        description: API 密钥
+        type: string
+      provider_id:
+        description: 外键，指向 Provider
+        type: integer
+    type: object
+  models.Model:
+    properties:
+      config:
+        allOf:
+          - $ref: '#/definitions/models.ModelConfig'
+        description: 使用 JSON 储存配置
+      created_at:
+        type: string
+      description:
+        description: 额外模型描述
+        type: string
+      display_name:
+        description: 对外展示模型名称
+        type: string
+      id:
+        type: integer
+      name:
+        description: 模型名称
+        type: string
+      provider_id:
+        description: 关联的 Provider ID
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.ModelConfig:
+    properties:
+      default_temperature:
+        type: number
+      frequency_penalty:
+        type: number
+      max_tokens:
+        type: integer
+      presence_penalty:
+        type: number
+      system_prompt:
+        type: string
+      top_p:
+        type: number
+    type: object
   models.Permission:
     properties:
       created_at:
@@ -79,6 +159,37 @@ definitions:
         type: string
       path:
         description: 权限路径（一般与名称相同）
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Provider:
+    properties:
+      api_keys:
+        description: 一对多关系，与 APIKey 模型关联
+        items:
+          $ref: '#/definitions/models.APIKey'
+        type: array
+      base_url:
+        description: API 的基本 URL
+        type: string
+      created_at:
+        type: string
+      description:
+        description: 额外提供商描述
+        type: string
+      display_name:
+        description: 对外展示提供商名称
+        type: string
+      id:
+        type: integer
+      models:
+        description: 一对多关系，与 Model 模型关联
+        items:
+          $ref: '#/definitions/models.Model'
+        type: array
+      name:
+        description: 提供商名称
         type: string
       updated_at:
         type: string
@@ -201,6 +312,107 @@ paths:
       summary: 创建会话
       tags:
         - Session
+  /manage/provider/{provider_id}:
+    get:
+      consumes:
+        - application/json
+      description: 获取 API 提供商
+      parameters:
+        - description: API 提供商 ID
+          in: path
+          name: provider_id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: API 提供商
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-models_Provider'
+      summary: 获取 API 提供商
+      tags:
+        - Provider
+  /manage/provider/create:
+    post:
+      consumes:
+        - application/json
+      description: 创建 API 提供商
+      parameters:
+        - description: API 提供商参数
+          in: body
+          name: provider
+          required: true
+          schema:
+            $ref: '#/definitions/models.Provider'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 成功创建的 API 提供商
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-models_Provider'
+      summary: 创建 API 提供商
+      tags:
+        - Provider
+  /manage/provider/delete/{provider_id}:
+    post:
+      consumes:
+        - application/json
+      description: 删除 API 提供商
+      parameters:
+        - description: API 提供商 ID
+          in: path
+          name: provider_id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 删除成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 删除 API 提供商
+      tags:
+        - Provider
+  /manage/provider/list:
+    get:
+      consumes:
+        - application/json
+      description: 批量获取 API 提供商
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: API 提供商列表
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-array_models_Provider'
+      summary: 批量获取 API 提供商
+      tags:
+        - Provider
+  /manage/provider/update:
+    post:
+      consumes:
+        - application/json
+      description: 更新 API 提供商
+      parameters:
+        - description: API 提供商参数
+          in: body
+          name: provider
+          required: true
+          schema:
+            $ref: '#/definitions/models.Provider'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 更新成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新 API 提供商
+      tags:
+        - Provider
   /user/login:
     post:
       consumes:

@@ -29,22 +29,26 @@ func (s *GormStore) GetProviders() ([]models.Provider, error) {
 
 // DeleteProvider 删除提供商
 func (s *GormStore) DeleteProvider(providerId uint64) error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
-		// 删除模型
-		if err := tx.Where("provider_id = ?", providerId).Delete(&models.Model{}).Error; err != nil {
-			return err
-		}
-		// 删除提供商
-		return tx.Where("id = ?", providerId).Delete(&models.Provider{}).Error
-	})
+	return s.Db.Transaction(
+		func(tx *gorm.DB) error {
+			// 删除模型
+			if err := tx.Where("provider_id = ?", providerId).Delete(&models.Model{}).Error; err != nil {
+				return err
+			}
+			// 删除提供商
+			return tx.Where("id = ?", providerId).Delete(&models.Provider{}).Error
+		},
+	)
 }
 
 // AddAPIKey 为供应商添加密钥
 func (s *GormStore) AddAPIKey(providerId uint64, apiKey string) error {
-	return s.Db.Create(&models.APIKey{
-		ProviderID: providerId,
-		Key:        apiKey,
-	}).Error
+	return s.Db.Create(
+		&models.APIKey{
+			ProviderID: providerId,
+			Key:        apiKey,
+		},
+	).Error
 }
 
 // DeleteAPIKey 为供应商删除密钥
@@ -72,6 +76,12 @@ func (s *GormStore) GetModel(modelId uint64) (*models.Model, error) {
 func (s *GormStore) GetModelsByProvider(providerId uint64) ([]models.Model, error) {
 	var aiModels []models.Model
 	return aiModels, s.Db.Where("provider_id = ?", providerId).Find(&aiModels).Error
+}
+
+// FindModelByProviderAndName 通过提供商和模型名称查找模型
+func (s *GormStore) FindModelByProviderAndName(providerId uint64, modelName string) (*models.Model, error) {
+	var model models.Model
+	return &model, s.Db.Where("provider_id = ? AND name = ?", providerId, modelName).First(&model).Error
 }
 
 // DeleteModel 删除模型

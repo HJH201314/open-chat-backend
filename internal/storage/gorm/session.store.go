@@ -12,17 +12,19 @@ func (s *GormStore) CreateSession(session *models.Session) error {
 
 // DeleteSession 删除会话
 func (s *GormStore) DeleteSession(sessionId string) error {
-	return s.Db.Transaction(func(tx *gorm.DB) error {
-		// 删除会话
-		if err := tx.Delete(&models.Session{ID: sessionId}).Error; err != nil {
-			return err
-		}
-		// 删除消息
-		if err := tx.Where("session_id = ?", sessionId).Delete(&models.Message{}).Error; err != nil {
-			return err
-		}
-		return nil
-	})
+	return s.Db.Transaction(
+		func(tx *gorm.DB) error {
+			// 删除会话
+			if err := tx.Delete(&models.Session{ID: sessionId}).Error; err != nil {
+				return err
+			}
+			// 删除消息
+			if err := tx.Where("session_id = ?", sessionId).Delete(&models.Message{}).Error; err != nil {
+				return err
+			}
+			return nil
+		},
+	)
 }
 
 // ToggleContext 更新会话的上下文开关状态

@@ -19,10 +19,12 @@ func (s *GormStore) GetUser(userId uint64) (*models.User, error) {
 func (s *GormStore) BindRolesToUser(userId uint64, roleIds []uint64) error {
 	var userRoles []models.UserRole
 	for _, roleId := range roleIds {
-		userRoles = append(userRoles, models.UserRole{
-			UserID: userId,
-			RoleID: roleId,
-		})
+		userRoles = append(
+			userRoles, models.UserRole{
+				UserID: userId,
+				RoleID: roleId,
+			},
+		)
 	}
 	return s.Db.Create(&userRoles).Error
 }
@@ -66,17 +68,23 @@ func (s *GormStore) DelPermission(permissionId uint64) error {
 func (s *GormStore) BindPermissionsToRole(roleId uint64, permissionIds []uint64) error {
 	var rolePermissions []models.RolePermission
 	for _, permissionId := range permissionIds {
-		rolePermissions = append(rolePermissions, models.RolePermission{
-			RoleID:       roleId,
-			PermissionID: permissionId,
-		})
+		rolePermissions = append(
+			rolePermissions, models.RolePermission{
+				RoleID:       roleId,
+				PermissionID: permissionId,
+			},
+		)
 	}
 	return s.Db.Create(&rolePermissions).Error
 }
 
 // UnbindPermissionsFromRole 解绑权限从角色
 func (s *GormStore) UnbindPermissionsFromRole(roleId uint64, permissionIds []uint64) error {
-	return s.Db.Where("role_id = ? AND permission_id in (?)", roleId, permissionIds).Delete(&models.RolePermission{}).Error
+	return s.Db.Where(
+		"role_id = ? AND permission_id in (?)",
+		roleId,
+		permissionIds,
+	).Delete(&models.RolePermission{}).Error
 }
 
 // UpdateRolePermissions 更新角色权限
