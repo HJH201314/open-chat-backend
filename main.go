@@ -29,16 +29,16 @@ func main() {
 	// 初始化路由
 	routers.InitRouter(r, store, cache)
 
-	// 在 9033 端口启动服务
-	if err := r.Run("0.0.0.0:9033"); err != nil {
-		log.Fatal("Error running server", err.Error())
-	}
-
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
 	defer cancelCache()
 	cacheService := services.NewCacheService(store, cache)
-	cacheService.Start(cacheCtx, 5*time.Minute)
+	go cacheService.Start(cacheCtx, 5*time.Minute)
+
+	// 在 9033 端口启动服务
+	if err := r.Run("0.0.0.0:9033"); err != nil {
+		log.Fatal("Error running server", err.Error())
+	}
 }
 
 // loadEnv 加载环境变量

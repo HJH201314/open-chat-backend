@@ -23,6 +23,7 @@ func NewCacheService(gormStore *gorm.GormStore, redisClient *redis.RedisClient) 
 }
 
 func (s *CacheService) Start(ctx context.Context, interval time.Duration) {
+	s.syncCacheProviders()
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -32,7 +33,7 @@ func (s *CacheService) Start(ctx context.Context, interval time.Duration) {
 			s.syncCacheProviders()
 		case <-ctx.Done():
 			if s.Logger != nil {
-				s.Logger.Println("定时任务终止")
+				s.Logger.Println("Cache Service stopped")
 			}
 			return
 		}
@@ -41,7 +42,7 @@ func (s *CacheService) Start(ctx context.Context, interval time.Duration) {
 
 func (s *CacheService) syncCacheProviders() {
 	// 1. 查询数据库
-	data, err := s.GormStore.GetProviders()
+	data, err := s.GormStore.QueryProviders()
 	if err != nil {
 		s.Logger.Println("failed to query store", err)
 		return
@@ -54,5 +55,5 @@ func (s *CacheService) syncCacheProviders() {
 	}
 
 	// 记录成功日志
-	s.Logger.Printf("成功缓存%d条数据", len(data))
+	s.Logger.Printf("Cache %d providers successfully", len(data))
 }

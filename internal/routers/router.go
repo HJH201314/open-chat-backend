@@ -26,9 +26,13 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) 
 	chatHandler := chat.NewChatHandler(baseHandler)
 	chatGroup := r.Group("/chat")
 	{
+		chatConfigGroup := chatGroup.Group("/config")
+		{
+			chatConfigGroup.GET("/models", chatHandler.GetModels)
+		}
 		chatSessionGroup := chatGroup.Group("/session")
 		{
-			chatSessionGroup.GET("/new", chatHandler.CreateSession)
+			chatSessionGroup.POST("/new", chatHandler.CreateSession)
 			chatSessionGroup.POST("/del/:session_id", chatHandler.DeleteSession)
 		}
 		chatCompletionGroup := chatGroup.Group("/completion")

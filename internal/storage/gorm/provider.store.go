@@ -15,16 +15,28 @@ func (s *GormStore) UpdateProvider(provider *models.Provider) error {
 	return s.Db.Model(provider).Updates(provider).Error
 }
 
-// GetProvider 获取提供商
+// GetProvider 获取提供商（不含关联数据）
 func (s *GormStore) GetProvider(providerId uint64) (*models.Provider, error) {
 	var provider models.Provider
 	return &provider, s.Db.Where("id = ?", providerId).First(&provider).Error
 }
 
-// GetProviders 获取提供商
+// GetProviders 获取提供商（不含关联数据）
 func (s *GormStore) GetProviders() ([]models.Provider, error) {
 	var providers []models.Provider
 	return providers, s.Db.Find(&providers).Error
+}
+
+// QueryProvider 获取提供商（含关联数据）
+func (s *GormStore) QueryProvider(providerId uint64) (*models.Provider, error) {
+	var provider models.Provider
+	return &provider, s.Db.Preload("APIKeys").Preload("Models").Where("id = ?", providerId).First(&provider).Error
+}
+
+// QueryProviders 获取提供商（含关联数据）
+func (s *GormStore) QueryProviders() ([]models.Provider, error) {
+	var providers []models.Provider
+	return providers, s.Db.Preload("APIKeys").Preload("Models").Find(&providers).Error
 }
 
 // DeleteProvider 删除提供商

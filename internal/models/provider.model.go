@@ -28,11 +28,19 @@ type Model struct {
 	AutoCreateUpdateAt
 }
 
+// ModelCache 缓存中的 model 数据
+type ModelCache struct {
+	Model
+	ProviderName        string `json:"provider_name"`         // 关联的 Provider Name
+	ProviderDisplayName string `json:"provider_display_name"` // 关联的 Provider DisplayName
+}
+
 // ModelConfig 定义了模型的默认配置
 type ModelConfig struct {
-	DefaultTemperature float32 `json:"default_temperature"`
-	SystemPrompt       string  `json:"system_prompt"`
-	MaxTokens          int     `json:"max_tokens"`
+	DefaultTemperature float64 `json:"default_temperature"` // 默认温度
+	AllowSystemPrompt  bool    `json:"allow_system_prompt"` // 是否允许用户自行修改系统提示
+	SystemPrompt       string  `json:"system_prompt"`       // 预设系统提示
+	MaxTokens          int64   `json:"max_tokens"`
 	TopP               float32 `json:"top_p"`
 	FrequencyPenalty   float32 `json:"frequency_penalty"`
 	PresencePenalty    float32 `json:"presence_penalty"`
@@ -40,6 +48,7 @@ type ModelConfig struct {
 
 var DefaultModelConfig = ModelConfig{
 	DefaultTemperature: 0.6,
+	AllowSystemPrompt:  true,
 	SystemPrompt:       "",
 	MaxTokens:          4096,
 	TopP:               1.0,

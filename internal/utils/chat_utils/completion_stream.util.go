@@ -1,4 +1,4 @@
-package utils
+package chat_utils
 
 import (
 	"context"
@@ -8,10 +8,11 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/ssestream"
+	"strings"
 )
 
 // CompletionStream 流式聊天
-func CompletionStream(ctx context.Context, opts CompletionStreamOptions) (<-chan StreamEvent, error) {
+func CompletionStream(ctx context.Context, opts CompletionStreamOptions) (chan StreamEvent, error) {
 	// 参数校验
 	if err := validateOptions(opts); err != nil {
 		return nil, fmt.Errorf("invalid options: %w", err)
@@ -105,10 +106,8 @@ streamingLoop:
 			sendError(eventChan, ctx.Err())
 			return
 		default:
-			// 接收下一个响应
-			streaming := stream.Next()
-			if !streaming {
-				// 若流式结束，退出循环
+			// 接收下一个响应，若流式结束，退出循环
+			if !stream.Next() {
 				break streamingLoop
 			}
 			if stream.Err() != nil {
@@ -118,10 +117,21 @@ streamingLoop:
 			chunk := stream.Current()
 			acc.AddChunk(chunk)
 
+			// 额外解析含有 reasoning_content 的结构
+			choiceDelta := &chunk.Choices[0].Delta
 			// 发送内容事件
-			eventChan <- StreamEvent{
-				Type:    "content",
-				Content: chunk.Choices[0].Delta.Content,
+			if reasoningContent := choiceDelta.JSON.ExtraFields["reasoning_content"].Raw(); reasoningContent != "" {
+				reasoningContent, _ = strings.CutPrefix(reasoningContent, "\"")
+				reasoningContent, _ = strings.CutSuffix(reasoningContent, "\"")
+				eventChan <- StreamEvent{
+					Type:    "reasoning_content",
+					Content: reasoningContent,
+				}
+			} else {
+				eventChan <- StreamEvent{
+					Type:    "content",
+					Content: choiceDelta.Content,
+				}
 			}
 		}
 	}
@@ -158,6 +168,25 @@ type Message struct {
 	Content string
 }
 
+func SystemMessage(content string) Message {
+	return Message{
+		Role:    "system",
+		Content: content,
+	}
+}
+func AssistantMessage(content string) Message {
+	return Message{
+		Role:    "assistant",
+		Content: content,
+	}
+}
+func UserMessage(content string) Message {
+	return Message{
+		Role:    "user",
+		Content: content,
+	}
+}
+
 // StreamEvent 表示流式事件的数据结构
 type StreamEvent struct {
 	Type     string      // 事件类型：content/error/done
@@ -168,13 +197,17 @@ type StreamEvent struct {
 
 // CompletionStreamOptions 流式请求配置
 type CompletionStreamOptions struct {
-	Provider      Provider  // 服务提供商
-	Model         string    // 模型名称
-	Messages      []Message // 消息列表
-	SystemPrompt  string    // 系统提示词
-	Temperature   float64   // 温度系数
-	MaxTokens     int64     // 最大 token 数
-	ContextWindow int64     // 上下文窗口大小
+	Provider     Provider  // 服务提供商
+	Model        string    // 模型名称
+	Messages     []Message // 消息列表
+	SystemPrompt string    // 系统提示词
+	CompletionModelConfig
+}
+
+type CompletionModelConfig struct {
+	Temperature   float64 // 温度系数
+	MaxTokens     int64   // 最大 token 数
+	ContextWindow int64   // 上下文窗口大小
 }
 
 // DoneResponse 结果响应
@@ -185,4 +218,10 @@ type DoneResponse struct {
 type DoneResponseUsage struct {
 	PromptTokens     int64 `json:"prompt_tokens"`
 	CompletionTokens int64 `json:"completion_tokens"`
+}
+
+// ChoiceDelta 拓展流式输出 Delta
+type ChoiceDelta struct {
+	openai.ChatCompletionChunkChoicesDelta
+	ReasoningContent string `json:"reasoning_content"`
 }

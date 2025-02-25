@@ -49,6 +49,29 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/chat/config/models": {
+            "get": {
+                "description": "获取所有模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "获取所有模型",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-array_models_ModelCache"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/session/del/{session_id}": {
             "post": {
                 "description": "删除会话",
@@ -361,6 +384,8 @@ const docTemplate = `{
         "chat.CompletionStream.userInput": {
             "type": "object",
             "required": [
+                "model_name",
+                "provider_name",
                 "question"
             ],
             "properties": {
@@ -368,11 +393,11 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "model_name": {
-                    "description": "准确的模型名称",
+                    "description": "Model.Name 准确的模型名称",
                     "type": "string"
                 },
-                "provider": {
-                    "description": "DeepSeek or OpenAI",
+                "provider_name": {
+                    "description": "Provider.Name 准确的供应商名称",
                     "type": "string"
                 },
                 "question": {
@@ -393,6 +418,26 @@ const docTemplate = `{
                 },
                 "data": {
                     "description": "数据"
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-array_models_ModelCache": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModelCache"
+                    }
                 },
                 "msg": {
                     "description": "消息",
@@ -553,10 +598,59 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ModelCache": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "description": "使用 JSON 储存配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ModelConfig"
+                        }
+                    ]
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "额外模型描述",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "对外展示模型名称",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "模型名称",
+                    "type": "string"
+                },
+                "provider_display_name": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "description": "关联的 Provider ID",
+                    "type": "integer"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ModelConfig": {
             "type": "object",
             "properties": {
+                "allow_system_prompt": {
+                    "description": "是否允许用户自行修改系统提示",
+                    "type": "boolean"
+                },
                 "default_temperature": {
+                    "description": "默认温度",
                     "type": "number"
                 },
                 "frequency_penalty": {
@@ -569,6 +663,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "system_prompt": {
+                    "description": "预设系统提示",
                     "type": "string"
                 },
                 "top_p": {

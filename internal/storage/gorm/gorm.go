@@ -52,5 +52,6 @@ func NewGormStore() *GormStore {
 	}
 	// 初始化 GORM 存储
 	store.Db = db
+	store.Logger.Println("connected to postgres")
 	return store
 }

@@ -1,18 +1,17 @@
 package chat
 
 import (
-	"context"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/models"
 	"github.com/fcraft/open-chat/internal/shared/constant"
+	"github.com/fcraft/open-chat/internal/shared/entity"
 	_ "github.com/fcraft/open-chat/internal/shared/entity"
 	"github.com/fcraft/open-chat/internal/shared/util"
+	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/gin-gonic/gin"
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -82,6 +81,31 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	util.NormalResponse(c, true)
 }
 
+// GetModels
+//
+//	@Summary		获取所有模型
+//	@Description	获取所有模型
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entity.CommonResponse[[]models.ModelCache]
+//	@Router			/chat/config/models [get]
+func (h *Handler) GetModels(c *gin.Context) {
+	// 从缓存中查询
+	cacheModels, err := h.Redis.GetCachedModels()
+	if err != nil {
+		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to get models")
+		return
+	}
+	// 将 config 隐藏
+	slice.ForEach(
+		cacheModels, func(_ int, item models.ModelCache) {
+			item.Config = models.ModelConfig{}
+		},
+	)
+	util.NormalResponse(c, cacheModels)
+}
+
 // CompletionStream
 //
 //	@Summary		流式输出聊天
@@ -93,28 +117,44 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 //	@Param			request		body	chat.CompletionStream.userInput	true	"用户输入及参数"
 //	@Router			/chat/completion/stream/{session_id} [post]
 func (h *Handler) CompletionStream(c *gin.Context) {
-	// 设置流式响应头
-	c.Writer.Header().Set("Content-Type", "text/event-stream")
-	c.Writer.Header().Set("Cache-Control", "no-redis")
-
 	// 从 query 和 body 中获取用户输入
 	var uri struct {
 		SessionId string `uri:"session_id" binding:"required"`
 	}
 	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
+		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
+		ModelName     string  `json:"model_name" binding:"required"`    // Model.Name 准确的模型名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
-		Provider      *string `json:"provider" binding:"-"`      // DeepSeek or OpenAI
-		ModelName     *string `json:"model_name" binding:"-"`    // 准确的模型名称
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
-	var request userInput
+	var req userInput
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
-		_ = c.Error(constant.ErrBadRequest)
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
 		return
 	}
-	if err := c.ShouldBindJSON(&request); err != nil || request.Question == "" {
-		_ = c.Error(constant.ErrBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil || req.Question == "" {
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		return
+	}
+
+	// 读取模型信息
+	modelInfo := h.Redis.FindCachedModelByName(req.Provider, req.ModelName)
+	if modelInfo == nil {
+		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		return
+	}
+	modelConfig := modelInfo.Config
+	// 获取供应商 base_url 和 api_key
+	providerInfo := h.Redis.FindProviderByName(req.Provider)
+	if providerInfo == nil {
+		util.HttpErrorResponse(c, constant.ErrInternal)
+		return
+	}
+	providerBaseUrl := providerInfo.BaseURL
+	providerKey, idx := slice.Random(providerInfo.APIKeys)
+	if idx == -1 {
+		util.HttpErrorResponse(c, constant.ErrInternal)
 		return
 	}
 
@@ -125,10 +165,10 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		return
 	}
 
-	// 若启用（会话配置或显式传入），获取上下文消息
+	// 上下文消息
 	enableContext := session.EnableContext // 默认使用会话配置
-	if request.EnableContext != nil {
-		enableContext = *request.EnableContext // 请求参数优先
+	if req.EnableContext != nil {
+		enableContext = *req.EnableContext // 请求参数优先
 	}
 	var contextMessages []models.Message
 	if enableContext {
@@ -139,119 +179,149 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		}
 		contextMessages = messages
 	}
-	var chatMessages []openai.ChatCompletionMessageParamUnion
+
 	// 系统提示
-	/*var systemPrompt = ""
-	if request.SystemPrompt != nil && *request.SystemPrompt != "" {
-		systemPrompt = *request.SystemPrompt
-	} else {
-		systemPrompt = ""
-	}
-	const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
-	fullSystemPrompt := systemPrompt + titlePrompt
-	chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "system", Content: fullSystemPrompt})*/
-	for _, msg := range contextMessages {
-		switch msg.Role {
-		case "user":
-			chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "user", Content: msg.Content})
-		case "assistant":
-			chatMessages = append(chatMessages, openai.ChatCompletionMessage{Role: "assistant", Content: msg.Content})
+	var fullSystemPrompt = ""
+	if modelConfig.AllowSystemPrompt {
+		var systemPrompt = ""
+		if req.SystemPrompt != nil && *req.SystemPrompt != "" {
+			systemPrompt = *req.SystemPrompt
 		}
+		const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
+		fullSystemPrompt = systemPrompt + titlePrompt
 	}
-	chatMessages = append(chatMessages, openai.UserMessage(request.Question))
+
+	// 标准格式消息列表
+	var chatMessages []chat_utils.Message
+	chatMessages = append(
+		chatMessages, slice.Map(
+			contextMessages, func(_ int, m models.Message) chat_utils.Message {
+				return chat_utils.Message{
+					Role:    m.Role,
+					Content: m.Content,
+				}
+			},
+		)...,
+	)
+	chatMessages = append(chatMessages, chat_utils.UserMessage(req.Question))
 
 	// 预先插入新对话，获取消息 ID
 	messages := []models.Message{
-		{SessionID: session.ID, Role: "user"},
-		{SessionID: session.ID, Role: "assistant"},
+		{SessionID: session.ID, Role: "user", ModelID: modelInfo.ID},
+		{SessionID: session.ID, Role: "assistant", ModelID: modelInfo.ID},
 	}
 	if err := h.Store.CreateMessages(&messages); err != nil {
 		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create messages")
 		return
 	}
-
-	// 初始化 OpenAI 客户端
-	client := openai.NewClient(
-		option.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-		option.WithBaseURL(os.Getenv("OPENAI_BASE_PATH")),
-	)
-	modelName := os.Getenv("OPENAI_MODEL")
-	if request.ModelName != nil {
-		modelName = *request.ModelName
-	}
-
-	// 创建流式请求
-	stream := client.Chat.Completions.NewStreaming(
-		context.TODO(), openai.ChatCompletionNewParams{
-			Messages:    openai.F(chatMessages),
-			Model:       openai.F(modelName),
-			Temperature: openai.F(0.6),
-		},
-	)
-
-	// 创建一个通道来发送事件
-	eventChan := make(chan string)
-
-	acc := openai.ChatCompletionAccumulator{}
-
-	go func() {
-		// 发送消息 ID 给前端
-		eventChan <- "[ID:" + strconv.FormatUint(messages[0].ID, 10) + "," + strconv.FormatUint(
-			messages[1].ID,
-			10,
-		) + "]"
-
-		// 流式传输 OpenAI 的响应
-		for stream.Next() {
-			chunk := stream.Current()
-			acc.AddChunk(chunk)
-
-			// 将 OpenAI 的响应通过通道发送到 Gin 的响应流
-			if len(chunk.Choices) > 0 {
-				eventChan <- chunk.Choices[0].Delta.Content
-			}
-		}
-
-		if err := stream.Err(); err != nil {
-			eventChan <- "[ERROR: API response error]"
-		}
-		// 清理资源，1. 发送[DONE]告知前端响应已完成 2. 关闭通道以结束当前连接 3. 关闭 OpenAI 的数据流
-		if err := stream.Close(); err != nil {
-			return
-		}
-		eventChan <- "[DONE]"
-		close(eventChan)
-
-		// 保存用户输入和响应结果
-		if len(acc.Choices) > 0 {
-			messages[0].Content = request.Question
-			messages[1].Content = acc.Choices[0].Message.Content
+	// 执行结束后，根据是否有回答进行操作
+	var fullResponseContent string
+	defer func() {
+		if fullResponseContent != "" {
+			// 完成响应，记录消息
+			messages[0].Content = req.Question
+			messages[1].Content = fullResponseContent
 			if err := h.Store.SaveMessages(&messages); err != nil {
-				return
+				// do nothing
 			}
 		} else {
-			// 如果没有响应，删除预先保存的消息
+			// 无响应，删除预插入的消息
 			if err := h.Store.DeleteMessages(session.ID, []uint64{messages[0].ID, messages[1].ID}); err != nil {
-				return
+				// do nothing
 			}
 		}
 	}()
 
-	c.Stream(
-		func(w io.Writer) bool {
-			if event, ok := <-eventChan; ok {
-				// 显式传输换行符，避免前端处理异常
-				event = strings.ReplaceAll(event, "\n", "\\n")
-				// 按照 SSE 规范输出内容
-				_, err := w.Write([]byte("data: " + event + "\n\n"))
-
-				if err != nil {
-					return false
-				}
-				// 返回 true 说明还要等待下一个事件，Stream 会进入下一次迭代
-				return true
-			}
-			return false
+	eventChan, err := chat_utils.CompletionStream(
+		c.Request.Context(), chat_utils.CompletionStreamOptions{
+			Provider: chat_utils.Provider{
+				BaseUrl: providerBaseUrl,
+				ApiKey:  providerKey.Key,
+			},
+			Model:                 req.ModelName,
+			Messages:              chatMessages,
+			SystemPrompt:          fullSystemPrompt,
+			CompletionModelConfig: getCompletionModelConfig(modelConfig),
 		},
 	)
+	if err != nil {
+		util.HttpErrorResponse(c, constant.ErrInternal)
+		return
+	}
+	sendStreamMessageEvent(
+		c,
+		"[ID:"+strconv.FormatUint(messages[0].ID, 10)+","+strconv.FormatUint(messages[1].ID, 10)+"]",
+		false,
+	)
+
+	// 设置流式响应头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	// 流式输出
+	c.Stream(
+		func(w io.Writer) bool {
+			event, ok := <-eventChan
+			if !ok {
+				return false
+			}
+
+			switch event.Type {
+			case "content":
+				// 消息内容
+				sendStreamMessageEvent(c, event.Content, false)
+			case "reasoning_content":
+				// 思考内容
+				sendStreamMessageEvent(c, event.Content, true)
+			case "error":
+				// 错误信息（记录日志并终止流）
+				c.SSEvent(
+					"error", (&entity.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
+				)
+				return false
+			case "done":
+				// 用量信息
+				c.SSEvent("usage", event.Metadata)
+				resp, ok := event.Metadata.(chat_utils.DoneResponse)
+				if ok {
+					fullResponseContent = resp.Content
+				}
+				// 结束标记
+				c.SSEvent("done", "[DONE]")
+				return false
+			}
+			return true
+		},
+	)
+}
+
+func sendStreamMessageEvent(c *gin.Context, msg string, thinking bool) {
+	var name string
+	if thinking {
+		name = "think"
+	} else {
+		name = "msg"
+	}
+	c.SSEvent(
+		name, gin.H{
+			"content": strings.ReplaceAll(msg, "\n", "\\n"),
+		},
+	)
+}
+
+func getCompletionModelConfig(config models.ModelConfig) chat_utils.CompletionModelConfig {
+	temperature := config.DefaultTemperature
+	if temperature == 0 {
+		temperature = models.DefaultModelConfig.DefaultTemperature
+	}
+	maxTokens := config.MaxTokens
+	if maxTokens == 0 {
+		maxTokens = models.DefaultModelConfig.MaxTokens
+	}
+
+	return chat_utils.CompletionModelConfig{
+		Temperature: temperature,
+		MaxTokens:   maxTokens,
+	}
 }
