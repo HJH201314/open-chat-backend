@@ -345,6 +345,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/refresh": {
+            "get": {
+                "description": "刷新登录态",
+                "tags": [
+                    "User"
+                ],
+                "summary": "刷新登录态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "刷新用 Token",
+                        "name": "X-Refresh-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "nothing",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/user/register": {
             "post": {
                 "description": "用户注册",
@@ -628,6 +654,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "provider_display_name": {
+                    "description": "关联的 Provider DisplayName",
                     "type": "string"
                 },
                 "provider_id": {
@@ -635,6 +662,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "provider_name": {
+                    "description": "关联的 Provider Name",
                     "type": "string"
                 },
                 "updated_at": {

@@ -15,9 +15,9 @@ definitions:
         description: 系统提示词
         type: string
     required:
-      - model_name
-      - provider_name
-      - question
+    - model_name
+    - provider_name
+    - question
     type: object
   entity.CommonResponse-any:
     properties:
@@ -77,7 +77,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/models.Provider'
+        - $ref: '#/definitions/models.Provider'
         description: 数据
       msg:
         description: 消息
@@ -90,7 +90,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/models.User'
+        - $ref: '#/definitions/models.User'
         description: 数据
       msg:
         description: 消息
@@ -125,7 +125,7 @@ definitions:
     properties:
       config:
         allOf:
-          - $ref: '#/definitions/models.ModelConfig'
+        - $ref: '#/definitions/models.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -150,7 +150,7 @@ definitions:
     properties:
       config:
         allOf:
-          - $ref: '#/definitions/models.ModelConfig'
+        - $ref: '#/definitions/models.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -166,11 +166,13 @@ definitions:
         description: 模型名称
         type: string
       provider_display_name:
+        description: 关联的 Provider DisplayName
         type: string
       provider_id:
         description: 关联的 Provider ID
         type: integer
       provider_name:
+        description: 关联的 Provider Name
         type: string
       updated_at:
         type: string
@@ -287,8 +289,8 @@ definitions:
       username:
         type: string
     required:
-      - password
-      - username
+    - password
+    - username
     type: object
   user.Register.registerRequest:
     properties:
@@ -297,42 +299,42 @@ definitions:
       username:
         type: string
     required:
-      - password
-      - username
+    - password
+    - username
     type: object
 info:
-  contact: { }
+  contact: {}
 paths:
   /chat/completion/stream/{session_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 流式输出聊天
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
-        - description: 用户输入及参数
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/chat.CompletionStream.userInput'
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: 用户输入及参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.CompletionStream.userInput'
       produces:
-        - text/event-stream
-      responses: { }
+      - text/event-stream
+      responses: {}
       summary: 流式输出聊天
       tags:
-        - Chat
+      - Chat
   /chat/config/models:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取所有模型
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -340,20 +342,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-array_models_ModelCache'
       summary: 获取所有模型
       tags:
-        - config
+      - config
   /chat/session/del/{session_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除会话
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -361,14 +363,14 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除会话
       tags:
-        - Session
+      - Session
   /chat/session/new:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建会话
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -376,20 +378,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-string'
       summary: 创建会话
       tags:
-        - Session
+      - Session
   /manage/provider/{provider_id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取 API 提供商
       parameters:
-        - description: API 提供商 ID
-          in: path
-          name: provider_id
-          required: true
-          type: integer
+      - description: API 提供商 ID
+        in: path
+        name: provider_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: API 提供商
@@ -397,21 +399,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-models_Provider'
       summary: 获取 API 提供商
       tags:
-        - Provider
+      - Provider
   /manage/provider/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建 API 提供商
       parameters:
-        - description: API 提供商参数
-          in: body
-          name: provider
-          required: true
-          schema:
-            $ref: '#/definitions/models.Provider'
+      - description: API 提供商参数
+        in: body
+        name: provider
+        required: true
+        schema:
+          $ref: '#/definitions/models.Provider'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的 API 提供商
@@ -419,20 +421,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-models_Provider'
       summary: 创建 API 提供商
       tags:
-        - Provider
+      - Provider
   /manage/provider/delete/{provider_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除 API 提供商
       parameters:
-        - description: API 提供商 ID
-          in: path
-          name: provider_id
-          required: true
-          type: integer
+      - description: API 提供商 ID
+        in: path
+        name: provider_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功与否
@@ -440,14 +442,14 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除 API 提供商
       tags:
-        - Provider
+      - Provider
   /manage/provider/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取 API 提供商
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: API 提供商列表
@@ -455,21 +457,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-array_models_Provider'
       summary: 批量获取 API 提供商
       tags:
-        - Provider
+      - Provider
   /manage/provider/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新 API 提供商
       parameters:
-        - description: API 提供商参数
-          in: body
-          name: provider
-          required: true
-          schema:
-            $ref: '#/definitions/models.Provider'
+      - description: API 提供商参数
+        in: body
+        name: provider
+        required: true
+        schema:
+          $ref: '#/definitions/models.Provider'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新成功与否
@@ -477,21 +479,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新 API 提供商
       tags:
-        - Provider
+      - Provider
   /user/login:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 用户登录
       parameters:
-        - description: 登录请求
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/user.Login.loginRequest'
+      - description: 登录请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/user.Login.loginRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: login successfully
@@ -499,14 +501,14 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-models_User'
       summary: 用户登录
       tags:
-        - User
+      - User
   /user/ping:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 检测客户端登录态
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: user is online
@@ -518,21 +520,38 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-any'
       summary: 检测客户端登录态
       tags:
-        - User
+      - User
+  /user/refresh:
+    get:
+      description: 刷新登录态
+      parameters:
+      - description: 刷新用 Token
+        in: header
+        name: X-Refresh-Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: nothing
+          schema:
+            type: string
+      summary: 刷新登录态
+      tags:
+      - User
   /user/register:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 用户注册
       parameters:
-        - description: 注册请求
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/user.Register.registerRequest'
+      - description: 注册请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/user.Register.registerRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: register successfully
@@ -540,5 +559,5 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 用户注册
       tags:
-        - User
+      - User
 swagger: "2.0"

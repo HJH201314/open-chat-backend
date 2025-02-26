@@ -46,6 +46,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) 
 	userGroup := r.Group("/user")
 	{
 		userGroup.POST("/ping", userHandler.Ping)
+		userGroup.GET("/refresh", userHandler.Refresh)
 		userGroup.POST("/login", userHandler.Login)
 		userGroup.POST("/register", userHandler.Register)
 	}

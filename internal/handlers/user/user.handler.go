@@ -6,10 +6,8 @@ import (
 	"github.com/fcraft/open-chat/internal/shared/constant"
 	"github.com/fcraft/open-chat/internal/shared/entity"
 	"github.com/fcraft/open-chat/internal/shared/util"
+	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"os"
-	"time"
 )
 
 type Handler struct {
@@ -42,29 +40,55 @@ func (h *Handler) Ping(c *gin.Context) {
 	}
 }
 
-func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
-	// 1. 创建 Claims
-	claims := entity.UserClaims{
-		ID: user.ID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 过期时间
-			IssuedAt:  jwt.NewNumericDate(time.Now()),                     // 签发时间
-			NotBefore: jwt.NewNumericDate(time.Now()),                     // 生效时间
-			Issuer:    "open-chat",                                        // 签发者
-			Subject:   "user-auth",                                        // 主题
-		},
+// Refresh 使用 auth_token 和 refresh_token 刷新登录态
+//
+//	@Summary		刷新登录态
+//	@Description	刷新登录态
+//	@Tags			User
+//	@Param			X-Refresh-Token	header		string	true	"刷新用 Token"
+//	@Success		200				{string}	string	"nothing"
+//	@Router			/user/refresh [get]
+func (h *Handler) Refresh(c *gin.Context) {
+	// 1. 验证 auth_token 是否存在、是否真的坏了
+	authToken := auth_utils.ValidateAuthToken(c)
+	if authToken == nil || authToken.Valid {
+		return
+	}
+	authClaims, ok := authToken.Claims.(*entity.UserClaims)
+	if !ok {
+		return
 	}
 
-	// 2. 签发 Token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET")))
+	// 2. 验证 auth_token 和 refresh_token 是否匹配
+	refreshToken := auth_utils.ValidateRefreshToken(c, authClaims)
+	if refreshToken == nil {
+		return
+	}
+	refreshClaims, ok := authToken.Claims.(*entity.UserClaims)
+	if !ok {
+		return
+	}
+
+	// 3. 确认用户存在并重新签发
+	if user, err := h.Store.GetUser(refreshClaims.ID); err == nil {
+		signJwtTokenIntoHeader(c, user)
+	}
+}
+
+func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
+	authToken, err := auth_utils.SignAuthTokenForUser(user.ID)
 	if err != nil {
 		util.HttpErrorResponse(c, constant.ErrInternal)
 		return
 	}
-
-	// 3. 将 token 写入 header
-	c.Writer.Header().Set("OC-Auth-Token", tokenString)
+	refreshToken, err := auth_utils.SignRefreshTokenForUser(user.ID)
+	if err != nil {
+		util.HttpErrorResponse(c, constant.ErrInternal)
+		return
+	}
+	// 将 token 写入 header
+	c.Writer.Header().Set("OC-Auth-Token", authToken)
+	c.Writer.Header().Set("OC-Refresh-Token", refreshToken)
 }
 
 // Login
