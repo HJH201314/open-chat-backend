@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"github.com/fcraft/open-chat/internal/entities"
 	"github.com/fcraft/open-chat/internal/models"
 	"gorm.io/gorm"
 )
@@ -8,6 +9,25 @@ import (
 // CreateSession 创建会话
 func (s *GormStore) CreateSession(session *models.Session) error {
 	return s.Db.Create(session).Error
+}
+
+// GetSession 获取会话
+func (s *GormStore) GetSession(sessionId string) (*models.Session, error) {
+	var session models.Session
+	return &session, s.Db.Where(
+		"id = ?",
+		sessionId,
+	).First(&session).Error
+}
+
+// FindSessionWithUser 联合 sessionId 和 userId 获取会话
+func (s *GormStore) FindSessionWithUser(sessionId string, userId uint64) (*models.Session, error) {
+	var session models.Session
+	return &session, s.Db.Where(
+		"id = ? AND user_id = ?",
+		sessionId,
+		userId,
+	).First(&session).Error
 }
 
 // DeleteSession 删除会话
@@ -57,4 +77,32 @@ func (s *GormStore) GetLatestMessages(sessionID string, limit int) ([]models.Mes
 		Limit(limit).
 		Find(&messages).Error
 	return messages, err
+}
+
+// GetMessagesByPage 分页获取消息
+func (s *GormStore) GetMessagesByPage(sessionID string, page int, pageSize int, sort entities.SortParam) ([]models.Message, *int, error) {
+	var messages []models.Message
+	offset := (page - 1) * pageSize
+	// 多查询一条以判断是否存在下一页
+	limit := pageSize + 1
+
+	err := s.Db.Where("session_id = ?", sessionID).
+		Order(sort.WithDefault("id ASC", "id").SafeExpr([]string{})). // 保持与现有排序一致
+		Offset(offset).
+		Limit(limit).
+		Find(&messages).Error
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 分页逻辑处理
+	hasNext := len(messages) > pageSize
+	if hasNext {
+		messages = messages[:pageSize]
+		nextPage := page + 1
+		return messages, &nextPage, nil
+	}
+
+	return messages, nil, nil
 }

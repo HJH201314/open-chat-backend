@@ -1,12 +1,12 @@
 package user
 
 import (
+	"github.com/fcraft/open-chat/internal/constants"
+	"github.com/fcraft/open-chat/internal/entities"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/models"
-	"github.com/fcraft/open-chat/internal/shared/constant"
-	"github.com/fcraft/open-chat/internal/shared/entity"
-	"github.com/fcraft/open-chat/internal/shared/util"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
+	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,18 +25,18 @@ func NewUserHandler(h *handlers.BaseHandler) *Handler {
 //	@Tags			User
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[models.User]	"user is online"
-//	@Failure		404	{object}	entity.CommonResponse[any]			"user not found"
+//	@Success		200	{object}	entities.CommonResponse[models.User]	"user is online"
+//	@Failure		404	{object}	entities.CommonResponse[any]			"user not found"
 //	@Router			/user/ping [post]
 func (h *Handler) Ping(c *gin.Context) {
-	if userId := util.GetUserId(c); userId > 0 {
+	if userId := ctx_utils.GetUserId(c); userId > 0 {
 		if user, err := h.Store.GetUser(userId); err == nil {
-			util.NormalResponse(c, user)
+			ctx_utils.Success(c, user)
 		} else {
-			util.CustomErrorResponse(c, 404, "user not found")
+			ctx_utils.CustomError(c, 404, "user not found")
 		}
 	} else {
-		util.NormalResponse(c, "boom")
+		ctx_utils.Success(c, "boom")
 	}
 }
 
@@ -54,7 +54,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	if authToken == nil || authToken.Valid {
 		return
 	}
-	authClaims, ok := authToken.Claims.(*entity.UserClaims)
+	authClaims, ok := authToken.Claims.(*entities.UserClaims)
 	if !ok {
 		return
 	}
@@ -64,7 +64,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	if refreshToken == nil {
 		return
 	}
-	refreshClaims, ok := authToken.Claims.(*entity.UserClaims)
+	refreshClaims, ok := authToken.Claims.(*entities.UserClaims)
 	if !ok {
 		return
 	}
@@ -78,12 +78,12 @@ func (h *Handler) Refresh(c *gin.Context) {
 func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
 	authToken, err := auth_utils.SignAuthTokenForUser(user.ID)
 	if err != nil {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	refreshToken, err := auth_utils.SignRefreshTokenForUser(user.ID)
 	if err != nil {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	// 将 token 写入 header
@@ -99,7 +99,7 @@ func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			req	body		user.Login.loginRequest				true	"登录请求"
-//	@Success		200	{object}	entity.CommonResponse[models.User]	"login successfully"
+//	@Success		200	{object}	entities.CommonResponse[models.User]	"login successfully"
 //	@Router			/user/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	type loginRequest struct {
@@ -108,7 +108,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 	var req loginRequest
 	if err := c.BindJSON(&req); err != nil {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	var userRes models.User
@@ -117,12 +117,12 @@ func (h *Handler) Login(c *gin.Context) {
 		req.Username,
 		req.Password,
 	).First(&userRes).Error; err != nil {
-		util.CustomErrorResponse(c, 401, "username or password is incorrect")
+		ctx_utils.CustomError(c, 401, "username or password is incorrect")
 		return
 	}
 
 	signJwtTokenIntoHeader(c, &userRes)
-	util.NormalResponse(c, userRes)
+	ctx_utils.Success(c, userRes)
 }
 
 // Register
@@ -133,7 +133,7 @@ func (h *Handler) Login(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			req	body		user.Register.registerRequest	true	"注册请求"
-//	@Success		200	{object}	entity.CommonResponse[bool]		"register successfully"
+//	@Success		200	{object}	entities.CommonResponse[bool]		"register successfully"
 //	@Router			/user/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	type registerRequest struct {
@@ -142,12 +142,12 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	var req registerRequest
 	if err := c.BindJSON(&req); err != nil {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	var userRes models.User
 	if err := h.Store.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
-		util.NormalResponse(c, false)
+		ctx_utils.Success(c, false)
 		return
 	}
 	user := models.User{
@@ -155,9 +155,9 @@ func (h *Handler) Register(c *gin.Context) {
 		Password: req.Password,
 	}
 	if err := h.Store.CreateUser(&user); err != nil {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 
-	util.NormalResponse(c, true)
+	ctx_utils.Success(c, true)
 }

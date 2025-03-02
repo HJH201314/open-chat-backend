@@ -2,19 +2,23 @@ package chat
 
 import (
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/fcraft/open-chat/internal/constants"
+	"github.com/fcraft/open-chat/internal/entities"
+	_ "github.com/fcraft/open-chat/internal/entities"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/models"
-	"github.com/fcraft/open-chat/internal/shared/constant"
-	"github.com/fcraft/open-chat/internal/shared/entity"
-	_ "github.com/fcraft/open-chat/internal/shared/entity"
-	"github.com/fcraft/open-chat/internal/shared/util"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
+	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+type PathParamSessionId struct {
+	SessionId string `uri:"session_id" binding:"required"`
+}
 
 type Handler struct {
 	*handlers.BaseHandler
@@ -31,18 +35,18 @@ func NewChatHandler(h *handlers.BaseHandler) *Handler {
 //	@Tags			Session
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[string]
+//	@Success		200	{object}	entities.CommonResponse[string]
 //	@Router			/chat/session/new [post]
 func (h *Handler) CreateSession(c *gin.Context) {
 	session := models.Session{
-		UserID:        util.GetUserId(c),
+		UserID:        ctx_utils.GetUserId(c),
 		EnableContext: true, // 默认开启上下文
 	}
 	if err := h.Store.CreateSession(&session); err != nil {
-		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create session")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create session")
 		return
 	}
-	util.NormalResponse(c, session.ID)
+	ctx_utils.Success(c, session.ID)
 }
 
 // DeleteSession
@@ -53,32 +57,71 @@ func (h *Handler) CreateSession(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			session_id	path		string	true	"会话 ID"
-//	@Success		200			{object}	entity.CommonResponse[bool]
+//	@Success		200			{object}	entities.CommonResponse[bool]
 //	@Router			/chat/session/del/{session_id} [post]
 func (h *Handler) DeleteSession(c *gin.Context) {
-	var uri struct {
-		SessionId string `uri:"session_id" binding:"required"`
-	}
+	var uri PathParamSessionId
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	// 验证用户对会话的所有权
-	var session models.Session
-	if err := h.Store.Db.Where(
-		"id = ? AND user_id = ?",
-		uri.SessionId,
-		util.GetUserId(c),
-	).First(&session).Error; err != nil {
-		util.HttpErrorResponse(c, constant.ErrUnauthorized)
+	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	// 执行删除操作
 	if err := h.Store.DeleteSession(uri.SessionId); err != nil {
-		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to delete session")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete session")
 		return
 	}
-	util.NormalResponse(c, true)
+	ctx_utils.Success(c, true)
+}
+
+// GetMessages
+//
+//	@Summary		获取消息
+//	@Description	获取消息
+//	@Tags			Message
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string												true	"会话 ID"
+//	@Param			req			query		entities.ParamPagingSort							true	"分页参数"
+//	@Success		200			{object}	entities.CommonResponse[chat.GetMessages.resType]	"返回数据"
+//	@Router			/chat/message/list/{session_id} [get]
+func (h *Handler) GetMessages(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	var req entities.ParamPagingSort
+	if err := c.BindQuery(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	// 验证用户对会话的所有权
+	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	// 查询消息
+	size := req.GetPageSize(20, 50)
+	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.PageNum, size, req.SortParam)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	type resType struct {
+		Messages []models.Message `json:"messages"`
+		NextPage *int             `json:"next_page"`
+	}
+	ctx_utils.Success(
+		c, &resType{
+			Messages: messages,
+			NextPage: nextPage,
+		},
+	)
 }
 
 // GetModels
@@ -88,13 +131,13 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[[]models.ModelCache]
+//	@Success		200	{object}	entities.CommonResponse[[]models.ModelCache]
 //	@Router			/chat/config/models [get]
 func (h *Handler) GetModels(c *gin.Context) {
 	// 从缓存中查询
 	cacheModels, err := h.Redis.GetCachedModels()
 	if err != nil {
-		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to get models")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to get models")
 		return
 	}
 	// 将 config 隐藏
@@ -103,7 +146,7 @@ func (h *Handler) GetModels(c *gin.Context) {
 			item.Config = models.ModelConfig{}
 		},
 	)
-	util.NormalResponse(c, cacheModels)
+	ctx_utils.Success(c, cacheModels)
 }
 
 // CompletionStream
@@ -117,10 +160,8 @@ func (h *Handler) GetModels(c *gin.Context) {
 //	@Param			request		body	chat.CompletionStream.userInput	true	"用户输入及参数"
 //	@Router			/chat/completion/stream/{session_id} [post]
 func (h *Handler) CompletionStream(c *gin.Context) {
-	// 从 query 和 body 中获取用户输入
-	var uri struct {
-		SessionId string `uri:"session_id" binding:"required"`
-	}
+	// 从 path 和 body 中获取用户输入
+	var uri PathParamSessionId
 	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
 		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
@@ -130,38 +171,38 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	var req userInput
 	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	if err := c.ShouldBindJSON(&req); err != nil || req.Question == "" {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 
 	// 读取模型信息
 	modelInfo := h.Redis.FindCachedModelByName(req.Provider, req.ModelName)
 	if modelInfo == nil {
-		util.HttpErrorResponse(c, constant.ErrBadRequest)
+		ctx_utils.CustomError(c, 404, "module not found")
 		return
 	}
 	modelConfig := modelInfo.Config
 	// 获取供应商 base_url 和 api_key
 	providerInfo := h.Redis.FindProviderByName(req.Provider)
 	if providerInfo == nil {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	providerBaseUrl := providerInfo.BaseURL
 	providerKey, idx := slice.Random(providerInfo.APIKeys)
 	if idx == -1 {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 
 	// 获取会话配置
 	var session models.Session
 	if err := h.Store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
-		util.CustomErrorResponse(c, http.StatusNotFound, "session not found")
+		ctx_utils.CustomError(c, http.StatusNotFound, "session not found")
 		return
 	}
 
@@ -174,7 +215,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	if enableContext {
 		messages, err := h.Store.GetLatestMessages(session.ID, 50)
 		if err != nil {
-			util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to load context")
+			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to load context")
 			return
 		}
 		contextMessages = messages
@@ -211,7 +252,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		{SessionID: session.ID, Role: "assistant", ModelID: modelInfo.ID},
 	}
 	if err := h.Store.CreateMessages(&messages); err != nil {
-		util.CustomErrorResponse(c, http.StatusInternalServerError, "failed to create messages")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create messages")
 		return
 	}
 	// 执行结束后，根据是否有回答进行操作
@@ -245,7 +286,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		util.HttpErrorResponse(c, constant.ErrInternal)
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	sendStreamMessageEvent(
@@ -277,7 +318,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			case "error":
 				// 错误信息（记录日志并终止流）
 				c.SSEvent(
-					"error", (&entity.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
+					"error", (&entities.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
 				)
 				return false
 			case "done":

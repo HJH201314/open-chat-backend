@@ -83,6 +83,11 @@ func processStreaming(ctx context.Context, client *openai.Client, messages []Mes
 			Model:       openai.F(opts.Model),
 			Temperature: openai.F(opts.Temperature),
 			MaxTokens:   openai.F(opts.MaxTokens),
+			StreamOptions: openai.F(
+				openai.ChatCompletionStreamOptionsParam{
+					IncludeUsage: openai.F(true),
+				},
+			),
 		},
 	)
 	if stream.Err() != nil {
@@ -118,6 +123,9 @@ streamingLoop:
 			acc.AddChunk(chunk)
 
 			// 额外解析含有 reasoning_content 的结构
+			if len(chunk.Choices) == 0 {
+				continue
+			}
 			choiceDelta := &chunk.Choices[0].Delta
 			// 发送内容事件
 			if reasoningContent := choiceDelta.JSON.ExtraFields["reasoning_content"].Raw(); reasoningContent != "" {

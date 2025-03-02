@@ -1,7 +1,7 @@
-package entity
+package entities
 
 import (
-	"github.com/fcraft/open-chat/internal/shared/constant"
+	"github.com/fcraft/open-chat/internal/constants"
 )
 
 type CommonResponse[T any] struct {
@@ -26,24 +26,11 @@ func (c *CommonResponse[T]) WithData(data T) *CommonResponse[T] {
 }
 
 func (c *CommonResponse[T]) WithError(err error) *CommonResponse[T] {
-	if status, ok := constant.ErrStatusMap[err]; ok {
+	if status, ok := constants.ErrStatusMap[err]; ok {
 		c.Code = status
 	}
 	c.Msg = err.Error()
 	return c
-}
-
-// ResponseWithData 创建一个 CommonResponse
-func ResponseWithData[T any](code int, msg string, data T) *CommonResponse[T] {
-	return &CommonResponse[T]{
-		Code: code,
-		Msg:  msg,
-		Data: data,
-	}
-}
-
-func Response(code int, msg string) *CommonResponse[any] {
-	return ResponseWithData[any](code, msg, nil)
 }
 
 var (

@@ -1,10 +1,10 @@
 package middlewares
 
 import (
-	"github.com/fcraft/open-chat/internal/shared/constant"
-	"github.com/fcraft/open-chat/internal/shared/entity"
-	"github.com/fcraft/open-chat/internal/shared/util"
+	"github.com/fcraft/open-chat/internal/constants"
+	"github.com/fcraft/open-chat/internal/entities"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
+	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 	"slices"
 	"strings"
@@ -28,13 +28,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 解析 auth_token
 		token := auth_utils.ValidateAuthToken(c)
 		if token == nil || !token.Valid {
-			util.HttpErrorResponse(c, constant.ErrUnauthorized)
+			ctx_utils.HttpError(c, constants.ErrUnauthorized)
 			return
 		}
 		// 转换 claims
-		claims, ok := token.Claims.(*entity.UserClaims)
+		claims, ok := token.Claims.(*entities.UserClaims)
 		if !ok {
-			util.HttpErrorResponse(c, constant.ErrUnauthorized)
+			ctx_utils.HttpError(c, constants.ErrUnauthorized)
 			return
 		}
 
