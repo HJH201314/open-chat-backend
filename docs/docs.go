@@ -66,7 +66,55 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-array_models_ModelCache"
+                            "$ref": "#/definitions/entities.CommonResponse-array_models_ModelCache"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/message/list/{session_id}": {
+            "get": {
+                "description": "获取消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Message"
+                ],
+                "summary": "获取消息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entities.CommonResponse-chat_GetMessages_resType"
                         }
                     }
                 }
@@ -98,7 +146,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                            "$ref": "#/definitions/entities.CommonResponse-bool"
                         }
                     }
                 }
@@ -121,7 +169,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-string"
+                            "$ref": "#/definitions/entities.CommonResponse-string"
                         }
                     }
                 }
@@ -155,7 +203,7 @@ const docTemplate = `{
                     "200": {
                         "description": "成功创建的 API 提供商",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-models_Provider"
+                            "$ref": "#/definitions/entities.CommonResponse-models_Provider"
                         }
                     }
                 }
@@ -187,7 +235,7 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功与否",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                            "$ref": "#/definitions/entities.CommonResponse-bool"
                         }
                     }
                 }
@@ -210,7 +258,7 @@ const docTemplate = `{
                     "200": {
                         "description": "API 提供商列表",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-array_models_Provider"
+                            "$ref": "#/definitions/entities.CommonResponse-array_models_Provider"
                         }
                     }
                 }
@@ -244,7 +292,7 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功与否",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                            "$ref": "#/definitions/entities.CommonResponse-bool"
                         }
                     }
                 }
@@ -276,7 +324,7 @@ const docTemplate = `{
                     "200": {
                         "description": "API 提供商",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-models_Provider"
+                            "$ref": "#/definitions/entities.CommonResponse-models_Provider"
                         }
                     }
                 }
@@ -310,7 +358,7 @@ const docTemplate = `{
                     "200": {
                         "description": "login successfully",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-models_User"
+                            "$ref": "#/definitions/entities.CommonResponse-models_User"
                         }
                     }
                 }
@@ -333,13 +381,13 @@ const docTemplate = `{
                     "200": {
                         "description": "user is online",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-models_User"
+                            "$ref": "#/definitions/entities.CommonResponse-models_User"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-any"
+                            "$ref": "#/definitions/entities.CommonResponse-any"
                         }
                     }
                 }
@@ -399,7 +447,7 @@ const docTemplate = `{
                     "200": {
                         "description": "register successfully",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                            "$ref": "#/definitions/entities.CommonResponse-bool"
                         }
                     }
                 }
@@ -435,7 +483,21 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-any": {
+        "chat.GetMessages.resType": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.CommonResponse-any": {
             "type": "object",
             "properties": {
                 "code": {
@@ -451,7 +513,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-array_models_ModelCache": {
+        "entities.CommonResponse-array_models_ModelCache": {
             "type": "object",
             "properties": {
                 "code": {
@@ -471,7 +533,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-array_models_Provider": {
+        "entities.CommonResponse-array_models_Provider": {
             "type": "object",
             "properties": {
                 "code": {
@@ -491,7 +553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-bool": {
+        "entities.CommonResponse-bool": {
             "type": "object",
             "properties": {
                 "code": {
@@ -508,7 +570,28 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-models_Provider": {
+        "entities.CommonResponse-chat_GetMessages_resType": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/chat.GetMessages.resType"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entities.CommonResponse-models_Provider": {
             "type": "object",
             "properties": {
                 "code": {
@@ -529,7 +612,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-models_User": {
+        "entities.CommonResponse-models_User": {
             "type": "object",
             "properties": {
                 "code": {
@@ -550,7 +633,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-string": {
+        "entities.CommonResponse-string": {
             "type": "object",
             "properties": {
                 "code": {
@@ -583,6 +666,31 @@ const docTemplate = `{
                 "provider_id": {
                     "description": "外键，指向 Provider",
                     "type": "integer"
+                }
+            }
+        },
+        "models.Message": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "model_id": {
+                    "description": "回复所使用的模型",
+                    "type": "integer"
+                },
+                "role": {
+                    "description": "user/assistant/system",
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
                 }
             }
         },
