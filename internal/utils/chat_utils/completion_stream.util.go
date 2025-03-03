@@ -102,6 +102,7 @@ func processStreaming(ctx context.Context, client *openai.Client, messages []Mes
 	}(stream)
 
 	acc := openai.ChatCompletionAccumulator{}
+	accReasoningContent := ""
 
 	// 处理流式响应
 streamingLoop:
@@ -131,6 +132,7 @@ streamingLoop:
 			if reasoningContent := choiceDelta.JSON.ExtraFields["reasoning_content"].Raw(); reasoningContent != "" {
 				reasoningContent, _ = strings.CutPrefix(reasoningContent, "\"")
 				reasoningContent, _ = strings.CutSuffix(reasoningContent, "\"")
+				accReasoningContent += reasoningContent
 				eventChan <- StreamEvent{
 					Type:    "reasoning_content",
 					Content: reasoningContent,
@@ -147,7 +149,8 @@ streamingLoop:
 	// 发送完成事件
 	eventChan <- StreamEvent{
 		Type: "done", Metadata: DoneResponse{
-			Content: acc.Choices[0].Message.Content,
+			Content:          acc.Choices[0].Message.Content,
+			ReasoningContent: accReasoningContent,
 			Usage: DoneResponseUsage{
 				PromptTokens:     acc.Usage.PromptTokens,
 				CompletionTokens: acc.Usage.CompletionTokens,
@@ -220,8 +223,9 @@ type CompletionModelConfig struct {
 
 // DoneResponse 结果响应
 type DoneResponse struct {
-	Content string            `json:"content"`
-	Usage   DoneResponseUsage `json:"usage"`
+	Content          string            `json:"content"`
+	ReasoningContent string            `json:"reasoning_content"`
+	Usage            DoneResponseUsage `json:"usage"`
 }
 type DoneResponseUsage struct {
 	PromptTokens     int64 `json:"prompt_tokens"`

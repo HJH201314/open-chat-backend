@@ -685,6 +685,9 @@ const docTemplate = `{
                     "description": "回复所使用的模型",
                     "type": "integer"
                 },
+                "reasoning_content": {
+                    "type": "string"
+                },
                 "role": {
                     "description": "user/assistant/system",
                     "type": "string"

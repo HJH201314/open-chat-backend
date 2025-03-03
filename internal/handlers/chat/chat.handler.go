@@ -257,11 +257,13 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	// 执行结束后，根据是否有回答进行操作
 	var fullResponseContent string
+	var fullReasoningContent string
 	defer func() {
 		if fullResponseContent != "" {
 			// 完成响应，记录消息
 			messages[0].Content = req.Question
 			messages[1].Content = fullResponseContent
+			messages[1].ReasoningContent = fullReasoningContent
 			if err := h.Store.SaveMessages(&messages); err != nil {
 				// do nothing
 			}
@@ -327,6 +329,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 				resp, ok := event.Metadata.(chat_utils.DoneResponse)
 				if ok {
 					fullResponseContent = resp.Content
+					fullReasoningContent = resp.ReasoningContent
 				}
 				// 结束标记
 				c.SSEvent("done", "[DONE]")
