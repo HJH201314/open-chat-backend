@@ -19,16 +19,7 @@ definitions:
     - provider_name
     - question
     type: object
-  chat.GetMessages.resType:
-    properties:
-      messages:
-        items:
-          $ref: '#/definitions/models.Message'
-        type: array
-      next_page:
-        type: integer
-    type: object
-  entities.CommonResponse-any:
+  entity.CommonResponse-any:
     properties:
       code:
         description: 代码
@@ -39,7 +30,7 @@ definitions:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-array_models_ModelCache:
+  entity.CommonResponse-array_schema_ModelCache:
     properties:
       code:
         description: 代码
@@ -47,13 +38,13 @@ definitions:
       data:
         description: 数据
         items:
-          $ref: '#/definitions/models.ModelCache'
+          $ref: '#/definitions/schema.ModelCache'
         type: array
       msg:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-array_models_Provider:
+  entity.CommonResponse-array_schema_Provider:
     properties:
       code:
         description: 代码
@@ -61,13 +52,13 @@ definitions:
       data:
         description: 数据
         items:
-          $ref: '#/definitions/models.Provider'
+          $ref: '#/definitions/schema.Provider'
         type: array
       msg:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-bool:
+  entity.CommonResponse-bool:
     properties:
       code:
         description: 代码
@@ -79,46 +70,59 @@ definitions:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-chat_GetMessages_resType:
+  entity.CommonResponse-entity_PagingResponse-schema_Message:
     properties:
       code:
         description: 代码
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/chat.GetMessages.resType'
+          - $ref: '#/definitions/entity.PagingResponse-schema_Message'
         description: 数据
       msg:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-models_Provider:
+  entity.CommonResponse-entity_PagingResponse-schema_Session:
     properties:
       code:
         description: 代码
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/models.Provider'
+          - $ref: '#/definitions/entity.PagingResponse-schema_Session'
         description: 数据
       msg:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-models_User:
+  entity.CommonResponse-schema_Provider:
     properties:
       code:
         description: 代码
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/models.User'
+          - $ref: '#/definitions/schema.Provider'
         description: 数据
       msg:
         description: 消息
         type: string
     type: object
-  entities.CommonResponse-string:
+  entity.CommonResponse-schema_User:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/schema.User'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-string:
     properties:
       code:
         description: 代码
@@ -130,7 +134,25 @@ definitions:
         description: 消息
         type: string
     type: object
-  models.APIKey:
+  entity.PagingResponse-schema_Message:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Message'
+        type: array
+      next_page:
+        type: integer
+    type: object
+  entity.PagingResponse-schema_Session:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Session'
+        type: array
+      next_page:
+        type: integer
+    type: object
+  schema.APIKey:
     properties:
       created_at:
         type: string
@@ -143,7 +165,7 @@ definitions:
         description: 外键，指向 Provider
         type: integer
     type: object
-  models.Message:
+  schema.Message:
     properties:
       content:
         type: string
@@ -162,11 +184,11 @@ definitions:
       session_id:
         type: string
     type: object
-  models.Model:
+  schema.Model:
     properties:
       config:
         allOf:
-        - $ref: '#/definitions/models.ModelConfig'
+          - $ref: '#/definitions/schema.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -187,11 +209,11 @@ definitions:
       updated_at:
         type: string
     type: object
-  models.ModelCache:
+  schema.ModelCache:
     properties:
       config:
         allOf:
-        - $ref: '#/definitions/models.ModelConfig'
+          - $ref: '#/definitions/schema.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -218,7 +240,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  models.ModelConfig:
+  schema.ModelConfig:
     properties:
       allow_system_prompt:
         description: 是否允许用户自行修改系统提示
@@ -238,7 +260,16 @@ definitions:
       top_p:
         type: number
     type: object
-  models.Permission:
+  schema.ModelParams:
+    properties:
+      max_tokens:
+        type: integer
+      schema:
+        type: string
+      temperature:
+        type: number
+    type: object
+  schema.Permission:
     properties:
       created_at:
         type: string
@@ -256,12 +287,12 @@ definitions:
       updated_at:
         type: string
     type: object
-  models.Provider:
+  schema.Provider:
     properties:
       api_keys:
         description: 一对多关系，与 APIKey 模型关联
         items:
-          $ref: '#/definitions/models.APIKey'
+          $ref: '#/definitions/schema.APIKey'
         type: array
       base_url:
         description: API 的基本 URL
@@ -276,18 +307,18 @@ definitions:
         type: string
       id:
         type: integer
-      models:
-        description: 一对多关系，与 Model 模型关联
-        items:
-          $ref: '#/definitions/models.Model'
-        type: array
       name:
         description: 提供商名称
         type: string
+      schema:
+        description: 一对多关系，与 Model 模型关联
+        items:
+          $ref: '#/definitions/schema.Model'
+        type: array
       updated_at:
         type: string
     type: object
-  models.Role:
+  schema.Role:
     properties:
       created_at:
         type: string
@@ -302,12 +333,30 @@ definitions:
       permissions:
         description: 多对多关联
         items:
-          $ref: '#/definitions/models.Permission'
+          $ref: '#/definitions/schema.Permission'
         type: array
       updated_at:
         type: string
     type: object
-  models.User:
+  schema.Session:
+    properties:
+      created_at:
+        type: string
+      enable_context:
+        description: 上下文开关
+        type: boolean
+      id:
+        type: string
+      last_active:
+        type: string
+      model_params:
+        allOf:
+          - $ref: '#/definitions/schema.ModelParams'
+        description: 模型参数
+      user_id:
+        type: integer
+    type: object
+  schema.User:
     properties:
       created_at:
         type: string
@@ -316,7 +365,7 @@ definitions:
       roles:
         description: 用户与角色之间的多对多关系
         items:
-          $ref: '#/definitions/models.Role'
+          $ref: '#/definitions/schema.Role'
         type: array
       updated_at:
         type: string
@@ -369,7 +418,7 @@ paths:
       summary: 流式输出聊天
       tags:
       - Chat
-  /chat/config/models:
+  /chat/config/schema:
     get:
       consumes:
       - application/json
@@ -380,7 +429,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.CommonResponse-array_models_ModelCache'
+            $ref: '#/definitions/entity.CommonResponse-array_schema_ModelCache'
       summary: 获取所有模型
       tags:
       - config
@@ -411,7 +460,7 @@ paths:
         "200":
           description: 返回数据
           schema:
-            $ref: '#/definitions/entities.CommonResponse-chat_GetMessages_resType'
+            $ref: '#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Message'
       summary: 获取消息
       tags:
       - Message
@@ -432,10 +481,36 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.CommonResponse-bool'
+            $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除会话
       tags:
       - Session
+  /chat/session/list:
+    get:
+      consumes:
+        - application/json
+      description: 获取会话列表
+      parameters:
+        - in: query
+          name: page_num
+          required: true
+          type: integer
+        - in: query
+          name: page_size
+          type: integer
+        - in: query
+          name: sort_expr
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Session'
+      summary: 获取会话列表
+      tags:
+        - Session
   /chat/session/new:
     post:
       consumes:
@@ -447,7 +522,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.CommonResponse-string'
+            $ref: '#/definitions/entity.CommonResponse-string'
       summary: 创建会话
       tags:
       - Session
@@ -468,7 +543,7 @@ paths:
         "200":
           description: API 提供商
           schema:
-            $ref: '#/definitions/entities.CommonResponse-models_Provider'
+            $ref: '#/definitions/entity.CommonResponse-schema_Provider'
       summary: 获取 API 提供商
       tags:
       - Provider
@@ -483,14 +558,14 @@ paths:
         name: provider
         required: true
         schema:
-          $ref: '#/definitions/models.Provider'
+          $ref: '#/definitions/schema.Provider'
       produces:
       - application/json
       responses:
         "200":
           description: 成功创建的 API 提供商
           schema:
-            $ref: '#/definitions/entities.CommonResponse-models_Provider'
+            $ref: '#/definitions/entity.CommonResponse-schema_Provider'
       summary: 创建 API 提供商
       tags:
       - Provider
@@ -511,7 +586,7 @@ paths:
         "200":
           description: 删除成功与否
           schema:
-            $ref: '#/definitions/entities.CommonResponse-bool'
+            $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除 API 提供商
       tags:
       - Provider
@@ -526,7 +601,7 @@ paths:
         "200":
           description: API 提供商列表
           schema:
-            $ref: '#/definitions/entities.CommonResponse-array_models_Provider'
+            $ref: '#/definitions/entity.CommonResponse-array_schema_Provider'
       summary: 批量获取 API 提供商
       tags:
       - Provider
@@ -541,14 +616,14 @@ paths:
         name: provider
         required: true
         schema:
-          $ref: '#/definitions/models.Provider'
+          $ref: '#/definitions/schema.Provider'
       produces:
       - application/json
       responses:
         "200":
           description: 更新成功与否
           schema:
-            $ref: '#/definitions/entities.CommonResponse-bool'
+            $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新 API 提供商
       tags:
       - Provider
@@ -570,7 +645,7 @@ paths:
         "200":
           description: login successfully
           schema:
-            $ref: '#/definitions/entities.CommonResponse-models_User'
+            $ref: '#/definitions/entity.CommonResponse-schema_User'
       summary: 用户登录
       tags:
       - User
@@ -585,11 +660,11 @@ paths:
         "200":
           description: user is online
           schema:
-            $ref: '#/definitions/entities.CommonResponse-models_User'
+            $ref: '#/definitions/entity.CommonResponse-schema_User'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/entities.CommonResponse-any'
+            $ref: '#/definitions/entity.CommonResponse-any'
       summary: 检测客户端登录态
       tags:
       - User
@@ -628,7 +703,7 @@ paths:
         "200":
           description: register successfully
           schema:
-            $ref: '#/definitions/entities.CommonResponse-bool'
+            $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 用户注册
       tags:
       - User

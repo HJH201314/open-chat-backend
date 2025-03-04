@@ -49,7 +49,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/chat/config/models": {
+        "/chat/config/schema": {
             "get": {
                 "description": "获取所有模型",
                 "consumes": [
@@ -66,7 +66,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-array_models_ModelCache"
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_ModelCache"
                         }
                     }
                 }
@@ -114,7 +114,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-chat_GetMessages_resType"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Message"
                         }
                     }
                 }
@@ -146,7 +146,48 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-bool"
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/session/list": {
+            "get": {
+                "description": "获取会话列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "获取会话列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Session"
                         }
                     }
                 }
@@ -169,7 +210,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-string"
+                            "$ref": "#/definitions/entity.CommonResponse-string"
                         }
                     }
                 }
@@ -195,7 +236,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Provider"
+                            "$ref": "#/definitions/schema.Provider"
                         }
                     }
                 ],
@@ -203,7 +244,7 @@ const docTemplate = `{
                     "200": {
                         "description": "成功创建的 API 提供商",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-models_Provider"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Provider"
                         }
                     }
                 }
@@ -235,7 +276,7 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功与否",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-bool"
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -258,7 +299,7 @@ const docTemplate = `{
                     "200": {
                         "description": "API 提供商列表",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-array_models_Provider"
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_Provider"
                         }
                     }
                 }
@@ -284,7 +325,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Provider"
+                            "$ref": "#/definitions/schema.Provider"
                         }
                     }
                 ],
@@ -292,7 +333,7 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功与否",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-bool"
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -324,7 +365,7 @@ const docTemplate = `{
                     "200": {
                         "description": "API 提供商",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-models_Provider"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Provider"
                         }
                     }
                 }
@@ -358,7 +399,7 @@ const docTemplate = `{
                     "200": {
                         "description": "login successfully",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-models_User"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
                         }
                     }
                 }
@@ -381,13 +422,13 @@ const docTemplate = `{
                     "200": {
                         "description": "user is online",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-models_User"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-any"
+                            "$ref": "#/definitions/entity.CommonResponse-any"
                         }
                     }
                 }
@@ -447,7 +488,7 @@ const docTemplate = `{
                     "200": {
                         "description": "register successfully",
                         "schema": {
-                            "$ref": "#/definitions/entities.CommonResponse-bool"
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -483,21 +524,7 @@ const docTemplate = `{
                 }
             }
         },
-        "chat.GetMessages.resType": {
-            "type": "object",
-            "properties": {
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Message"
-                    }
-                },
-                "next_page": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.CommonResponse-any": {
+        "entity.CommonResponse-any": {
             "type": "object",
             "properties": {
                 "code": {
@@ -513,7 +540,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-array_models_ModelCache": {
+        "entity.CommonResponse-array_schema_ModelCache": {
             "type": "object",
             "properties": {
                 "code": {
@@ -524,7 +551,7 @@ const docTemplate = `{
                     "description": "数据",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ModelCache"
+                        "$ref": "#/definitions/schema.ModelCache"
                     }
                 },
                 "msg": {
@@ -533,7 +560,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-array_models_Provider": {
+        "entity.CommonResponse-array_schema_Provider": {
             "type": "object",
             "properties": {
                 "code": {
@@ -544,7 +571,7 @@ const docTemplate = `{
                     "description": "数据",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Provider"
+                        "$ref": "#/definitions/schema.Provider"
                     }
                 },
                 "msg": {
@@ -553,7 +580,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-bool": {
+        "entity.CommonResponse-bool": {
             "type": "object",
             "properties": {
                 "code": {
@@ -570,7 +597,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-chat_GetMessages_resType": {
+        "entity.CommonResponse-entity_PagingResponse-schema_Message": {
             "type": "object",
             "properties": {
                 "code": {
@@ -581,7 +608,7 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/chat.GetMessages.resType"
+                            "$ref": "#/definitions/entity.PagingResponse-schema_Message"
                         }
                     ]
                 },
@@ -591,7 +618,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-models_Provider": {
+        "entity.CommonResponse-entity_PagingResponse-schema_Session": {
             "type": "object",
             "properties": {
                 "code": {
@@ -602,7 +629,7 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Provider"
+                            "$ref": "#/definitions/entity.PagingResponse-schema_Session"
                         }
                     ]
                 },
@@ -612,7 +639,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-models_User": {
+        "entity.CommonResponse-schema_Provider": {
             "type": "object",
             "properties": {
                 "code": {
@@ -623,7 +650,7 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/schema.Provider"
                         }
                     ]
                 },
@@ -633,7 +660,28 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CommonResponse-string": {
+        "entity.CommonResponse-schema_User": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.User"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-string": {
             "type": "object",
             "properties": {
                 "code": {
@@ -650,7 +698,35 @@ const docTemplate = `{
                 }
             }
         },
-        "models.APIKey": {
+        "entity.PagingResponse-schema_Message": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Message"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PagingResponse-schema_Session": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Session"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.APIKey": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -669,7 +745,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Message": {
+        "schema.Message": {
             "type": "object",
             "properties": {
                 "content": {
@@ -697,14 +773,14 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Model": {
+        "schema.Model": {
             "type": "object",
             "properties": {
                 "config": {
                     "description": "使用 JSON 储存配置",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.ModelConfig"
+                            "$ref": "#/definitions/schema.ModelConfig"
                         }
                     ]
                 },
@@ -735,14 +811,14 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ModelCache": {
+        "schema.ModelCache": {
             "type": "object",
             "properties": {
                 "config": {
                     "description": "使用 JSON 储存配置",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.ModelConfig"
+                            "$ref": "#/definitions/schema.ModelConfig"
                         }
                     ]
                 },
@@ -781,7 +857,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ModelConfig": {
+        "schema.ModelConfig": {
             "type": "object",
             "properties": {
                 "allow_system_prompt": {
@@ -810,7 +886,21 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Permission": {
+        "schema.ModelParams": {
+            "type": "object",
+            "properties": {
+                "max_tokens": {
+                    "type": "integer"
+                },
+                "schema": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "type": "number"
+                }
+            }
+        },
+        "schema.Permission": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -836,14 +926,14 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Provider": {
+        "schema.Provider": {
             "type": "object",
             "properties": {
                 "api_keys": {
                     "description": "一对多关系，与 APIKey 模型关联",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.APIKey"
+                        "$ref": "#/definitions/schema.APIKey"
                     }
                 },
                 "base_url": {
@@ -864,23 +954,23 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "models": {
-                    "description": "一对多关系，与 Model 模型关联",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Model"
-                    }
-                },
                 "name": {
                     "description": "提供商名称",
                     "type": "string"
+                },
+                "schema": {
+                    "description": "一对多关系，与 Model 模型关联",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Model"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "models.Role": {
+        "schema.Role": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -901,7 +991,7 @@ const docTemplate = `{
                     "description": "多对多关联",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Permission"
+                        "$ref": "#/definitions/schema.Permission"
                     }
                 },
                 "updated_at": {
@@ -909,7 +999,36 @@ const docTemplate = `{
                 }
             }
         },
-        "models.User": {
+        "schema.Session": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "enable_context": {
+                    "description": "上下文开关",
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_active": {
+                    "type": "string"
+                },
+                "model_params": {
+                    "description": "模型参数",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ModelParams"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -922,7 +1041,7 @@ const docTemplate = `{
                     "description": "用户与角色之间的多对多关系",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Role"
+                        "$ref": "#/definitions/schema.Role"
                     }
                 },
                 "updated_at": {

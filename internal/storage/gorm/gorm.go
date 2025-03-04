@@ -2,7 +2,7 @@ package gorm
 
 import (
 	"fmt"
-	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/schema"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -37,16 +37,17 @@ func NewGormStore() *GormStore {
 	}
 	// 自动迁移表结构
 	if err := db.AutoMigrate(
-		&models.Session{},
-		&models.Message{},
-		&models.User{},
-		&models.Role{},
-		&models.Permission{},
-		&models.RolePermission{},
-		&models.UserRole{},
-		&models.Provider{},
-		&models.APIKey{},
-		&models.Model{},
+		&schema.Session{},
+		&schema.Message{},
+		&schema.User{},
+		&schema.Role{},
+		&schema.Permission{},
+		&schema.RolePermission{},
+		&schema.UserRole{},
+		&schema.Provider{},
+		&schema.APIKey{},
+		&schema.Model{},
+		&schema.BotRole{},
 	); err != nil {
 		store.Logger.Fatal("failed to migrate database")
 	}

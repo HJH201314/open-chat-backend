@@ -2,9 +2,9 @@ package user
 
 import (
 	"github.com/fcraft/open-chat/internal/constants"
-	"github.com/fcraft/open-chat/internal/entities"
+	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/handlers"
-	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
@@ -25,8 +25,8 @@ func NewUserHandler(h *handlers.BaseHandler) *Handler {
 //	@Tags			User
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entities.CommonResponse[models.User]	"user is online"
-//	@Failure		404	{object}	entities.CommonResponse[any]			"user not found"
+//	@Success		200	{object}	entity.CommonResponse[schema.User]	"user is online"
+//	@Failure		404	{object}	entity.CommonResponse[any]			"user not found"
 //	@Router			/user/ping [post]
 func (h *Handler) Ping(c *gin.Context) {
 	if userId := ctx_utils.GetUserId(c); userId > 0 {
@@ -54,7 +54,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	if authToken == nil || authToken.Valid {
 		return
 	}
-	authClaims, ok := authToken.Claims.(*entities.UserClaims)
+	authClaims, ok := authToken.Claims.(*entity.UserClaims)
 	if !ok {
 		return
 	}
@@ -64,7 +64,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	if refreshToken == nil {
 		return
 	}
-	refreshClaims, ok := authToken.Claims.(*entities.UserClaims)
+	refreshClaims, ok := authToken.Claims.(*entity.UserClaims)
 	if !ok {
 		return
 	}
@@ -75,7 +75,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	}
 }
 
-func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
+func signJwtTokenIntoHeader(c *gin.Context, user *schema.User) {
 	authToken, err := auth_utils.SignAuthTokenForUser(user.ID)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
@@ -99,7 +99,7 @@ func signJwtTokenIntoHeader(c *gin.Context, user *models.User) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			req	body		user.Login.loginRequest				true	"登录请求"
-//	@Success		200	{object}	entities.CommonResponse[models.User]	"login successfully"
+//	@Success		200	{object}	entity.CommonResponse[schema.User]	"login successfully"
 //	@Router			/user/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	type loginRequest struct {
@@ -111,7 +111,7 @@ func (h *Handler) Login(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	var userRes models.User
+	var userRes schema.User
 	if err := h.Store.Db.Where(
 		"username = ? AND password = ?",
 		req.Username,
@@ -133,7 +133,7 @@ func (h *Handler) Login(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			req	body		user.Register.registerRequest	true	"注册请求"
-//	@Success		200	{object}	entities.CommonResponse[bool]		"register successfully"
+//	@Success		200	{object}	entity.CommonResponse[bool]		"register successfully"
 //	@Router			/user/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	type registerRequest struct {
@@ -145,12 +145,12 @@ func (h *Handler) Register(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	var userRes models.User
+	var userRes schema.User
 	if err := h.Store.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
 		ctx_utils.Success(c, false)
 		return
 	}
-	user := models.User{
+	user := schema.User{
 		Username: req.Username,
 		Password: req.Password,
 	}

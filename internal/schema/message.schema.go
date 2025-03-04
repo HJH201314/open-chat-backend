@@ -1,4 +1,4 @@
-package models
+package schema
 
 type Message struct {
 	ID               uint64 `gorm:"primaryKey;autoIncrement" json:"id"`

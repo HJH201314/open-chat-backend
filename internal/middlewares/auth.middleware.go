@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/fcraft/open-chat/internal/constants"
-	"github.com/fcraft/open-chat/internal/entities"
+	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		// 转换 claims
-		claims, ok := token.Claims.(*entities.UserClaims)
+		claims, ok := token.Claims.(*entity.UserClaims)
 		if !ok {
 			ctx_utils.HttpError(c, constants.ErrUnauthorized)
 			return

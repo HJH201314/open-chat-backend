@@ -5,20 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
 
 // CacheProviders 缓存供应商及关联的模型数据（使用哈希表）
-func (r *RedisClient) CacheProviders(providers []models.Provider) error {
+func (r *RedisClient) CacheProviders(providers []schema.Provider) error {
 	// 删除所有旧的 Provider 和 Model 键
 	ctx := context.Background()
 	pipe := r.Client.Pipeline()
 
-	// 1. 扫描并删除所有 provider:* 和 model:* 键
+	// 1. 扫描并删除所有 provider:* 和 schema:* 键
 	providerKeys, _ := r.Client.Keys(ctx, "provider:*").Result()
-	modelKeys, _ := r.Client.Keys(ctx, "model:*").Result()
+	modelKeys, _ := r.Client.Keys(ctx, "schema:*").Result()
 	if len(providerKeys) > 0 {
 		pipe.Del(ctx, providerKeys...)
 	}
@@ -40,8 +40,8 @@ func (r *RedisClient) CacheProviders(providers []models.Provider) error {
 
 		// 缓存关联的 Models
 		for _, model := range provider.Models {
-			modelKey := fmt.Sprintf("model:%s:%s", provider.Name, model.Name)
-			cacheModel := models.ModelCache{
+			modelKey := fmt.Sprintf("schema:%s:%s", provider.Name, model.Name)
+			cacheModel := schema.ModelCache{
 				Model:               model,
 				ProviderName:        provider.Name,
 				ProviderDisplayName: provider.DisplayName,
@@ -62,7 +62,7 @@ func (r *RedisClient) CacheProviders(providers []models.Provider) error {
 }
 
 // GetCachedProviders 获取所有缓存的 Provider
-func (r *RedisClient) GetCachedProviders() ([]models.Provider, error) {
+func (r *RedisClient) GetCachedProviders() ([]schema.Provider, error) {
 	ctx := context.Background()
 
 	// 1. 获取所有 Provider 键
@@ -82,13 +82,13 @@ func (r *RedisClient) GetCachedProviders() ([]models.Provider, error) {
 	}
 
 	// 3. 反序列化数据
-	var providers []models.Provider
+	var providers []schema.Provider
 	for _, cmd := range cmds {
 		data, err := cmd.Result()
 		if err != nil || data == "" {
 			continue
 		}
-		var provider models.Provider
+		var provider schema.Provider
 		if err := json.Unmarshal([]byte(data), &provider); err != nil {
 			continue // 或记录错误
 		}
@@ -99,11 +99,11 @@ func (r *RedisClient) GetCachedProviders() ([]models.Provider, error) {
 }
 
 // GetCachedModels 获取所有缓存的 Model
-func (r *RedisClient) GetCachedModels() ([]models.ModelCache, error) {
+func (r *RedisClient) GetCachedModels() ([]schema.ModelCache, error) {
 	ctx := context.Background()
 
 	// 1. 获取所有 Model 键
-	modelKeys, err := r.Client.Keys(ctx, "model:*").Result()
+	modelKeys, err := r.Client.Keys(ctx, "schema:*").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -119,13 +119,13 @@ func (r *RedisClient) GetCachedModels() ([]models.ModelCache, error) {
 	}
 
 	// 3. 反序列化数据
-	var modelCached []models.ModelCache
+	var modelCached []schema.ModelCache
 	for _, cmd := range cmds {
 		data, err := cmd.Result()
 		if err != nil || data == "" {
 			continue
 		}
-		var mc models.ModelCache
+		var mc schema.ModelCache
 		if err := json.Unmarshal([]byte(data), &mc); err != nil {
 			continue // 或记录错误
 		}
@@ -136,7 +136,7 @@ func (r *RedisClient) GetCachedModels() ([]models.ModelCache, error) {
 }
 
 // FindProviderByName 根据 ProviderName 获取供应商
-func (r *RedisClient) FindProviderByName(providerName string) *models.Provider {
+func (r *RedisClient) FindProviderByName(providerName string) *schema.Provider {
 	ctx := context.Background()
 
 	// 构造符合哈希表存储规则的 key
@@ -153,7 +153,7 @@ func (r *RedisClient) FindProviderByName(providerName string) *models.Provider {
 	}
 
 	// 反序列化数据
-	var providerCache models.Provider
+	var providerCache schema.Provider
 	if err := json.Unmarshal([]byte(data), &providerCache); err != nil {
 		// 可选：记录数据损坏错误
 		// log.Printf("Unmarshal error: %v", err)
@@ -164,11 +164,11 @@ func (r *RedisClient) FindProviderByName(providerName string) *models.Provider {
 }
 
 // FindCachedModelByName 根据 ProviderName 和 ModelName 直接定位缓存模型
-func (r *RedisClient) FindCachedModelByName(providerName string, modelName string) *models.ModelCache {
+func (r *RedisClient) FindCachedModelByName(providerName string, modelName string) *schema.ModelCache {
 	ctx := context.Background()
 
 	// 构造符合哈希表存储规则的 key
-	key := fmt.Sprintf("model:%s:%s", providerName, modelName)
+	key := fmt.Sprintf("schema:%s:%s", providerName, modelName)
 
 	// 直接通过 HGet 获取数据
 	data, err := r.Client.HGet(ctx, key, "data").Result()
@@ -181,7 +181,7 @@ func (r *RedisClient) FindCachedModelByName(providerName string, modelName strin
 	}
 
 	// 反序列化数据
-	var modelCache models.ModelCache
+	var modelCache schema.ModelCache
 	if err := json.Unmarshal([]byte(data), &modelCache); err != nil {
 		// 可选：记录数据损坏错误
 		// log.Printf("Unmarshal error: %v", err)

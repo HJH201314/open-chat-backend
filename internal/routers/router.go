@@ -33,6 +33,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) 
 		chatSessionGroup := chatGroup.Group("/session")
 		{
 			chatSessionGroup.POST("/new", chatHandler.CreateSession)
+			chatSessionGroup.GET("/list", chatHandler.GetSessions)
 			chatSessionGroup.POST("/del/:session_id", chatHandler.DeleteSession)
 		}
 		chatMessageGroup := chatGroup.Group("/message")
@@ -72,7 +73,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) 
 			manageApiKeyGroup.POST("/create", manageHandler.CreateAPIKey)
 			manageApiKeyGroup.POST("/delete/:key_id", manageHandler.DeleteAPIKey)
 		}
-		manageModelGroup := manageGroup.Group("/model")
+		manageModelGroup := manageGroup.Group("/schema")
 		{
 			manageModelGroup.POST("/create", manageHandler.CreateModel)
 			manageModelGroup.GET("/:model_id", manageHandler.GetModel)

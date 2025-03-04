@@ -2,8 +2,8 @@ package manage
 
 import (
 	"github.com/fcraft/open-chat/internal/constants"
-	_ "github.com/fcraft/open-chat/internal/entities"
-	"github.com/fcraft/open-chat/internal/models"
+	_ "github.com/fcraft/open-chat/internal/entity"
+	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,11 +16,11 @@ import (
 //	@Tags			Provider
 //	@Accept			json
 //	@Produce		json
-//	@Param			provider	body		models.Provider								true	"API 提供商参数"
-//	@Success		200			{object}	entities.CommonResponse[models.Provider]	"成功创建的 API 提供商"
+//	@Param			provider	body		schema.Provider							true	"API 提供商参数"
+//	@Success		200			{object}	entity.CommonResponse[schema.Provider]	"成功创建的 API 提供商"
 //	@Router			/manage/provider/create [post]
 func (h *Handler) CreateProvider(c *gin.Context) {
-	var provider models.Provider
+	var provider schema.Provider
 	if err := c.ShouldBindJSON(&provider); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
@@ -39,8 +39,8 @@ func (h *Handler) CreateProvider(c *gin.Context) {
 //	@Tags			Provider
 //	@Accept			json
 //	@Produce		json
-//	@Param			provider_id	path		uint64										true	"API 提供商 ID"
-//	@Success		200			{object}	entities.CommonResponse[models.Provider]	"API 提供商"
+//	@Param			provider_id	path		uint64									true	"API 提供商 ID"
+//	@Success		200			{object}	entity.CommonResponse[schema.Provider]	"API 提供商"
 //	@Router			/manage/provider/{provider_id} [get]
 func (h *Handler) GetProvider(c *gin.Context) {
 	var uri struct {
@@ -65,7 +65,7 @@ func (h *Handler) GetProvider(c *gin.Context) {
 //	@Tags			Provider
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entities.CommonResponse[[]models.Provider]	"API 提供商列表"
+//	@Success		200	{object}	entity.CommonResponse[[]schema.Provider]	"API 提供商列表"
 //	@Router			/manage/provider/list [get]
 func (h *Handler) GetProviders(c *gin.Context) {
 	providers, err := h.Store.GetProviders()
@@ -83,11 +83,11 @@ func (h *Handler) GetProviders(c *gin.Context) {
 //	@Tags			Provider
 //	@Accept			json
 //	@Produce		json
-//	@Param			provider	body		models.Provider					true	"API 提供商参数"
-//	@Success		200			{object}	entities.CommonResponse[bool]	"更新成功与否"
+//	@Param			provider	body		schema.Provider				true	"API 提供商参数"
+//	@Success		200			{object}	entity.CommonResponse[bool]	"更新成功与否"
 //	@Router			/manage/provider/update [post]
 func (h *Handler) UpdateProvider(c *gin.Context) {
-	var provider models.Provider
+	var provider schema.Provider
 	if err := c.ShouldBindJSON(&provider); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
@@ -106,8 +106,8 @@ func (h *Handler) UpdateProvider(c *gin.Context) {
 //	@Tags			Provider
 //	@Accept			json
 //	@Produce		json
-//	@Param			provider_id	path		uint64							true	"API 提供商 ID"
-//	@Success		200			{object}	entities.CommonResponse[bool]	"删除成功与否"
+//	@Param			provider_id	path		uint64						true	"API 提供商 ID"
+//	@Success		200			{object}	entity.CommonResponse[bool]	"删除成功与否"
 //	@Router			/manage/provider/delete/{provider_id} [post]
 func (h *Handler) DeleteProvider(c *gin.Context) {
 	var uri struct {
@@ -125,7 +125,7 @@ func (h *Handler) DeleteProvider(c *gin.Context) {
 }
 
 func (h *Handler) CreateAPIKey(c *gin.Context) {
-	var apiKey models.APIKey
+	var apiKey schema.APIKey
 	if err := c.ShouldBindJSON(&apiKey); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
@@ -153,13 +153,13 @@ func (h *Handler) DeleteAPIKey(c *gin.Context) {
 }
 
 func (h *Handler) CreateModel(c *gin.Context) {
-	var model models.Model
+	var model schema.Model
 	if err := c.ShouldBindJSON(&model); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	if err := h.Store.AddModel(&model); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create model")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create schema")
 		return
 	}
 	ctx_utils.Success(c, model)
@@ -175,7 +175,7 @@ func (h *Handler) GetModel(c *gin.Context) {
 	}
 	model, err := h.Store.GetModel(uri.ModelId)
 	if err != nil {
-		ctx_utils.CustomError(c, 404, "model not found")
+		ctx_utils.CustomError(c, 404, "schema not found")
 		return
 	}
 	ctx_utils.Success(c, model)
@@ -191,20 +191,20 @@ func (h *Handler) GetModelsByProvider(c *gin.Context) {
 	}
 	aiModels, err := h.Store.GetModelsByProvider(uri.ProviderId)
 	if err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to get models")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to get schema")
 		return
 	}
 	ctx_utils.Success(c, aiModels)
 }
 
 func (h *Handler) UpdateModel(c *gin.Context) {
-	var model models.Model
+	var model schema.Model
 	if err := c.ShouldBindJSON(&model); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
 	if err := h.Store.UpdateModel(&model); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update model")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update schema")
 		return
 	}
 	ctx_utils.Success(c, true)
@@ -219,7 +219,7 @@ func (h *Handler) DeleteModel(c *gin.Context) {
 		return
 	}
 	if err := h.Store.DeleteModel(uri.ModelId); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete model")
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete schema")
 		return
 	}
 	ctx_utils.Success(c, true)

@@ -1,7 +1,7 @@
 package auth_utils
 
 import (
-	"github.com/fcraft/open-chat/internal/entities"
+	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
@@ -12,7 +12,7 @@ import (
 // SignAuthTokenForUser 为用户签发 token
 func SignAuthTokenForUser(userId uint64) (string, error) {
 	// 1. 创建 Claims
-	claims := entities.UserClaims{
+	claims := entity.UserClaims{
 		ID: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 过期时间
@@ -35,7 +35,7 @@ func SignAuthTokenForUser(userId uint64) (string, error) {
 // SignRefreshTokenForUser 为用户签发刷新 token
 func SignRefreshTokenForUser(userId uint64) (string, error) {
 	// 1. 创建 Claims
-	claims := entities.UserClaims{
+	claims := entity.UserClaims{
 		ID: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)), // 过期时间
@@ -64,7 +64,7 @@ func ValidateAuthToken(c *gin.Context) *jwt.Token {
 
 	// 2. 解析 auth_token
 	token, err := jwt.ParseWithClaims(
-		authTokenString, &entities.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		authTokenString, &entity.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("AUTH_SECRET")), nil
 		},
 	)
@@ -76,7 +76,7 @@ func ValidateAuthToken(c *gin.Context) *jwt.Token {
 }
 
 // ValidateRefreshToken 联合验证刷新 token 是否合法，合法返回 refresh_token
-func ValidateRefreshToken(c *gin.Context, authClaims *entities.UserClaims) *jwt.Token {
+func ValidateRefreshToken(c *gin.Context, authClaims *entity.UserClaims) *jwt.Token {
 	// 1. 从请求头中获取 token
 	refreshTokenString := c.GetHeader("X-Refresh-Token")
 	if refreshTokenString == "" {
@@ -85,7 +85,7 @@ func ValidateRefreshToken(c *gin.Context, authClaims *entities.UserClaims) *jwt.
 
 	// 2. 解析 refresh_token
 	token, err := jwt.ParseWithClaims(
-		refreshTokenString, &entities.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		refreshTokenString, &entity.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("AUTH_SECRET")), nil
 		},
 	)
@@ -94,7 +94,7 @@ func ValidateRefreshToken(c *gin.Context, authClaims *entities.UserClaims) *jwt.
 	}
 
 	// 3. 验证 ID 是否相同
-	refreshClaims, ok := token.Claims.(*entities.UserClaims)
+	refreshClaims, ok := token.Claims.(*entity.UserClaims)
 	if !ok || refreshClaims.ID != authClaims.ID {
 		return nil
 	}

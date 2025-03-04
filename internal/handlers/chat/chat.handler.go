@@ -3,10 +3,9 @@ package chat
 import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
-	"github.com/fcraft/open-chat/internal/entities"
-	_ "github.com/fcraft/open-chat/internal/entities"
-	"github.com/fcraft/open-chat/internal/handlers"
-	"github.com/fcraft/open-chat/internal/models"
+	"github.com/fcraft/open-chat/internal/entity"
+	_ "github.com/fcraft/open-chat/internal/entity"
+	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
@@ -15,139 +14,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-type PathParamSessionId struct {
-	SessionId string `uri:"session_id" binding:"required"`
-}
-
-type Handler struct {
-	*handlers.BaseHandler
-}
-
-func NewChatHandler(h *handlers.BaseHandler) *Handler {
-	return &Handler{BaseHandler: h}
-}
-
-// CreateSession
-//
-//	@Summary		创建会话
-//	@Description	创建会话
-//	@Tags			Session
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	entities.CommonResponse[string]
-//	@Router			/chat/session/new [post]
-func (h *Handler) CreateSession(c *gin.Context) {
-	session := models.Session{
-		UserID:        ctx_utils.GetUserId(c),
-		EnableContext: true, // 默认开启上下文
-	}
-	if err := h.Store.CreateSession(&session); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create session")
-		return
-	}
-	ctx_utils.Success(c, session.ID)
-}
-
-// DeleteSession
-//
-//	@Summary		删除会话
-//	@Description	删除会话
-//	@Tags			Session
-//	@Accept			json
-//	@Produce		json
-//	@Param			session_id	path		string	true	"会话 ID"
-//	@Success		200			{object}	entities.CommonResponse[bool]
-//	@Router			/chat/session/del/{session_id} [post]
-func (h *Handler) DeleteSession(c *gin.Context) {
-	var uri PathParamSessionId
-	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
-		return
-	}
-	// 验证用户对会话的所有权
-	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
-		return
-	}
-	// 执行删除操作
-	if err := h.Store.DeleteSession(uri.SessionId); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete session")
-		return
-	}
-	ctx_utils.Success(c, true)
-}
-
-// GetMessages
-//
-//	@Summary		获取消息
-//	@Description	获取消息
-//	@Tags			Message
-//	@Accept			json
-//	@Produce		json
-//	@Param			session_id	path		string												true	"会话 ID"
-//	@Param			req			query		entities.ParamPagingSort							true	"分页参数"
-//	@Success		200			{object}	entities.CommonResponse[chat.GetMessages.resType]	"返回数据"
-//	@Router			/chat/message/list/{session_id} [get]
-func (h *Handler) GetMessages(c *gin.Context) {
-	var uri PathParamSessionId
-	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
-		return
-	}
-	var req entities.ParamPagingSort
-	if err := c.BindQuery(&req); err != nil {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
-		return
-	}
-	// 验证用户对会话的所有权
-	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
-		return
-	}
-	// 查询消息
-	size := req.GetPageSize(20, 50)
-	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.PageNum, size, req.SortParam)
-	if err != nil {
-		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
-	}
-	type resType struct {
-		Messages []models.Message `json:"messages"`
-		NextPage *int             `json:"next_page"`
-	}
-	ctx_utils.Success(
-		c, &resType{
-			Messages: messages,
-			NextPage: nextPage,
-		},
-	)
-}
-
-// GetModels
-//
-//	@Summary		获取所有模型
-//	@Description	获取所有模型
-//	@Tags			config
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	entities.CommonResponse[[]models.ModelCache]
-//	@Router			/chat/config/models [get]
-func (h *Handler) GetModels(c *gin.Context) {
-	// 从缓存中查询
-	cacheModels, err := h.Redis.GetCachedModels()
-	if err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to get models")
-		return
-	}
-	// 将 config 隐藏
-	slice.ForEach(
-		cacheModels, func(_ int, item models.ModelCache) {
-			item.Config = models.ModelConfig{}
-		},
-	)
-	ctx_utils.Success(c, cacheModels)
-}
 
 // CompletionStream
 //
@@ -200,7 +66,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 获取会话配置
-	var session models.Session
+	var session schema.Session
 	if err := h.Store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
 		ctx_utils.CustomError(c, http.StatusNotFound, "session not found")
 		return
@@ -211,7 +77,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	if req.EnableContext != nil {
 		enableContext = *req.EnableContext // 请求参数优先
 	}
-	var contextMessages []models.Message
+	var contextMessages []schema.Message
 	if enableContext {
 		messages, err := h.Store.GetLatestMessages(session.ID, 50)
 		if err != nil {
@@ -236,7 +102,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var chatMessages []chat_utils.Message
 	chatMessages = append(
 		chatMessages, slice.Map(
-			contextMessages, func(_ int, m models.Message) chat_utils.Message {
+			contextMessages, func(_ int, m schema.Message) chat_utils.Message {
 				return chat_utils.Message{
 					Role:    m.Role,
 					Content: m.Content,
@@ -247,7 +113,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	chatMessages = append(chatMessages, chat_utils.UserMessage(req.Question))
 
 	// 预先插入新对话，获取消息 ID
-	messages := []models.Message{
+	messages := []schema.Message{
 		{SessionID: session.ID, Role: "user", ModelID: modelInfo.ID},
 		{SessionID: session.ID, Role: "assistant", ModelID: modelInfo.ID},
 	}
@@ -320,7 +186,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			case "error":
 				// 错误信息（记录日志并终止流）
 				c.SSEvent(
-					"error", (&entities.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
+					"error", (&entity.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
 				)
 				return false
 			case "done":
@@ -354,14 +220,14 @@ func sendStreamMessageEvent(c *gin.Context, msg string, thinking bool) {
 	)
 }
 
-func getCompletionModelConfig(config models.ModelConfig) chat_utils.CompletionModelConfig {
+func getCompletionModelConfig(config schema.ModelConfig) chat_utils.CompletionModelConfig {
 	temperature := config.DefaultTemperature
 	if temperature == 0 {
-		temperature = models.DefaultModelConfig.DefaultTemperature
+		temperature = schema.DefaultModelConfig.DefaultTemperature
 	}
 	maxTokens := config.MaxTokens
 	if maxTokens == 0 {
-		maxTokens = models.DefaultModelConfig.MaxTokens
+		maxTokens = schema.DefaultModelConfig.MaxTokens
 	}
 
 	return chat_utils.CompletionModelConfig{
