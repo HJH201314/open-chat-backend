@@ -90,9 +90,13 @@ func (s *GormStore) GetSessionsByPage(userId uint64, page int, pageSize int, sor
 		return nil, nil, err
 	}
 
-	sessions := slice.Map(
-		userSessions, func(_ int, userSession schema.UserSession) schema.Session {
-			return *userSession.Session
+	// 过滤没有关联 session 的数据并取出 session
+	sessions := slice.FilterMap(
+		userSessions, func(_ int, userSession schema.UserSession) (schema.Session, bool) {
+			if userSession.Session == nil {
+				return schema.Session{}, false
+			}
+			return *userSession.Session, true
 		},
 	)
 	// 分页逻辑处理
