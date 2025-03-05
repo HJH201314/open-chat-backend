@@ -21,19 +21,19 @@ func main() {
 	// 初始化数据库
 	store := gorm.NewGormStore()
 	// 初始化 Redis
-	cache := redis.NewRedisClient()
-
-	r := gin.Default()
-	// 初始化中间件
-	r.Use(middlewares.AuthMiddleware())
-	// 初始化路由
-	routers.InitRouter(r, store, cache)
+	rd := redis.NewRedisStore()
 
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
 	defer cancelCache()
-	cacheService := services.NewCacheService(store, cache)
+	cacheService := services.NewCacheService(store, rd)
 	go cacheService.Start(cacheCtx, 5*time.Minute)
+
+	r := gin.Default()
+	// 初始化中间件
+	r.Use(middlewares.AuthMiddleware(rd))
+	// 初始化路由
+	routers.InitRouter(r, store, rd, cacheService)
 
 	// 在 9033 端口启动服务
 	if err := r.Run("0.0.0.0:9033"); err != nil {

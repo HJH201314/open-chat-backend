@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (r *RedisClient) CacheMessages(sessionID string, messages []schema.Message) error {
+func (r *RedisStore) CacheMessages(sessionID string, messages []schema.Message) error {
 	// 保留最近50条消息
 	pipe := r.Client.Pipeline()
 	pipe.Del(context.Background(), "messages:"+sessionID)
@@ -33,7 +33,7 @@ func (r *RedisClient) CacheMessages(sessionID string, messages []schema.Message)
 	return err
 }
 
-func (r *RedisClient) GetCachedMessages(sessionID string) ([]schema.Message, error) {
+func (r *RedisStore) GetCachedMessages(sessionID string) ([]schema.Message, error) {
 	data, err := r.Client.LRange(context.Background(), "messages:"+sessionID, 0, -1).Result()
 	if err != nil {
 		return nil, err

@@ -71,24 +71,28 @@ func (h *Handler) Refresh(c *gin.Context) {
 
 	// 3. 确认用户存在并重新签发
 	if user, err := h.Store.GetUser(refreshClaims.ID); err == nil {
-		signJwtTokenIntoHeader(c, user)
+		token, _ := signJwtTokenIntoHeader(c, user)
+		if err := h.Redis.CacheUserToken(user.ID, token, constants.RefreshTokenExpire); err != nil {
+			return
+		}
 	}
 }
 
-func signJwtTokenIntoHeader(c *gin.Context, user *schema.User) {
+func signJwtTokenIntoHeader(c *gin.Context, user *schema.User) (string, string) {
 	authToken, err := auth_utils.SignAuthTokenForUser(user.ID)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
+		return "", ""
 	}
 	refreshToken, err := auth_utils.SignRefreshTokenForUser(user.ID)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
+		return "", ""
 	}
 	// 将 token 写入 header
 	c.Writer.Header().Set("OC-Auth-Token", authToken)
 	c.Writer.Header().Set("OC-Refresh-Token", refreshToken)
+	return authToken, refreshToken
 }
 
 // Login
@@ -121,8 +125,26 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	signJwtTokenIntoHeader(c, &userRes)
+	// 签发并缓存 token
+	token, _ := signJwtTokenIntoHeader(c, &userRes)
+	if err := h.Redis.CacheUserToken(userRes.ID, token, constants.RefreshTokenExpire); err != nil {
+		return
+	}
 	ctx_utils.Success(c, userRes)
+}
+
+// Logout
+//
+//	@Summary		用户登出
+//	@Description	用户登出
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Router			/user/logout [post]
+func (h *Handler) Logout(c *gin.Context) {
+	if err := h.Redis.InvalidUserToken(ctx_utils.GetUserId(c), ctx_utils.GetRawAuthToken(c)); err != nil {
+		return
+	}
 }
 
 // Register

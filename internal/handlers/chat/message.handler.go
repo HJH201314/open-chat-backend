@@ -15,8 +15,8 @@ import (
 //	@Tags			Message
 //	@Accept			json
 //	@Produce		json
-//	@Param			session_id	path		string														true	"会话 ID"
-//	@Param			req			query		entity.ParamPagingSort										true	"分页参数"
+//	@Param			session_id	path		string															true	"会话 ID"
+//	@Param			req			query		entity.ParamPagingSort											true	"分页参数"
 //	@Success		200			{object}	entity.CommonResponse[entity.PagingResponse[schema.Message]]	"返回数据"
 //	@Router			/chat/message/list/{session_id} [get]
 func (h *Handler) GetMessages(c *gin.Context) {
@@ -31,8 +31,8 @@ func (h *Handler) GetMessages(c *gin.Context) {
 		return
 	}
 	// 验证用户对会话的所有权
-	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.CustomError(c, 400, "no permission")
 		return
 	}
 	// 查询消息

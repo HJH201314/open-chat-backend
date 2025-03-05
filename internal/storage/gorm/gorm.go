@@ -5,6 +5,7 @@ import (
 	"github.com/fcraft/open-chat/internal/schema"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
 	"os"
 )
@@ -31,7 +32,14 @@ func NewGormStore() *GormStore {
 	if os.Getenv("PG_DSN") != "" {
 		dsn = os.Getenv("PG_DSN")
 	}
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(
+		postgres.Open(dsn), &gorm.Config{
+			// 取消外键
+			DisableForeignKeyConstraintWhenMigrating: true,
+			// 日志
+			Logger: logger.Default.LogMode(logger.Info),
+		},
+	)
 	if err != nil {
 		store.Logger.Fatal("failed to connect database")
 	}
@@ -48,6 +56,7 @@ func NewGormStore() *GormStore {
 		&schema.APIKey{},
 		&schema.Model{},
 		&schema.BotRole{},
+		&schema.UserSession{},
 	); err != nil {
 		store.Logger.Fatal("failed to migrate database")
 	}

@@ -1,14 +1,32 @@
 package gorm
 
 import (
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
 	"gorm.io/gorm"
 )
 
 // CreateSession 创建会话
-func (s *GormStore) CreateSession(session *schema.Session) error {
-	return s.Db.Create(session).Error
+func (s *GormStore) CreateSession(userId uint64, session *schema.Session) error {
+	return s.Db.Transaction(
+		func(tx *gorm.DB) error {
+			if err := tx.Create(session).Error; err != nil {
+				return err
+			}
+			if userId > 0 {
+				userSession := schema.UserSession{
+					UserID:    userId,
+					SessionID: session.ID,
+					Type:      schema.OWNER,
+				}
+				if err := tx.Create(&userSession).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	)
 }
 
 // GetSession 获取会话
@@ -30,7 +48,7 @@ func (s *GormStore) FindSessionWithUser(sessionId string, userId uint64) (*schem
 	).First(&session).Error
 }
 
-// DeleteSession 删除会话
+// DeleteSession 从数据库中删除会话
 func (s *GormStore) DeleteSession(sessionId string) error {
 	return s.Db.Transaction(
 		func(tx *gorm.DB) error {
@@ -42,6 +60,10 @@ func (s *GormStore) DeleteSession(sessionId string) error {
 			if err := tx.Where("session_id = ?", sessionId).Delete(&schema.Message{}).Error; err != nil {
 				return err
 			}
+			// 删除权限
+			if err := tx.Where("session_id = ?", sessionId).Delete(&schema.UserSession{}).Error; err != nil {
+				return err
+			}
 			return nil
 		},
 	)
@@ -49,21 +71,30 @@ func (s *GormStore) DeleteSession(sessionId string) error {
 
 // GetSessionsByPage 分页获取会话
 func (s *GormStore) GetSessionsByPage(userId uint64, page int, pageSize int, sort entity.SortParam) ([]schema.Session, *int, error) {
-	var sessions []schema.Session
 	offset := (page - 1) * pageSize
 	// 多查询一条以判断是否存在下一页
 	limit := pageSize + 1
 
+	var userSessions []schema.UserSession
 	err := s.Db.Where("user_id = ?", userId).
-		Order(sort.WithDefault("id ASC", "id").SafeExpr([]string{})). // 保持与现有排序一致
+		Order(sort.WithDefault("id DESC", "id").SafeExpr([]string{})).
 		Offset(offset).
 		Limit(limit).
-		Find(&sessions).Error
-
+		Preload("Session").
+		Preload(
+			"Session.Messages",
+			"id IN (SELECT MIN(id) FROM messages GROUP BY session_id)",
+		).
+		Find(&userSessions).Error
 	if err != nil {
 		return nil, nil, err
 	}
 
+	sessions := slice.Map(
+		userSessions, func(_ int, userSession schema.UserSession) schema.Session {
+			return *userSession.Session
+		},
+	)
 	// 分页逻辑处理
 	hasNext := len(sessions) > pageSize
 	if hasNext {

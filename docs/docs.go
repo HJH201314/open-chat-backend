@@ -8,7 +8,7 @@ const docTemplate = `{
     "swagger": "2.0",
     "info": {
         "description": "{{escape .Description}}",
-        "title": "{{.Title}}",
+        "title": "{{.Name}}",
         "contact": {},
         "version": "{{.Version}}"
     },
@@ -49,7 +49,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/chat/config/schema": {
+        "/chat/config/models": {
             "get": {
                 "description": "获取所有模型",
                 "consumes": [
@@ -403,6 +403,22 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/user/logout": {
+            "post": {
+                "description": "用户登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户登出",
+                "responses": {}
             }
         },
         "/user/ping": {
@@ -1010,10 +1026,18 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
+                    "description": "原始数据",
                     "type": "string"
                 },
                 "last_active": {
                     "type": "string"
+                },
+                "messages": {
+                    "description": "组装数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Message"
+                    }
                 },
                 "model_params": {
                     "description": "模型参数",
@@ -1022,9 +1046,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/schema.ModelParams"
                         }
                     ]
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },

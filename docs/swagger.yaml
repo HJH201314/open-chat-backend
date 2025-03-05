@@ -346,15 +346,19 @@ definitions:
         description: 上下文开关
         type: boolean
       id:
+        description: 原始数据
         type: string
       last_active:
         type: string
+      messages:
+        description: 组装数据
+        items:
+          $ref: '#/definitions/schema.Message'
+        type: array
       model_params:
         allOf:
           - $ref: '#/definitions/schema.ModelParams'
         description: 模型参数
-      user_id:
-        type: integer
     type: object
   schema.User:
     properties:
@@ -418,7 +422,7 @@ paths:
       summary: 流式输出聊天
       tags:
       - Chat
-  /chat/config/schema:
+  /chat/config/models:
     get:
       consumes:
       - application/json
@@ -647,6 +651,17 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-schema_User'
       summary: 用户登录
+      tags:
+        - User
+  /user/logout:
+    post:
+      consumes:
+        - application/json
+      description: 用户登出
+      produces:
+        - application/json
+      responses: { }
+      summary: 用户登出
       tags:
       - User
   /user/ping:

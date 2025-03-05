@@ -2,23 +2,29 @@ package services
 
 import (
 	"context"
-	"github.com/fcraft/open-chat/internal/storage/gorm"
-	"github.com/fcraft/open-chat/internal/storage/redis"
+	gormstore "github.com/fcraft/open-chat/internal/storage/gorm"
+	redisstore "github.com/fcraft/open-chat/internal/storage/redis"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 	"log"
 	"time"
 )
 
 type CacheService struct {
-	GormStore   *gorm.GormStore
-	RedisClient *redis.RedisClient
-	Logger      *log.Logger
+	Gorm       *gorm.DB
+	GormStore  *gormstore.GormStore
+	Redis      *redis.Client
+	RedisStore *redisstore.RedisStore
+	Logger     *log.Logger
 }
 
-func NewCacheService(gormStore *gorm.GormStore, redisClient *redis.RedisClient) *CacheService {
+func NewCacheService(gormStore *gormstore.GormStore, redisClient *redisstore.RedisStore) *CacheService {
 	return &CacheService{
-		GormStore:   gormStore,
-		RedisClient: redisClient,
-		Logger:      log.New(log.Writer(), "CacheService", log.LstdFlags),
+		Gorm:       gormStore.Db,
+		GormStore:  gormStore,
+		Redis:      redisClient.Client,
+		RedisStore: redisClient,
+		Logger:     log.New(log.Writer(), "Cache", log.LstdFlags),
 	}
 }
 
@@ -49,7 +55,7 @@ func (s *CacheService) syncCacheProviders() {
 	}
 
 	// 2. 写入Redis
-	if err := s.RedisClient.CacheProviders(data); err != nil {
+	if err := s.RedisStore.CacheProviders(data); err != nil {
 		s.Logger.Println("failed to save to redis", err)
 		return
 	}

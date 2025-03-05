@@ -9,15 +9,15 @@ import (
 	"os"
 )
 
-type RedisClient struct {
+type RedisStore struct {
 	Client *redis.Client
 	Logger *log.Logger
 }
 
-func NewRedisClient() *RedisClient {
+func NewRedisStore() *RedisStore {
 	db, _ := convertor.ToInt(os.Getenv("RD_DB"))
-	client := &RedisClient{
-		Logger: log.New(log.Writer(), "RedisClient", log.LstdFlags),
+	client := &RedisStore{
+		Logger: log.New(log.Writer(), "RedisStore", log.LstdFlags),
 		Client: redis.NewClient(
 			&redis.Options{
 				Addr:     fmt.Sprintf("%s:%s", os.Getenv("RD_HOST"), os.Getenv("RD_PORT")),

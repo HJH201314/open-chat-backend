@@ -11,7 +11,7 @@ import (
 )
 
 // CacheProviders 缓存供应商及关联的模型数据（使用哈希表）
-func (r *RedisClient) CacheProviders(providers []schema.Provider) error {
+func (r *RedisStore) CacheProviders(providers []schema.Provider) error {
 	// 删除所有旧的 Provider 和 Model 键
 	ctx := context.Background()
 	pipe := r.Client.Pipeline()
@@ -62,7 +62,7 @@ func (r *RedisClient) CacheProviders(providers []schema.Provider) error {
 }
 
 // GetCachedProviders 获取所有缓存的 Provider
-func (r *RedisClient) GetCachedProviders() ([]schema.Provider, error) {
+func (r *RedisStore) GetCachedProviders() ([]schema.Provider, error) {
 	ctx := context.Background()
 
 	// 1. 获取所有 Provider 键
@@ -99,7 +99,7 @@ func (r *RedisClient) GetCachedProviders() ([]schema.Provider, error) {
 }
 
 // GetCachedModels 获取所有缓存的 Model
-func (r *RedisClient) GetCachedModels() ([]schema.ModelCache, error) {
+func (r *RedisStore) GetCachedModels() ([]schema.ModelCache, error) {
 	ctx := context.Background()
 
 	// 1. 获取所有 Model 键
@@ -136,7 +136,7 @@ func (r *RedisClient) GetCachedModels() ([]schema.ModelCache, error) {
 }
 
 // FindProviderByName 根据 ProviderName 获取供应商
-func (r *RedisClient) FindProviderByName(providerName string) *schema.Provider {
+func (r *RedisStore) FindProviderByName(providerName string) *schema.Provider {
 	ctx := context.Background()
 
 	// 构造符合哈希表存储规则的 key
@@ -164,7 +164,7 @@ func (r *RedisClient) FindProviderByName(providerName string) *schema.Provider {
 }
 
 // FindCachedModelByName 根据 ProviderName 和 ModelName 直接定位缓存模型
-func (r *RedisClient) FindCachedModelByName(providerName string, modelName string) *schema.ModelCache {
+func (r *RedisStore) FindCachedModelByName(providerName string, modelName string) *schema.ModelCache {
 	ctx := context.Background()
 
 	// 构造符合哈希表存储规则的 key

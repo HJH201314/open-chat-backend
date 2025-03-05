@@ -38,7 +38,7 @@
                 "responses": {}
             }
         },
-        "/chat/config/schema": {
+        "/chat/config/models": {
             "get": {
                 "description": "获取所有模型",
                 "consumes": [
@@ -392,6 +392,22 @@
                         }
                     }
                 }
+            }
+        },
+        "/user/logout": {
+            "post": {
+                "description": "用户登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户登出",
+                "responses": {}
             }
         },
         "/user/ping": {
@@ -999,10 +1015,18 @@
                     "type": "boolean"
                 },
                 "id": {
+                    "description": "原始数据",
                     "type": "string"
                 },
                 "last_active": {
                     "type": "string"
+                },
+                "messages": {
+                    "description": "组装数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Message"
+                    }
                 },
                 "model_params": {
                     "description": "模型参数",
@@ -1011,9 +1035,6 @@
                             "$ref": "#/definitions/schema.ModelParams"
                         }
                     ]
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },

@@ -2,10 +2,10 @@ package auth_utils
 
 import (
 	"github.com/fcraft/open-chat/internal/entity"
+	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -57,7 +57,7 @@ func SignRefreshTokenForUser(userId uint64) (string, error) {
 
 func ValidateAuthToken(c *gin.Context) *jwt.Token {
 	// 1. 从请求头中获取 token
-	authTokenString := strings.Replace(c.GetHeader("Authorization"), "Bearer ", "", 1)
+	authTokenString := ctx_utils.GetRawAuthToken(c)
 	if authTokenString == "" {
 		return nil
 	}
@@ -78,7 +78,7 @@ func ValidateAuthToken(c *gin.Context) *jwt.Token {
 // ValidateRefreshToken 联合验证刷新 token 是否合法，合法返回 refresh_token
 func ValidateRefreshToken(c *gin.Context, authClaims *entity.UserClaims) *jwt.Token {
 	// 1. 从请求头中获取 token
-	refreshTokenString := c.GetHeader("X-Refresh-Token")
+	refreshTokenString := ctx_utils.GetRawRefreshToken(c)
 	if refreshTokenString == "" {
 		return nil
 	}

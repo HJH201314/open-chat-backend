@@ -44,6 +44,11 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
+	// 验证用户对会话的所有权
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.CustomError(c, 400, "no permission")
+		return
+	}
 
 	// 读取模型信息
 	modelInfo := h.Redis.FindCachedModelByName(req.Provider, req.ModelName)

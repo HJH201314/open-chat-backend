@@ -20,10 +20,10 @@ import (
 //	@Router			/chat/session/new [post]
 func (h *Handler) CreateSession(c *gin.Context) {
 	session := schema.Session{
-		UserID:        ctx_utils.GetUserId(c),
 		EnableContext: true, // 默认开启上下文
 	}
-	if err := h.Store.CreateSession(&session); err != nil {
+
+	if err := h.Store.CreateSession(ctx_utils.GetUserId(c), &session); err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create session")
 		return
 	}
@@ -47,12 +47,12 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 		return
 	}
 	// 验证用户对会话的所有权
-	if _, err := h.Store.FindSessionWithUser(uri.SessionId, ctx_utils.GetUserId(c)); err != nil {
-		ctx_utils.HttpError(c, constants.ErrBadRequest)
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.CustomError(c, 400, "no permission")
 		return
 	}
 	// 执行删除操作
-	if err := h.Store.DeleteSession(uri.SessionId); err != nil {
+	if err := h.Helper.DeleteSession(uri.SessionId); err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete session")
 		return
 	}
@@ -66,7 +66,7 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 //	@Tags			Session
 //	@Accept			json
 //	@Produce		json
-//	@Param			req	query		entity.ParamPagingSort										true	"分页参数"
+//	@Param			req	query		entity.ParamPagingSort											true	"分页参数"
 //	@Success		200	{object}	entity.CommonResponse[entity.PagingResponse[schema.Session]]	"返回数据"
 //	@Router			/chat/session/list [get]
 func (h *Handler) GetSessions(c *gin.Context) {

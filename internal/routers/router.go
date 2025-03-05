@@ -6,6 +6,7 @@ import (
 	"github.com/fcraft/open-chat/internal/handlers/chat"
 	"github.com/fcraft/open-chat/internal/handlers/manage"
 	"github.com/fcraft/open-chat/internal/handlers/user"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/fcraft/open-chat/internal/storage/redis"
 	"github.com/gin-gonic/gin"
@@ -17,10 +18,10 @@ type Router struct {
 	Engine *gin.Engine
 }
 
-func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) Router {
+func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, cache *services.CacheService) Router {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DeepLinking(true)))
 
-	baseHandler := &handlers.BaseHandler{Store: store, Redis: redis}
+	baseHandler := handlers.NewBaseHandler(store, redis, cache)
 
 	// routes for chat completion
 	chatHandler := chat.NewChatHandler(baseHandler)
@@ -53,6 +54,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisClient) 
 		userGroup.POST("/ping", userHandler.Ping)
 		userGroup.GET("/refresh", userHandler.Refresh)
 		userGroup.POST("/login", userHandler.Login)
+		userGroup.POST("/logout", userHandler.Logout)
 		userGroup.POST("/register", userHandler.Register)
 	}
 
