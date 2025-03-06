@@ -129,7 +129,7 @@ streamingLoop:
 			}
 			choiceDelta := &chunk.Choices[0].Delta
 			// 发送内容事件
-			if reasoningContent := choiceDelta.JSON.ExtraFields["reasoning_content"].Raw(); reasoningContent != "" {
+			if reasoningContent := choiceDelta.JSON.ExtraFields["reasoning_content"].Raw(); reasoningContent != "" && reasoningContent != "null" {
 				reasoningContent, _ = strings.CutPrefix(reasoningContent, "\"")
 				reasoningContent, _ = strings.CutSuffix(reasoningContent, "\"")
 				accReasoningContent += reasoningContent
