@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
@@ -11,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -127,14 +127,15 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		return
 	}
 	// 执行结束后，根据是否有回答进行操作
-	var fullResponseContent string
-	var fullReasoningContent string
+	var doneResp *chat_utils.DoneResponse
 	defer func() {
-		if fullResponseContent != "" {
+		if doneResp != nil && doneResp.Content != "" {
 			// 完成响应，记录消息
 			messages[0].Content = req.Question
-			messages[1].Content = fullResponseContent
-			messages[1].ReasoningContent = fullReasoningContent
+			messages[0].TokenUsage = doneResp.Usage.PromptTokens
+			messages[1].Content = doneResp.Content
+			messages[1].ReasoningContent = doneResp.ReasoningContent
+			messages[1].TokenUsage = doneResp.Usage.CompletionTokens
 			if err := h.Store.SaveMessages(&messages); err != nil {
 				// do nothing
 			}
@@ -162,10 +163,11 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
-	sendStreamMessageEvent(
-		c,
-		"[ID:"+strconv.FormatUint(messages[0].ID, 10)+","+strconv.FormatUint(messages[1].ID, 10)+"]",
-		false,
+	sendStreamCommandEvent(
+		c, "ID", map[string]uint64{
+			"q": messages[0].ID,
+			"a": messages[1].ID,
+		},
 	)
 
 	// 设置流式响应头
@@ -199,8 +201,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 				c.SSEvent("usage", event.Metadata)
 				resp, ok := event.Metadata.(chat_utils.DoneResponse)
 				if ok {
-					fullResponseContent = resp.Content
-					fullReasoningContent = resp.ReasoningContent
+					doneResp = &resp
 				}
 				// 结束标记
 				c.SSEvent("done", "[DONE]")
@@ -223,6 +224,23 @@ func sendStreamMessageEvent(c *gin.Context, msg string, thinking bool) {
 			"content": strings.ReplaceAll(msg, "\n", "\\n"),
 		},
 	)
+}
+
+// SendStreamCommandEvent 发送流式命令事件
+func sendStreamCommandEvent(c *gin.Context, cmd string, data interface{}) {
+	dataString, ok := data.(string)
+	if ok {
+		// 字符串格式
+		c.SSEvent("cmd", fmt.Sprintf("[%s,%s]", cmd, dataString))
+	} else {
+		// JSON 格式
+		c.SSEvent(
+			"cmd", gin.H{
+				"name": cmd,
+				"data": data,
+			},
+		)
+	}
 }
 
 func getCompletionModelConfig(config schema.ModelConfig) chat_utils.CompletionModelConfig {
