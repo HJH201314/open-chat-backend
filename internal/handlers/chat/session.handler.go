@@ -59,6 +59,36 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	ctx_utils.Success(c, true)
 }
 
+// GetSession
+//
+//	@Summary		获取会话
+//	@Description	获取会话
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string									true	"会话 ID"
+//	@Success		200			{object}	entity.CommonResponse[schema.Session]	"返回数据"
+//	@Router			/chat/session/{session_id} [get]
+func (h *Handler) GetSession(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	// 验证用户对会话的所有权
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.CustomError(c, 400, "no permission")
+		return
+	}
+	// 查询会话
+	session, err := h.Store.GetSession(uri.SessionId)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	ctx_utils.Success(c, session)
+}
+
 // GetSessions
 //
 //	@Summary		获取会话列表
@@ -88,4 +118,39 @@ func (h *Handler) GetSessions(c *gin.Context) {
 			NextPage: nextPage,
 		},
 	)
+}
+
+// UpdateSession
+//
+//	@Summary		更新会话
+//	@Description	更新会话
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string			true	"会话 ID"
+//	@Param			req			body		schema.Session	true	"会话 ID"
+//	@Success		200			{object}	entity.CommonResponse[bool]
+//	@Router			/chat/session/update/{session_id} [post]
+func (h *Handler) UpdateSession(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	var req schema.Session
+	if err := c.BindJSON(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	req.ID = uri.SessionId
+	// 验证用户对会话的所有权
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.CustomError(c, 400, "no permission")
+		return
+	}
+	if err := h.Store.UpdateSession(&req); err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update session")
+		return
+	}
+	ctx_utils.Success(c, true)
 }

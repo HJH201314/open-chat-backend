@@ -109,6 +109,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-schema_Session:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/schema.Session'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-schema_User:
     properties:
       code:
@@ -172,7 +185,12 @@ definitions:
       created_at:
         type: string
       id:
+        description: 默认结构
         type: integer
+      model:
+        allOf:
+          - $ref: '#/definitions/schema.Model'
+        description: 组装结构
       model_id:
         description: 回复所使用的模型
         type: integer
@@ -183,6 +201,8 @@ definitions:
         type: string
       session_id:
         type: string
+      token_usage:
+        type: integer
     type: object
   schema.Model:
     properties:
@@ -258,15 +278,6 @@ definitions:
         description: 预设系统提示
         type: string
       top_p:
-        type: number
-    type: object
-  schema.ModelParams:
-    properties:
-      max_tokens:
-        type: integer
-      schema:
-        type: string
-      temperature:
         type: number
     type: object
   schema.Permission:
@@ -346,7 +357,7 @@ definitions:
         description: 上下文开关
         type: boolean
       id:
-        description: 原始数据
+        description: 原始数据g
         type: string
       last_active:
         type: string
@@ -355,10 +366,11 @@ definitions:
         items:
           $ref: '#/definitions/schema.Message'
         type: array
-      model_params:
-        allOf:
-          - $ref: '#/definitions/schema.ModelParams'
-        description: 模型参数
+      name:
+        type: string
+      system_prompt:
+        description: 系统提示词
+        type: string
     type: object
   schema.User:
     properties:
@@ -449,6 +461,9 @@ paths:
         required: true
         type: string
       - in: query
+        name: end_time
+        type: integer
+      - in: query
         name: page_num
         required: true
         type: integer
@@ -458,6 +473,9 @@ paths:
       - in: query
         name: sort_expr
         type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
       - application/json
       responses:
@@ -468,6 +486,27 @@ paths:
       summary: 获取消息
       tags:
       - Message
+  /chat/session/{session_id}:
+    get:
+      consumes:
+        - application/json
+      description: 获取会话
+      parameters:
+        - description: 会话 ID
+          in: path
+          name: session_id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Session'
+      summary: 获取会话
+      tags:
+        - Session
   /chat/session/del/{session_id}:
     post:
       consumes:
@@ -496,6 +535,9 @@ paths:
       description: 获取会话列表
       parameters:
         - in: query
+          name: end_time
+          type: integer
+        - in: query
           name: page_num
           required: true
           type: integer
@@ -505,6 +547,9 @@ paths:
         - in: query
           name: sort_expr
           type: string
+        - in: query
+          name: start_time
+          type: integer
       produces:
         - application/json
       responses:
@@ -528,6 +573,33 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-string'
       summary: 创建会话
+      tags:
+        - Session
+  /chat/session/update/{session_id}:
+    post:
+      consumes:
+        - application/json
+      description: 更新会话
+      parameters:
+        - description: 会话 ID
+          in: path
+          name: session_id
+          required: true
+          type: string
+        - description: 会话 ID
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/schema.Session'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新会话
       tags:
       - Session
   /manage/provider/{provider_id}:

@@ -8,7 +8,7 @@ const docTemplate = `{
     "swagger": "2.0",
     "info": {
         "description": "{{escape .Description}}",
-        "title": "{{.Name}}",
+        "title": "{{.Title}}",
         "contact": {},
         "version": "{{.Version}}"
     },
@@ -95,6 +95,11 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "page_num",
                         "in": "query",
                         "required": true
@@ -107,6 +112,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
                         "in": "query"
                     }
                 ],
@@ -168,6 +178,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "page_num",
                         "in": "query",
                         "required": true
@@ -180,6 +195,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
                         "in": "query"
                     }
                 ],
@@ -211,6 +231,79 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/session/update/{session_id}": {
+            "post": {
+                "description": "更新会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "更新会话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "会话 ID",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Session"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/session/{session_id}": {
+            "get": {
+                "description": "获取会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "获取会话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Session"
                         }
                     }
                 }
@@ -676,6 +769,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-schema_Session": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Session"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-schema_User": {
             "type": "object",
             "properties": {
@@ -771,7 +885,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "description": "默认结构",
                     "type": "integer"
+                },
+                "model": {
+                    "description": "组装结构",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    ]
                 },
                 "model_id": {
                     "description": "回复所使用的模型",
@@ -786,6 +909,9 @@ const docTemplate = `{
                 },
                 "session_id": {
                     "type": "string"
+                },
+                "token_usage": {
+                    "type": "integer"
                 }
             }
         },
@@ -902,20 +1028,6 @@ const docTemplate = `{
                 }
             }
         },
-        "schema.ModelParams": {
-            "type": "object",
-            "properties": {
-                "max_tokens": {
-                    "type": "integer"
-                },
-                "schema": {
-                    "type": "string"
-                },
-                "temperature": {
-                    "type": "number"
-                }
-            }
-        },
         "schema.Permission": {
             "type": "object",
             "properties": {
@@ -1026,7 +1138,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "description": "原始数据",
+                    "description": "原始数据g",
                     "type": "string"
                 },
                 "last_active": {
@@ -1039,13 +1151,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/schema.Message"
                     }
                 },
-                "model_params": {
-                    "description": "模型参数",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/schema.ModelParams"
-                        }
-                    ]
+                "name": {
+                    "type": "string"
+                },
+                "system_prompt": {
+                    "description": "系统提示词",
+                    "type": "string"
                 }
             }
         },

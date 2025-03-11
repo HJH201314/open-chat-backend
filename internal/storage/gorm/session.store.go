@@ -29,6 +29,11 @@ func (s *GormStore) CreateSession(userId uint64, session *schema.Session) error 
 	)
 }
 
+// UpdateSession 更新会话
+func (s *GormStore) UpdateSession(session *schema.Session) error {
+	return s.Db.Omit("LastActive").Updates(session).Error
+}
+
 // GetSession 获取会话
 func (s *GormStore) GetSession(sessionId string) (*schema.Session, error) {
 	var session schema.Session

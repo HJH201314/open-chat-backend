@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
-	"strings"
 )
 
 // CompletionStream
@@ -93,18 +92,20 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 系统提示
-	var fullSystemPrompt = ""
+	var systemPrompt = ""
+	if session.SystemPrompt != "" {
+		systemPrompt = session.SystemPrompt
+	}
 	if modelConfig.AllowSystemPrompt {
-		var systemPrompt = ""
 		if req.SystemPrompt != nil && *req.SystemPrompt != "" {
 			systemPrompt = *req.SystemPrompt
 		}
-		const titlePrompt = "当检测到对话主题发生明显变化时，用简短的标题总结主题。生成的标题应不超过十个字，并用 [title:总结出的标题] 的格式放置在响应开头。如果主题没有变化，则正常回应用户问题。"
-		fullSystemPrompt = systemPrompt + titlePrompt
 	}
 
 	// 标准格式消息列表
 	var chatMessages []chat_utils.Message
+	// 此处不加入系统提示，系统提示由工具函数内部处理
+	// 标准格式消息 - 上下文消息
 	chatMessages = append(
 		chatMessages, slice.Map(
 			contextMessages, func(_ int, m schema.Message) chat_utils.Message {
@@ -115,6 +116,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			},
 		)...,
 	)
+	// 标准格式消息 - 用户输入
 	chatMessages = append(chatMessages, chat_utils.UserMessage(req.Question))
 
 	// 预先插入新对话，获取消息 ID
@@ -155,7 +157,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			},
 			Model:                 req.ModelName,
 			Messages:              chatMessages,
-			SystemPrompt:          fullSystemPrompt,
+			SystemPrompt:          systemPrompt,
 			CompletionModelConfig: getCompletionModelConfig(modelConfig),
 		},
 	)
@@ -221,7 +223,7 @@ func sendStreamMessageEvent(c *gin.Context, msg string, thinking bool) {
 	}
 	c.SSEvent(
 		name, gin.H{
-			"content": strings.ReplaceAll(msg, "\n", "\\n"),
+			"content": msg,
 		},
 	)
 }

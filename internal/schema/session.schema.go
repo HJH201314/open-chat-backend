@@ -5,26 +5,26 @@ import (
 	"time"
 )
 
+// Session 会话，一系列消息的集合
 type Session struct {
-	// 原始数据
-	ID            string      `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
-	Name          string      `json:"title"`
-	LastActive    time.Time   `json:"last_active"`
-	EnableContext bool        `json:"enable_context"`                                     // 上下文开关
-	ModelParams   ModelParams `gorm:"embedded;embeddedPrefix:param_" json:"model_params"` // 模型参数
+	// 原始数据g
+	ID            string    `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
+	Name          string    `json:"name"`
+	EnableContext bool      `json:"enable_context"` // 上下文开关
+	SystemPrompt  string    `json:"system_prompt"`  // 系统提示词
+	LastActive    time.Time `json:"last_active"`
 	AutoCreateDeleteAt
 
 	// 组装数据
 	Messages []Message `gorm:"foreignKey:SessionID;references:ID" json:"messages"`
 }
 
-type ModelParams struct {
-	Model       string  `json:"schema"`
-	Temperature float64 `json:"temperature"`
-	MaxTokens   int     `json:"max_tokens"`
-}
-
 type UserSessionType int
+
+const (
+	OWNER UserSessionType = iota + 1
+	INVITEE
+)
 
 func (u UserSessionType) MarshalJSON() ([]byte, error) {
 	var str string
@@ -37,11 +37,6 @@ func (u UserSessionType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(str)
 }
 
-const (
-	OWNER UserSessionType = iota + 1
-	INVITEE
-)
-
 // UserSession 用户-会话
 type UserSession struct {
 	// 原始数据
@@ -53,4 +48,8 @@ type UserSession struct {
 
 	// 组装数据
 	Session *Session `gorm:"foreignKey:ID;references:SessionID" json:"session"`
+}
+
+func (UserSession) TableName() string {
+	return "sessions_users"
 }
