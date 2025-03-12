@@ -1,3 +1,4 @@
+// Package constants ## THIS FILE WAS GENERATED, DO NOT MODIFY. ##
 package constants
 
 type BizError struct {
@@ -7,5 +8,4 @@ type BizError struct {
 
 var (
 	ErrNoPermission = BizError{Code: 10001, Msg: "no permission"}
-	ErrInvalidInput = BizError{Code: 10002, Msg: "invalid \"input\""}
 )
