@@ -6,18 +6,18 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
+	"log/slog"
 	"os"
 )
 
 type GormStore struct {
 	Db     *gorm.DB
-	Logger *log.Logger
+	Logger *slog.Logger
 }
 
 func NewGormStore() *GormStore {
 	store := &GormStore{
-		Logger: log.New(log.Writer(), "GormStore", log.LstdFlags),
+		Logger: slog.Default(),
 	}
 	// 初始化 Postgres 连接（在 .env 文件中配置）
 	dsn := fmt.Sprintf(
@@ -41,8 +41,12 @@ func NewGormStore() *GormStore {
 		},
 	)
 	if err != nil {
-		store.Logger.Fatal("failed to connect database")
+		store.Logger.Error("failed to connect database")
+		panic(err)
 	}
+	db.Set("gorm:table_options", "AUTO_INCREMENT=100000000")
+	// 注册自定义序列化器
+	InitSerializer()
 	// 自动迁移表结构
 	if err := db.AutoMigrate(
 		&schema.Session{},
@@ -57,11 +61,14 @@ func NewGormStore() *GormStore {
 		&schema.Model{},
 		&schema.BotRole{},
 		&schema.UserSession{},
+		&schema.UserUsage{},
+		&schema.Problem{},
+		&schema.Exam{}, &schema.ExamProblem{},
 	); err != nil {
-		store.Logger.Fatal("failed to migrate database")
+		store.Logger.Error("failed to migrate database")
 	}
 	// 初始化 GORM 存储
 	store.Db = db
-	store.Logger.Println("connected to postgres")
+	store.Logger.Info("connected to postgres")
 	return store
 }

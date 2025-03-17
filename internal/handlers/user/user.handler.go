@@ -116,12 +116,17 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 	var userRes schema.User
-	if err := h.Store.Db.Where(
+	if err := h.Db.Where(
 		"username = ? AND password = ?",
 		req.Username,
 		req.Password,
 	).First(&userRes).Error; err != nil {
 		ctx_utils.CustomError(c, 401, "username or password is incorrect")
+		return
+	}
+	// 赠送用量
+	if _, err := h.Store.CreateUserUsage(userRes.ID, 100000); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 
@@ -168,7 +173,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 	var userRes schema.User
-	if err := h.Store.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
+	if err := h.Db.Where("username = ?", req.Username).First(&userRes).Error; err == nil {
 		ctx_utils.Success(c, false)
 		return
 	}
@@ -177,6 +182,11 @@ func (h *Handler) Register(c *gin.Context) {
 		Password: req.Password,
 	}
 	if err := h.Store.CreateUser(&user); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	// 赠送用量
+	if _, err := h.Store.CreateUserUsage(user.ID, 100000); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}

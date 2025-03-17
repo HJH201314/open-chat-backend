@@ -4,7 +4,9 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"gorm.io/gorm"
+	"time"
 )
 
 // CreateSession 创建会话
@@ -32,6 +34,21 @@ func (s *GormStore) CreateSession(userId uint64, session *schema.Session) error 
 // UpdateSession 更新会话
 func (s *GormStore) UpdateSession(session *schema.Session) error {
 	return s.Db.Omit("LastActive").Updates(session).Error
+}
+
+// UpdateUserSessionShare 更新用户会话的分享信息
+func (s *GormStore) UpdateUserSessionShare(userSession *schema.UserSession) error {
+	updateData := map[string]interface{}{
+		"share_permanent":  userSession.ShareInfo.Permanent,
+		"share_title":      userSession.ShareInfo.Title,
+		"share_code":       userSession.ShareInfo.Code,
+		"share_expired_at": time.UnixMilli(userSession.ShareInfo.ExpiredAt),
+	}
+	return s.Db.Model(&schema.UserSession{}).Where(
+		"session_id = ? AND user_id = ?",
+		userSession.SessionID,
+		userSession.UserID,
+	).Updates(updateData).Error
 }
 
 // GetSession 获取会话
@@ -75,44 +92,30 @@ func (s *GormStore) DeleteSession(sessionId string) error {
 }
 
 // GetSessionsByPage 分页获取会话
-func (s *GormStore) GetSessionsByPage(userId uint64, page int, pageSize int, sort entity.SortParam) ([]schema.Session, *int, error) {
-	offset := (page - 1) * pageSize
-	// 多查询一条以判断是否存在下一页
-	limit := pageSize + 1
-
-	var userSessions []schema.UserSession
-	err := s.Db.Where("user_id = ?", userId).
-		Order(sort.WithDefault("id DESC", "id").SafeExpr([]string{})).
-		Offset(offset).
-		Limit(limit).
-		Preload("Session").
-		Preload(
-			"Session.Messages",
-			"id IN (SELECT MIN(id) FROM messages GROUP BY session_id)",
-		).
-		Find(&userSessions).Error
+func (s *GormStore) GetSessionsByPage(userId uint64, page entity.PagingParam, sort entity.SortParam) ([]schema.UserSession, *int64, error) {
+	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
+		s.Db.Where("user_id = ?", userId).
+			Preload("Session").
+			Preload(
+				"Session.Messages",
+				"id IN (SELECT MIN(id) FROM messages GROUP BY session_id)",
+			), page, sort,
+	)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// 过滤没有关联 session 的数据并取出 session
 	sessions := slice.FilterMap(
-		userSessions, func(_ int, userSession schema.UserSession) (schema.Session, bool) {
+		userSessions, func(_ int, userSession schema.UserSession) (schema.UserSession, bool) {
 			if userSession.Session == nil {
-				return schema.Session{}, false
+				return schema.UserSession{}, false
 			}
-			return *userSession.Session, true
+			return userSession, true
 		},
 	)
-	// 分页逻辑处理
-	hasNext := len(sessions) > pageSize
-	if hasNext {
-		sessions = sessions[:pageSize]
-		nextPage := page + 1
-		return sessions, &nextPage, nil
-	}
 
-	return sessions, nil, nil
+	return sessions, nextPage, nil
 }
 
 // ToggleContext 更新会话的上下文开关状态
@@ -148,29 +151,6 @@ func (s *GormStore) GetLatestMessages(sessionID string, limit int) ([]schema.Mes
 }
 
 // GetMessagesByPage 分页获取消息
-func (s *GormStore) GetMessagesByPage(sessionID string, page int, pageSize int, sort entity.SortParam) ([]schema.Message, *int, error) {
-	var messages []schema.Message
-	offset := (page - 1) * pageSize
-	// 多查询一条以判断是否存在下一页
-	limit := pageSize + 1
-
-	err := s.Db.Where("session_id = ?", sessionID).
-		Order(sort.WithDefault("id ASC", "id").SafeExpr([]string{})). // 保持与现有排序一致
-		Offset(offset).
-		Limit(limit).
-		Find(&messages).Error
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// 分页逻辑处理
-	hasNext := len(messages) > pageSize
-	if hasNext {
-		messages = messages[:pageSize]
-		nextPage := page + 1
-		return messages, &nextPage, nil
-	}
-
-	return messages, nil, nil
+func (s *GormStore) GetMessagesByPage(sessionID string, page entity.PagingParam, sort entity.SortParam) ([]schema.Message, *int64, error) {
+	return gorm_utils.GetByPageContinuous[schema.Message](s.Db.Where("session_id = ?", sessionID), page, sort)
 }

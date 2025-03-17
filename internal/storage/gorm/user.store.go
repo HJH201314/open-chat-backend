@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"github.com/fcraft/open-chat/internal/schema"
+	"gorm.io/gorm"
 )
 
 // CreateUser 创建用户
@@ -95,4 +96,34 @@ func (s *GormStore) UpdateRolePermissions(roleId uint64, permissionIds []uint64)
 	}
 	// 再绑定新的权限
 	return s.BindPermissionsToRole(roleId, permissionIds)
+}
+
+// GetUserUsage 获取用户用量
+func (s *GormStore) GetUserUsage(userId uint64) (*schema.UserUsage, error) {
+	var userLimit schema.UserUsage
+	return &userLimit, s.Db.Where("user_id = ?", userId).FirstOrCreate(&userLimit).Error
+}
+
+// CreateUserUsage 初始化用户用量
+func (s *GormStore) CreateUserUsage(userId uint64, init int64) (*schema.UserUsage, error) {
+	userLimit := schema.UserUsage{
+		UserID: userId,
+		Token:  init,
+	}
+	// 新创建的给予 init 用量，否则不变
+	return &userLimit, s.Db.Where("user_id = ?", userId).FirstOrCreate(&userLimit).Error
+}
+
+// UpdateUserUsage 更新用户用量
+func (s *GormStore) UpdateUserUsage(userId uint64, delta int64) error {
+	if delta < 0 {
+		return s.Db.Model(&schema.UserUsage{}).
+			Where("user_id = ?", userId).
+			UpdateColumn("token", gorm.Expr("token - ?", -delta)).Error
+	} else if delta > 0 {
+		return s.Db.Model(&schema.UserUsage{}).
+			Where("user_id = ?", userId).
+			UpdateColumn("token", gorm.Expr("token + ?", delta)).Error
+	}
+	return nil
 }

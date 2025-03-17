@@ -40,14 +40,22 @@ func (u UserSessionType) MarshalJSON() ([]byte, error) {
 // UserSession 用户-会话
 type UserSession struct {
 	// 原始数据
-	ID        uint64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID    uint64          `gorm:"index" json:"user_id"`
-	SessionID string          `gorm:"index" json:"session_id"`
+	UserID    uint64          `gorm:"primaryKey;index" json:"user_id"`
+	SessionID string          `gorm:"primaryKey;index" json:"session_id"`
 	Type      UserSessionType `json:"type"`
+	ShareInfo ShareInfo       `gorm:"embedded;embeddedPrefix:share_" json:"share_info"` // 分享字段
+
 	AutoCreateAt
 
 	// 组装数据
 	Session *Session `gorm:"foreignKey:ID;references:SessionID" json:"session"`
+}
+
+type ShareInfo struct {
+	Permanent bool   `gorm:"default:false" json:"permanent"`                          // 是否永久分享
+	Title     string `json:"title"`                                                   // 分享标题
+	Code      string `gorm:"type:varchar(32)" json:"code,omitempty"`                  // 邀请码（可选）
+	ExpiredAt int64  `gorm:"index;type:time;serializer:unixmstime" json:"expired_at"` // 邀请过期时间
 }
 
 func (UserSession) TableName() string {

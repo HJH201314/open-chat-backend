@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/MatusOllah/slogcolor"
 	"github.com/fcraft/open-chat/internal/middlewares"
 	"github.com/fcraft/open-chat/internal/routers"
 	"github.com/fcraft/open-chat/internal/services"
@@ -10,11 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 )
 
 func main() {
+	slog.SetDefault(slog.New(slogcolor.NewHandler(os.Stdout, slogcolor.DefaultOptions)))
+
 	// 加载环境变量
 	loadEnv()
 

@@ -100,6 +100,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "description": "分页参数",
                         "name": "page_num",
                         "in": "query",
                         "required": true
@@ -124,7 +125,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Message"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message"
                         }
                     }
                 }
@@ -183,6 +184,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "description": "分页参数",
                         "name": "page_num",
                         "in": "query",
                         "required": true
@@ -207,7 +209,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-entity_PagingResponse-schema_Session"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession"
                         }
                     }
                 }
@@ -236,6 +238,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/session/share/{session_id}": {
+            "post": {
+                "description": "分享会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "分享会话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "分享信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/chat.ShareSession.ShareRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/session/update/{session_id}": {
             "post": {
                 "description": "更新会话",
@@ -258,7 +301,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "会话 ID",
+                        "description": "会话信息",
                         "name": "req",
                         "in": "body",
                         "required": true,
@@ -272,6 +315,38 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/session/user/{session_id}": {
+            "get": {
+                "description": "获取用户会话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "获取用户会话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_UserSession"
                         }
                     }
                 }
@@ -464,6 +539,190 @@ const docTemplate = `{
                 }
             }
         },
+        "/tue/exam/create": {
+            "get": {
+                "description": "保存单个测验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exam"
+                ],
+                "summary": "保存单个测验",
+                "parameters": [
+                    {
+                        "description": "测验内容",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Exam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Exam"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/exam/{id}": {
+            "get": {
+                "description": "获取单个测验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exam"
+                ],
+                "summary": "获取单个测验",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "测验 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Exam"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/problem/create": {
+            "post": {
+                "description": "创建单个题目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "创建单个题目",
+                "parameters": [
+                    {
+                        "description": "题目结构",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Problem"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/problem/list": {
+            "get": {
+                "description": "分页获取题目列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "分页获取题目列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/problem/{id}": {
+            "get": {
+                "description": "获取单个题目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "获取单个题目",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "题目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Problem"
+                        }
+                    }
+                }
+            }
+        },
         "/user/login": {
             "post": {
                 "description": "用户登录",
@@ -617,11 +876,11 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "model_name": {
-                    "description": "Model.Name 准确的模型名称",
+                    "description": "Model.FileName 准确的模型名称",
                     "type": "string"
                 },
                 "provider_name": {
-                    "description": "Provider.Name 准确的供应商名称",
+                    "description": "Provider.FileName 准确的供应商名称",
                     "type": "string"
                 },
                 "question": {
@@ -630,6 +889,17 @@ const docTemplate = `{
                 "system_prompt": {
                     "description": "系统提示词",
                     "type": "string"
+                }
+            }
+        },
+        "chat.ShareSession.ShareRequest": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "share_info": {
+                    "$ref": "#/definitions/schema.ShareInfo"
                 }
             }
         },
@@ -706,7 +976,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-entity_PagingResponse-schema_Message": {
+        "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message": {
             "type": "object",
             "properties": {
                 "code": {
@@ -717,7 +987,7 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entity.PagingResponse-schema_Message"
+                            "$ref": "#/definitions/entity.PaginatedContinuationResponse-schema_Message"
                         }
                     ]
                 },
@@ -727,7 +997,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-entity_PagingResponse-schema_Session": {
+        "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem": {
             "type": "object",
             "properties": {
                 "code": {
@@ -738,7 +1008,70 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entity.PagingResponse-schema_Session"
+                            "$ref": "#/definitions/entity.PaginatedContinuationResponse-schema_Problem"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedContinuationResponse-schema_UserSession"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Exam": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Exam"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Problem": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Problem"
                         }
                     ]
                 },
@@ -811,6 +1144,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-schema_UserSession": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.UserSession"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-string": {
             "type": "object",
             "properties": {
@@ -828,7 +1182,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.PagingResponse-schema_Message": {
+        "entity.PaginatedContinuationResponse-schema_Message": {
             "type": "object",
             "properties": {
                 "list": {
@@ -842,13 +1196,27 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.PagingResponse-schema_Session": {
+        "entity.PaginatedContinuationResponse-schema_Problem": {
             "type": "object",
             "properties": {
                 "list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schema.Session"
+                        "$ref": "#/definitions/schema.Problem"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedContinuationResponse-schema_UserSession": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.UserSession"
                     }
                 },
                 "next_page": {
@@ -871,6 +1239,71 @@ const docTemplate = `{
                 },
                 "provider_id": {
                     "description": "外键，指向 Provider",
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.Exam": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "考试描述",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "problems": {
+                    "description": "考试包含的大题",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ExamProblem"
+                    }
+                },
+                "subjects": {
+                    "description": "所属科目分类",
+                    "type": "string"
+                },
+                "total_score": {
+                    "description": "考试总分（单位：0.01分）",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.ExamProblem": {
+            "type": "object",
+            "properties": {
+                "exam_id": {
+                    "description": "关联考试ID",
+                    "type": "integer"
+                },
+                "problem": {
+                    "description": "题目详细信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Problem"
+                        }
+                    ]
+                },
+                "problem_id": {
+                    "description": "关联题目ID",
+                    "type": "integer"
+                },
+                "score": {
+                    "description": "题目分值（1表示0.01分）",
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "description": "题目排序",
                     "type": "integer"
                 }
             }
@@ -991,7 +1424,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "provider_name": {
-                    "description": "关联的 Provider Name",
+                    "description": "关联的 Provider FileName",
                     "type": "string"
                 },
                 "updated_at": {
@@ -1053,6 +1486,88 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "schema.Problem": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "description": "答案（JSON存储ProblemAnswer）",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ProblemAnswer"
+                        }
+                    ]
+                },
+                "description": {
+                    "description": "支持HTML/Markdown",
+                    "type": "string"
+                },
+                "difficulty": {
+                    "description": "难度等级 1-5",
+                    "type": "integer"
+                },
+                "explanation": {
+                    "description": "答案解析",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "options": {
+                    "description": "选项（JSON存储ProblemOption数组）",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ProblemOption"
+                    }
+                },
+                "subject": {
+                    "description": "所属科目/分类",
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/schema.ProblemType"
+                }
+            }
+        },
+        "schema.ProblemAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "description": "选择题：存储正确选项ID []uint\n填空题：存储多个填空关键词 []string\n判断题：true/false\n简答题：文本答案 string"
+                }
+            }
+        },
+        "schema.ProblemOption": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "correct": {
+                    "description": "是否正确答案",
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.ProblemType": {
+            "type": "string",
+            "enum": [
+                "single_choice",
+                "multiple_choice",
+                "fill_blank",
+                "short_answer",
+                "true_false"
+            ],
+            "x-enum-varnames": [
+                "SingleChoice",
+                "MultipleChoice",
+                "FillBlank",
+                "ShortAnswer",
+                "TrueFalse"
+            ]
         },
         "schema.Provider": {
             "type": "object",
@@ -1160,6 +1675,27 @@ const docTemplate = `{
                 }
             }
         },
+        "schema.ShareInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "邀请码（可选）",
+                    "type": "string"
+                },
+                "expired_at": {
+                    "description": "邀请过期时间",
+                    "type": "integer"
+                },
+                "permanent": {
+                    "description": "是否永久分享",
+                    "type": "boolean"
+                },
+                "title": {
+                    "description": "分享标题",
+                    "type": "string"
+                }
+            }
+        },
         "schema.User": {
             "type": "object",
             "properties": {
@@ -1183,6 +1719,51 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "schema.UserSession": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "session": {
+                    "description": "组装数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Session"
+                        }
+                    ]
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "share_info": {
+                    "description": "分享字段",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ShareInfo"
+                        }
+                    ]
+                },
+                "type": {
+                    "$ref": "#/definitions/schema.UserSessionType"
+                },
+                "user_id": {
+                    "description": "原始数据",
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.UserSessionType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "OWNER",
+                "INVITEE"
+            ]
         },
         "user.Login.loginRequest": {
             "type": "object",

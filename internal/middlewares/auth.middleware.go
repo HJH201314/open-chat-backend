@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var ignorePaths = []string{"/swagger", "/user/refresh", "/user/login", "/user/register"}
+var ignorePaths = []string{"/swagger", "/user/refresh", "/user/login", "/user/logout", "/user/register"}
 
 // AuthMiddleware 鉴权中间件
 func AuthMiddleware(redisStore *redisstore.RedisStore) gin.HandlerFunc {

@@ -26,7 +26,11 @@ func (p *SortParam) SafeExpr(whitelist []string) string {
 
 	// 处理空值
 	if p.SortExpr == "" {
-		return fmt.Sprintf("%s, %s", p.DefaultOrder, p.StabilityField)
+		if p.DefaultOrder != "" {
+			return fmt.Sprintf("%s, %s", p.DefaultOrder, p.StabilityField)
+		} else {
+			return "" // 无默认排序，直接返回空字符串
+		}
 	}
 
 	// 分割多字段排序

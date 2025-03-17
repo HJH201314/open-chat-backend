@@ -1,6 +1,7 @@
 package ctx_utils
 
 import (
+	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,11 @@ func Success[T any](c *gin.Context, data T) {
 			Data: data,
 		},
 	)
+}
+
+// BizError 调用此函数，中断并返回有代码标记的错误
+func BizError(c *gin.Context, err constants.BizError) {
+	c.AbortWithStatusJSON(400, entity.ERR.WithCode(err.Code).WithMsg(err.Msg))
 }
 
 // CustomError 调用此函数，中断并返回格式化错误

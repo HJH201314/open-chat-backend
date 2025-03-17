@@ -31,7 +31,7 @@ type Model struct {
 // ModelCache 缓存中的 schema 数据
 type ModelCache struct {
 	Model
-	ProviderName        string `json:"provider_name"`         // 关联的 Provider Name
+	ProviderName        string `json:"provider_name"`         // 关联的 Provider FileName
 	ProviderDisplayName string `json:"provider_display_name"` // 关联的 Provider DisplayName
 }
 

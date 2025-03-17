@@ -29,8 +29,8 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var uri PathParamSessionId
 	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
-		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
-		ModelName     string  `json:"model_name" binding:"required"`    // Model.Name 准确的模型名称
+		Provider      string  `json:"provider_name" binding:"required"` // Provider.FileName 准确的供应商名称
+		ModelName     string  `json:"model_name" binding:"required"`    // Model.FileName 准确的模型名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
@@ -45,7 +45,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.CustomError(c, 400, "no permission")
+		ctx_utils.BizError(c, constants.ErrNoPermission)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 	// 获取会话配置
 	var session schema.Session
-	if err := h.Store.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
+	if err := h.Db.First(&session, "id = ?", uri.SessionId).Error; err != nil {
 		ctx_utils.CustomError(c, http.StatusNotFound, "session not found")
 		return
 	}
@@ -139,6 +139,10 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			messages[1].ReasoningContent = doneResp.ReasoningContent
 			messages[1].TokenUsage = doneResp.Usage.CompletionTokens
 			if err := h.Store.SaveMessages(&messages); err != nil {
+				// do nothing
+			}
+			usageTokens := doneResp.Usage.PromptTokens + doneResp.Usage.CompletionTokens*4
+			if err := h.Store.UpdateUserUsage(ctx_utils.GetUserId(c), -usageTokens); err != nil {
 				// do nothing
 			}
 		} else {

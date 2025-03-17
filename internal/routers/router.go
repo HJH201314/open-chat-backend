@@ -4,6 +4,7 @@ import (
 	_ "github.com/fcraft/open-chat/docs"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/handlers/chat"
+	"github.com/fcraft/open-chat/internal/handlers/course"
 	"github.com/fcraft/open-chat/internal/handlers/manage"
 	"github.com/fcraft/open-chat/internal/handlers/user"
 	"github.com/fcraft/open-chat/internal/services"
@@ -36,7 +37,9 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 			chatSessionGroup.POST("/new", chatHandler.CreateSession)
 			chatSessionGroup.GET("/list", chatHandler.GetSessions)
 			chatSessionGroup.GET("/:session_id", chatHandler.GetSession)
+			chatSessionGroup.GET("/user/:session_id", chatHandler.GetUserSession)
 			chatSessionGroup.POST("/update/:session_id", chatHandler.UpdateSession)
+			chatSessionGroup.POST("/share/:session_id", chatHandler.ShareSession)
 			chatSessionGroup.POST("/del/:session_id", chatHandler.DeleteSession)
 		}
 		chatMessageGroup := chatGroup.Group("/message")
@@ -84,6 +87,23 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 			manageModelGroup.GET("/list/:provider_id", manageHandler.GetModelsByProvider)
 			manageModelGroup.POST("/update", manageHandler.UpdateModel)
 			manageModelGroup.POST("/delete/:model_id", manageHandler.DeleteModel)
+		}
+	}
+
+	// routes for tue
+	tueHandler := course.NewCourseHandler(baseHandler)
+	tueGroup := r.Group("/tue")
+	{
+		tueProblemGroup := tueGroup.Group("/problem")
+		{
+			tueProblemGroup.GET("/:id", tueHandler.GetProblem)
+			tueProblemGroup.POST("/create", tueHandler.CreateProblem)
+			tueProblemGroup.GET("/list", tueHandler.GetProblems)
+		}
+		tueExamGroup := tueGroup.Group("/exam")
+		{
+			tueExamGroup.GET("/:id", tueHandler.GetExam)
+			tueExamGroup.POST("/create", tueHandler.CreateExam)
 		}
 	}
 

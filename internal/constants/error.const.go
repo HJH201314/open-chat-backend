@@ -7,7 +7,7 @@ import (
 
 // 预定义错误类型
 var (
-	ErrNotFound     = errors.New("404 not found")
+	ErrNotFound     = errors.New("not found")
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrBadRequest   = errors.New("invalid request")
 	ErrInternal     = errors.New("internal server error")
