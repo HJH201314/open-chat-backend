@@ -29,8 +29,8 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var uri PathParamSessionId
 	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
-		Provider      string  `json:"provider_name" binding:"required"` // Provider.FileName 准确的供应商名称
-		ModelName     string  `json:"model_name" binding:"required"`    // Model.FileName 准确的模型名称
+		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
+		ModelName     string  `json:"model_name" binding:"required"`    // Model.Name 准确的模型名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}

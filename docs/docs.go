@@ -876,11 +876,11 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "model_name": {
-                    "description": "Model.FileName 准确的模型名称",
+                    "description": "Model.Name 准确的模型名称",
                     "type": "string"
                 },
                 "provider_name": {
-                    "description": "Provider.FileName 准确的供应商名称",
+                    "description": "Provider.Name 准确的供应商名称",
                     "type": "string"
                 },
                 "question": {
