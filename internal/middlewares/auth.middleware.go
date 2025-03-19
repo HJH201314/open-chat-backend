@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+var AuthIgnoredKey = "auth_middleware_ignore"
 var ignorePaths = []string{"/swagger", "/user/refresh", "/user/login", "/user/logout", "/user/register"}
 
 // AuthMiddleware 鉴权中间件
@@ -22,6 +23,7 @@ func AuthMiddleware(redisStore *redisstore.RedisStore) gin.HandlerFunc {
 				return strings.HasPrefix(c.FullPath(), path)
 			},
 		) {
+			c.Set(AuthIgnoredKey, true)
 			c.Next()
 			return
 		}

@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/fcraft/open-chat/internal/schema"
-	"github.com/fcraft/open-chat/internal/storage/redis"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -15,14 +14,12 @@ import (
 type GormStore struct {
 	Db     *gorm.DB
 	Logger *slog.Logger
-	Redis  *redis.RedisStore
 }
 
 // NewGormStore 创建一个新的 GormStore
-func NewGormStore(redisStore *redis.RedisStore) *GormStore {
+func NewGormStore() *GormStore {
 	store := &GormStore{
 		Logger: slog.Default(),
-		Redis:  redisStore,
 	}
 	// 初始化 Postgres 连接（在 .env 文件中配置）
 	dsn := fmt.Sprintf(

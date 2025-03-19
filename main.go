@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/fcraft/open-chat/internal/storage/helper"
 	"log"
 	"log/slog"
 	"os"
@@ -24,8 +25,9 @@ func main() {
 	loadEnv()
 
 	// 初始化数据库
+	store := gorm.NewGormStore()
 	rd := redis.NewRedisStore()
-	store := gorm.NewGormStore(rd)
+	hp := helper.NewHandlerHelper(store, rd)
 
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
@@ -36,9 +38,9 @@ func main() {
 	r := gin.Default()
 	// 初始化中间件
 	r.Use(middlewares.AuthMiddleware(rd))
-	r.Use(middlewares.PermissionMiddleware(store))
+	r.Use(middlewares.PermissionMiddleware(hp))
 	// 初始化路由
-	routers.InitRouter(r, store, rd, cacheService)
+	routers.InitRouter(r, store, rd, hp, cacheService)
 
 	// 在 9033 端口启动服务
 	if err := r.Run("0.0.0.0:9033"); err != nil {

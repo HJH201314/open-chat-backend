@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"github.com/fcraft/open-chat/internal/storage/helper"
 	"reflect"
 	"runtime"
 	"strings"
@@ -140,7 +141,7 @@ func (r *Router) saveRoutesToDB() error {
 	return nil
 }
 
-func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, cache *services.CacheService) Router {
+func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, helper *helper.HandlerHelper, cache *services.CacheService) Router {
 	router := Router{
 		Engine: r,
 		store:  store,
@@ -148,7 +149,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DeepLinking(true)))
 
-	baseHandler := handlers.NewBaseHandler(store, redis, cache)
+	baseHandler := handlers.NewBaseHandler(store, redis, helper, cache)
 
 	// routes for chat completion
 	chatHandler := chat.NewChatHandler(baseHandler)

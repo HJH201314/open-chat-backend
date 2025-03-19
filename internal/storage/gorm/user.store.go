@@ -31,8 +31,7 @@ func (s *GormStore) BindRolesToUser(userId uint64, roleIds []uint64) error {
 		return err
 	}
 
-	// 删除用户角色缓存
-	return s.Redis.DeleteUserRolesCache(userId)
+	return nil
 }
 
 // UnbindRolesFromUser 解绑角色从用户
@@ -45,8 +44,7 @@ func (s *GormStore) UnbindRolesFromUser(userId uint64, roleIds []uint64) error {
 		return err
 	}
 
-	// 删除用户角色缓存
-	return s.Redis.DeleteUserRolesCache(userId)
+	return nil
 }
 
 // UpdateUserRoles 更新用户角色
@@ -61,21 +59,10 @@ func (s *GormStore) UpdateUserRoles(userId uint64, roleIds []uint64) error {
 
 // GetUserRoles 获取用户角色
 func (s *GormStore) GetUserRoles(userId uint64) ([]schema.Role, error) {
-	// 先尝试从缓存获取
-	if roles, err := s.Redis.GetCachedUserRoles(userId); err == nil && len(roles) > 0 {
-		return roles, nil
-	}
-
-	// 缓存未命中，从数据库获取
 	var roles []schema.Role
 	if err := s.Db.Preload("Permissions").Joins("JOIN user_roles ON roles.id = user_roles.role_id").
 		Where("user_roles.user_id = ?", userId).Find(&roles).Error; err != nil {
 		return nil, err
-	}
-
-	// 写入缓存
-	if len(roles) > 0 {
-		_ = s.Redis.CacheUserRoles(userId, roles)
 	}
 
 	return roles, nil

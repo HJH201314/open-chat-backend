@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/fcraft/open-chat/internal/services"
 	gormstore "github.com/fcraft/open-chat/internal/storage/gorm"
+	storehelper "github.com/fcraft/open-chat/internal/storage/helper"
 	redisstore "github.com/fcraft/open-chat/internal/storage/redis"
 	"gorm.io/gorm"
 )
@@ -12,15 +13,15 @@ type BaseHandler struct {
 	Db     *gorm.DB
 	Redis  *redisstore.RedisStore
 	Cache  *services.CacheService
-	Helper *HandlerHelper
+	Helper *storehelper.HandlerHelper
 }
 
-func NewBaseHandler(store *gormstore.GormStore, redis *redisstore.RedisStore, cache *services.CacheService) *BaseHandler {
+func NewBaseHandler(store *gormstore.GormStore, redis *redisstore.RedisStore, helper *storehelper.HandlerHelper, cache *services.CacheService) *BaseHandler {
 	return &BaseHandler{
 		Store:  store,
 		Db:     store.Db,
 		Redis:  redis,
 		Cache:  cache,
-		Helper: NewHandlerHelper(store, redis),
+		Helper: helper,
 	}
 }

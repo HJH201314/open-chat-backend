@@ -205,7 +205,7 @@ func (h *Handler) Register(c *gin.Context) {
 		}
 	}
 	// 绑定USER角色到新用户
-	if err := h.Store.BindRolesToUser(user.ID, []uint64{userRole.ID}); err != nil {
+	if err := h.Helper.BindRolesToUser(user.ID, []uint64{userRole.ID}); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}

@@ -3,14 +3,21 @@ package middlewares
 import (
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
-	"github.com/fcraft/open-chat/internal/storage/gorm"
+	handlers "github.com/fcraft/open-chat/internal/storage/helper"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 )
 
 // PermissionMiddleware 权限检查中间件
-func PermissionMiddleware(store *gorm.GormStore) gin.HandlerFunc {
+func PermissionMiddleware(helper *handlers.HandlerHelper) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 忽略权限检查
+		isIgnoreAuth, exists := c.Get(AuthIgnoredKey)
+		if exists && isIgnoreAuth.(bool) == true {
+			c.Next()
+			return
+		}
+
 		// 获取用户信息
 		claims, exists := c.Get("claims")
 		if !exists {
@@ -28,7 +35,7 @@ func PermissionMiddleware(store *gorm.GormStore) gin.HandlerFunc {
 		currentPath := c.Request.Method + ":" + c.FullPath()
 
 		// 查询用户角色
-		userRoles, err := store.GetUserRoles(userClaims.ID)
+		userRoles, err := helper.GetUserRoles(userClaims.ID)
 		if err != nil {
 			ctx_utils.HttpError(c, constants.ErrInternal)
 			return
