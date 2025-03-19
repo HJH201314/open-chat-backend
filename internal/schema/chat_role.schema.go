@@ -3,8 +3,9 @@ package schema
 type Permission struct {
 	ID          uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name        string `gorm:"unique;not null" json:"name"` // 权限名称
-	Path        string `gorm:"not null" json:"path"`        // 权限路径（一般与名称相同）
+	Path        string `gorm:"unique;not null" json:"path"` // 权限路径（形如：POST:/user/create）
 	Description string `json:"description"`                 // 权限描述
+	Module      string `json:"module"`                      // 所属模块（handler名称）
 	AutoCreateUpdateDeleteAt
 }
 

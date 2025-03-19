@@ -2,22 +2,26 @@ package gorm
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
+
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/storage/redis"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log/slog"
-	"os"
 )
 
 type GormStore struct {
 	Db     *gorm.DB
 	Logger *slog.Logger
+	Redis  *redis.RedisStore
 }
 
-func NewGormStore() *GormStore {
+func NewGormStore(redisStore *redis.RedisStore) *GormStore {
 	store := &GormStore{
 		Logger: slog.Default(),
+		Redis:  redisStore,
 	}
 	// 初始化 Postgres 连接（在 .env 文件中配置）
 	dsn := fmt.Sprintf(

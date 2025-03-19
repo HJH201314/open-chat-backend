@@ -1,25 +1,151 @@
 package routers
 
 import (
+	"reflect"
+	"runtime"
+	"strings"
+
 	_ "github.com/fcraft/open-chat/docs"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/handlers/chat"
 	"github.com/fcraft/open-chat/internal/handlers/course"
 	"github.com/fcraft/open-chat/internal/handlers/manage"
 	"github.com/fcraft/open-chat/internal/handlers/user"
+	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/fcraft/open-chat/internal/storage/redis"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm/clause"
 )
 
+// RouteInfo 存储路由信息
+type RouteInfo struct {
+	Method      string // HTTP 方法
+	Path        string // 路由路径
+	Name        string // 权限名称
+	Description string // 权限描述
+	Module      string // 所属模块
+}
+
 type Router struct {
-	Engine *gin.Engine
+	Engine     *gin.Engine
+	store      *gorm.GormStore
+	routeInfos []RouteInfo
+}
+
+var (
+	GET    = "GET"
+	POST   = "POST"
+	PUT    = "PUT"
+	PATCH  = "PATCH"
+	DELETE = "DELETE"
+)
+
+// getHandlerName 通过反射获取处理函数的名称
+func getHandlerName(handler gin.HandlerFunc) string {
+	// 获取处理函数的指针
+	handlerValue := reflect.ValueOf(handler)
+	if handlerValue.Kind() == reflect.Ptr {
+		handlerValue = handlerValue.Elem()
+	}
+
+	// 获取函数名称
+	handlerName := runtime.FuncForPC(handlerValue.Pointer()).Name()
+
+	// 提取函数名
+	parts := strings.Split(handlerName, ".")
+	if len(parts) >= 1 {
+		// 返回最后一部分（函数名）
+		funcName, _ := strings.CutSuffix(parts[len(parts)-1], "-fm")
+		return funcName
+	}
+
+	return handlerName
+}
+
+// getModuleName 通过反射获取处理函数的模块名
+func getModuleName(handler gin.HandlerFunc) string {
+	// 获取处理函数的指针
+	handlerValue := reflect.ValueOf(handler)
+	if handlerValue.Kind() == reflect.Ptr {
+		handlerValue = handlerValue.Elem()
+	}
+
+	// 获取函数名称
+	handlerName := runtime.FuncForPC(handlerValue.Pointer()).Name()
+
+	// 提取包名和函数名
+	parts := strings.Split(handlerName, ".")
+	if len(parts) >= 3 {
+		moduleParts := strings.Split(parts[len(parts)-3], "/")
+		// 返回倒数第三个部分（模块路径）的最后一部分（模块名）
+		return moduleParts[len(moduleParts)-1]
+	}
+
+	return ""
+}
+
+// registerRoute 收集路由信息并注册路由
+func (r *Router) registerRoute(group *gin.RouterGroup, method, path string, description string, handler gin.HandlerFunc) {
+	// 注册路由
+	switch method {
+	case GET:
+		group.GET(path, handler)
+	case POST:
+		group.POST(path, handler)
+	case PUT:
+		group.PUT(path, handler)
+	case DELETE:
+		group.DELETE(path, handler)
+	case PATCH:
+		group.PATCH(path, handler)
+	}
+
+	// 收集路由信息
+	moduleName := getModuleName(handler)
+	funcName := getHandlerName(handler)
+	r.routeInfos = append(
+		r.routeInfos, RouteInfo{
+			Method:      method,
+			Path:        group.BasePath() + path,
+			Name:        strings.Join([]string{moduleName, funcName}, "."),
+			Description: description,
+			Module:      moduleName,
+		},
+	)
+}
+
+// saveRoutesToDB 将收集到的路由信息保存到数据库
+func (r *Router) saveRoutesToDB() error {
+	for _, route := range r.routeInfos {
+		permission := schema.Permission{
+			Name:        route.Name,
+			Path:        route.Method + ":" + route.Path,
+			Description: route.Description,
+			Module:      route.Module,
+		}
+		// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
+		if err := r.store.Db.Clauses(
+			clause.OnConflict{
+				Columns:   []clause.Column{{Name: "path"}},
+				UpdateAll: true,
+			},
+		).Create(&permission).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, cache *services.CacheService) Router {
+	router := Router{
+		Engine: r,
+		store:  store,
+	}
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.DeepLinking(true)))
 
 	baseHandler := handlers.NewBaseHandler(store, redis, cache)
@@ -30,25 +156,95 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 	{
 		chatConfigGroup := chatGroup.Group("/config")
 		{
-			chatConfigGroup.GET("/models", chatHandler.GetModels)
+			router.registerRoute(
+				chatConfigGroup,
+				GET,
+				"/models",
+				"获取可用的聊天模型列表",
+
+				chatHandler.GetModels,
+			)
 		}
 		chatSessionGroup := chatGroup.Group("/session")
 		{
-			chatSessionGroup.POST("/new", chatHandler.CreateSession)
-			chatSessionGroup.GET("/list", chatHandler.GetSessions)
-			chatSessionGroup.GET("/:session_id", chatHandler.GetSession)
-			chatSessionGroup.GET("/user/:session_id", chatHandler.GetUserSession)
-			chatSessionGroup.POST("/update/:session_id", chatHandler.UpdateSession)
-			chatSessionGroup.POST("/share/:session_id", chatHandler.ShareSession)
-			chatSessionGroup.POST("/del/:session_id", chatHandler.DeleteSession)
+			router.registerRoute(
+				chatSessionGroup,
+				POST,
+				"/new",
+				"创建新的聊天会话",
+
+				chatHandler.CreateSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				GET,
+				"/list",
+				"获取当前用户的聊天会话列表",
+
+				chatHandler.GetSessions,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				GET,
+				"/:session_id",
+				"获取指定会话的详细信息",
+
+				chatHandler.GetSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				GET,
+				"/user/:session_id",
+				"获取指定用户的会话信息",
+
+				chatHandler.GetUserSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				POST,
+				"/update/:session_id",
+				"更新指定会话的信息",
+
+				chatHandler.UpdateSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				POST,
+				"/share/:session_id",
+				"分享指定的聊天会话",
+
+				chatHandler.ShareSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				POST,
+				"/del/:session_id",
+				"删除指定的聊天会话",
+
+				chatHandler.DeleteSession,
+			)
 		}
 		chatMessageGroup := chatGroup.Group("/message")
 		{
-			chatMessageGroup.GET("/list/:session_id", chatHandler.GetMessages)
+			router.registerRoute(
+				chatMessageGroup,
+				GET,
+				"/list/:session_id",
+				"获取指定会话的消息列表",
+
+				chatHandler.GetMessages,
+			)
 		}
 		chatCompletionGroup := chatGroup.Group("/completion")
 		{
-			chatCompletionGroup.POST("/stream/:session_id", chatHandler.CompletionStream)
+			router.registerRoute(
+				chatCompletionGroup,
+				POST,
+				"/stream/:session_id",
+				"与AI进行流式对话",
+
+				chatHandler.CompletionStream,
+			)
 		}
 	}
 
@@ -56,11 +252,11 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 	userHandler := user.NewUserHandler(baseHandler)
 	userGroup := r.Group("/user")
 	{
-		userGroup.POST("/ping", userHandler.Ping)
-		userGroup.GET("/refresh", userHandler.Refresh)
-		userGroup.POST("/login", userHandler.Login)
-		userGroup.POST("/logout", userHandler.Logout)
-		userGroup.POST("/register", userHandler.Register)
+		router.registerRoute(userGroup, POST, "/ping", "检查用户登录状态", userHandler.Ping)
+		router.registerRoute(userGroup, GET, "/refresh", "刷新用户的访问令牌", userHandler.Refresh)
+		router.registerRoute(userGroup, POST, "/login", "用户登录接口", userHandler.Login)
+		router.registerRoute(userGroup, POST, "/logout", "用户登出接口", userHandler.Logout)
+		router.registerRoute(userGroup, POST, "/register", "新用户注册接口", userHandler.Register)
 	}
 
 	// routes for management
@@ -69,24 +265,108 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 	{
 		manageProviderGroup := manageGroup.Group("/provider")
 		{
-			manageProviderGroup.POST("/create", manageHandler.CreateProvider)
-			manageProviderGroup.GET("/:provider_id", manageHandler.GetProvider)
-			manageProviderGroup.GET("/list", manageHandler.GetProviders)
-			manageProviderGroup.POST("/update", manageHandler.UpdateProvider)
-			manageProviderGroup.POST("/delete/:provider_id", manageHandler.DeleteProvider)
+			router.registerRoute(
+				manageProviderGroup,
+				POST,
+				"/create",
+				"创建新的AI提供商",
+
+				manageHandler.CreateProvider,
+			)
+			router.registerRoute(
+				manageProviderGroup,
+				GET,
+				"/:provider_id",
+				"获取指定提供商的详细信息",
+
+				manageHandler.GetProvider,
+			)
+			router.registerRoute(
+				manageProviderGroup,
+				GET,
+				"/list",
+				"获取所有AI提供商列表",
+
+				manageHandler.GetProviders,
+			)
+			router.registerRoute(
+				manageProviderGroup,
+				POST,
+				"/update",
+				"更新AI提供商信息",
+
+				manageHandler.UpdateProvider,
+			)
+			router.registerRoute(
+				manageProviderGroup,
+				POST,
+				"/delete/:provider_id",
+				"删除指定的AI提供商",
+
+				manageHandler.DeleteProvider,
+			)
 		}
 		manageApiKeyGroup := manageGroup.Group("/key")
 		{
-			manageApiKeyGroup.POST("/create", manageHandler.CreateAPIKey)
-			manageApiKeyGroup.POST("/delete/:key_id", manageHandler.DeleteAPIKey)
+			router.registerRoute(
+				manageApiKeyGroup,
+				POST,
+				"/create",
+				"创建新的API访问密钥",
+
+				manageHandler.CreateAPIKey,
+			)
+			router.registerRoute(
+				manageApiKeyGroup,
+				POST,
+				"/delete/:key_id",
+				"删除指定的API访问密钥",
+
+				manageHandler.DeleteAPIKey,
+			)
 		}
 		manageModelGroup := manageGroup.Group("/schema")
 		{
-			manageModelGroup.POST("/create", manageHandler.CreateModel)
-			manageModelGroup.GET("/:model_id", manageHandler.GetModel)
-			manageModelGroup.GET("/list/:provider_id", manageHandler.GetModelsByProvider)
-			manageModelGroup.POST("/update", manageHandler.UpdateModel)
-			manageModelGroup.POST("/delete/:model_id", manageHandler.DeleteModel)
+			router.registerRoute(
+				manageModelGroup,
+				POST,
+				"/create",
+				"创建新的AI模型",
+
+				manageHandler.CreateModel,
+			)
+			router.registerRoute(
+				manageModelGroup,
+				GET,
+				"/:model_id",
+				"获取指定模型的详细信息",
+
+				manageHandler.GetModel,
+			)
+			router.registerRoute(
+				manageModelGroup,
+				GET,
+				"/list/:provider_id",
+				"获取指定提供商的所有模型列表",
+
+				manageHandler.GetModelsByProvider,
+			)
+			router.registerRoute(
+				manageModelGroup,
+				POST,
+				"/update",
+				"更新AI模型信息",
+
+				manageHandler.UpdateModel,
+			)
+			router.registerRoute(
+				manageModelGroup,
+				POST,
+				"/delete/:model_id",
+				"删除指定的AI模型",
+
+				manageHandler.DeleteModel,
+			)
 		}
 	}
 
@@ -96,24 +376,71 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 	{
 		tueProblemGroup := tueGroup.Group("/problem")
 		{
-			tueProblemGroup.GET("/:id", tueHandler.GetProblem)
-			tueProblemGroup.POST("/create", tueHandler.CreateProblem)
-			tueProblemGroup.GET("/list", tueHandler.GetProblems)
+			router.registerRoute(
+				tueProblemGroup,
+				GET,
+				"/:id",
+				"获取指定题目的详细信息",
+
+				tueHandler.GetProblem,
+			)
+			router.registerRoute(
+				tueProblemGroup,
+				POST,
+				"/create",
+				"创建新的题目",
+
+				tueHandler.CreateProblem,
+			)
+			router.registerRoute(
+				tueProblemGroup,
+				GET,
+				"/list",
+				"获取所有题目列表",
+
+				tueHandler.GetProblems,
+			)
 		}
 		tueExamGroup := tueGroup.Group("/exam")
 		{
-			tueExamGroup.GET("/:id", tueHandler.GetExam)
-			tueExamGroup.POST("/create", tueHandler.CreateExam)
+			router.registerRoute(tueExamGroup, GET, "/:id", "获取指定考试的详细信息", tueHandler.GetExam)
+			router.registerRoute(tueExamGroup, POST, "/create", "创建新的考试", tueHandler.CreateExam)
 		}
 		tueCourseGroup := tueGroup.Group("/course")
 		{
-			tueCourseGroup.GET("/:id", tueHandler.GetCourse)
-			tueCourseGroup.POST("/create", tueHandler.CreateCourse)
-			tueCourseGroup.POST("/update", tueHandler.UpdateCourse)
-			tueCourseGroup.POST("/delete/:id", tueHandler.DeleteCourse)
-			tueCourseGroup.GET("/list", tueHandler.GetCourses)
+			router.registerRoute(
+				tueCourseGroup,
+				GET,
+				"/:id",
+				"获取指定课程的详细信息",
+
+				tueHandler.GetCourse,
+			)
+			router.registerRoute(tueCourseGroup, POST, "/create", "创建新的课程", tueHandler.CreateCourse)
+			router.registerRoute(tueCourseGroup, POST, "/update", "更新课程信息", tueHandler.UpdateCourse)
+			router.registerRoute(
+				tueCourseGroup,
+				POST,
+				"/delete/:id",
+				"删除指定的课程",
+
+				tueHandler.DeleteCourse,
+			)
+			router.registerRoute(
+				tueCourseGroup,
+				GET,
+				"/list",
+				"获取所有课程列表",
+
+				tueHandler.GetCourses,
+			)
 		}
 	}
 
-	return Router{Engine: r}
+	// 保存路由信息到数据库
+	if err := router.saveRoutesToDB(); err != nil {
+		panic("Failed to save routes to database: " + err.Error())
+	}
+
+	return router
 }

@@ -191,5 +191,24 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
+	// 添加默认USER角色
+	var userRole schema.Role
+	if err := h.Db.Where("name = ?", "USER").First(&userRole).Error; err != nil {
+		// 如果USER角色不存在，创建它
+		userRole = schema.Role{
+			Name:        "USER",
+			Description: "普通用户",
+		}
+		if err := h.Db.Create(&userRole).Error; err != nil {
+			ctx_utils.HttpError(c, constants.ErrInternal)
+			return
+		}
+	}
+	// 绑定USER角色到新用户
+	if err := h.Store.BindRolesToUser(user.ID, []uint64{userRole.ID}); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
 	ctx_utils.Success(c, true)
 }

@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"log"
+	"log/slog"
+	"os"
+	"time"
+
 	"github.com/MatusOllah/slogcolor"
 	"github.com/fcraft/open-chat/internal/middlewares"
 	"github.com/fcraft/open-chat/internal/routers"
@@ -10,10 +15,6 @@ import (
 	"github.com/fcraft/open-chat/internal/storage/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"log"
-	"log/slog"
-	"os"
-	"time"
 )
 
 func main() {
@@ -23,9 +24,8 @@ func main() {
 	loadEnv()
 
 	// 初始化数据库
-	store := gorm.NewGormStore()
-	// 初始化 Redis
 	rd := redis.NewRedisStore()
+	store := gorm.NewGormStore(rd)
 
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
@@ -36,6 +36,7 @@ func main() {
 	r := gin.Default()
 	// 初始化中间件
 	r.Use(middlewares.AuthMiddleware(rd))
+	r.Use(middlewares.PermissionMiddleware(store))
 	// 初始化路由
 	routers.InitRouter(r, store, rd, cacheService)
 
