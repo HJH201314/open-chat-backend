@@ -105,6 +105,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, c
 			tueExamGroup.GET("/:id", tueHandler.GetExam)
 			tueExamGroup.POST("/create", tueHandler.CreateExam)
 		}
+		tueCourseGroup := tueGroup.Group("/course")
+		{
+			tueCourseGroup.GET("/:id", tueHandler.GetCourse)
+			tueCourseGroup.POST("/create", tueHandler.CreateCourse)
+			tueCourseGroup.POST("/update", tueHandler.UpdateCourse)
+			tueCourseGroup.POST("/delete/:id", tueHandler.DeleteCourse)
+			tueCourseGroup.GET("/list", tueHandler.GetCourses)
+		}
 	}
 
 	return Router{Engine: r}

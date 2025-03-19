@@ -116,6 +116,32 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Course'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-schema_Course:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/schema.Course'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-schema_Exam:
     properties:
       code:
@@ -233,6 +259,15 @@ definitions:
       next_page:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_Course:
+    properties:
+      last_page:
+        type: integer
+      list:
+        items:
+          $ref: '#/definitions/schema.Course'
+        type: array
+    type: object
   schema.APIKey:
     properties:
       created_at:
@@ -244,6 +279,72 @@ definitions:
         type: string
       provider_id:
         description: 外键，指向 Provider
+        type: integer
+    type: object
+  schema.Course:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 课程描述
+        type: string
+      exams:
+        description: 课程考试
+        items:
+          $ref: '#/definitions/schema.CourseExam'
+        type: array
+      id:
+        description: 原始数据
+        type: integer
+      name:
+        description: 课程名称
+        type: string
+      resources:
+        description: 关联数据
+        items:
+          $ref: '#/definitions/schema.CourseResource'
+        type: array
+      sorted_data:
+        description: 排好序的数据
+        items: { }
+        type: array
+      updated_at:
+        type: string
+    type: object
+  schema.CourseExam:
+    properties:
+      course_id:
+        description: 关联课程ID
+        type: integer
+      exam:
+        allOf:
+          - $ref: '#/definitions/schema.Exam'
+        description: 考试详细信息
+      exam_id:
+        description: 关联考试ID
+        type: integer
+      id:
+        type: integer
+      sort_order:
+        description: 考试排序
+        type: integer
+    type: object
+  schema.CourseResource:
+    properties:
+      course_id:
+        description: 关联课程ID
+        type: integer
+      id:
+        type: integer
+      resource:
+        allOf:
+          - $ref: '#/definitions/schema.Resource'
+        description: 资源详细信息
+      resource_id:
+        description: 关联资源ID
+        type: integer
+      sort_order:
+        description: 资源排序
         type: integer
     type: object
   schema.Exam:
@@ -416,6 +517,8 @@ definitions:
         allOf:
           - $ref: '#/definitions/schema.ProblemAnswer'
         description: 答案（JSON存储ProblemAnswer）
+      created_at:
+        type: string
       description:
         description: 支持HTML/Markdown
         type: string
@@ -437,6 +540,8 @@ definitions:
         type: string
       type:
         $ref: '#/definitions/schema.ProblemType'
+      updated_at:
+        type: string
     type: object
   schema.ProblemAnswer:
     properties:
@@ -499,6 +604,27 @@ definitions:
         items:
           $ref: '#/definitions/schema.Model'
         type: array
+      updated_at:
+        type: string
+    type: object
+  schema.Resource:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 资源描述
+        type: string
+      file_key:
+        description: 文件的 uuid key
+        type: string
+      file_name:
+        description: OSS 中的文件名
+        type: string
+      id:
+        type: integer
+      origin_file_name:
+        description: 原始文件名
+        type: string
       updated_at:
         type: string
     type: object
@@ -969,6 +1095,124 @@ paths:
       summary: 更新 API 提供商
       tags:
       - Provider
+  /tue/course/{id}:
+    get:
+      consumes:
+        - application/json
+      description: 获取单个课程
+      parameters:
+        - description: 课程 ID
+          in: path
+          name: id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Course'
+      summary: 获取单个课程
+      tags:
+        - Course
+    post:
+      consumes:
+        - application/json
+      description: 删除课程
+      parameters:
+        - description: 课程 ID
+          in: path
+          name: id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-any'
+      summary: 删除课程
+      tags:
+        - Course
+  /tue/course/create:
+    post:
+      consumes:
+        - application/json
+      description: 创建课程基础参数，绑定或创建题目、资源
+      parameters:
+        - description: 课程内容
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/schema.Course'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Course'
+      summary: 创建课程
+      tags:
+        - Course
+  /tue/course/list:
+    get:
+      consumes:
+        - application/json
+      description: 获取课程列表
+      parameters:
+        - in: query
+          name: end_time
+          type: integer
+        - description: 分页参数
+          in: query
+          name: page_num
+          required: true
+          type: integer
+        - in: query
+          name: page_size
+          type: integer
+        - in: query
+          name: sort_expr
+          type: string
+        - in: query
+          name: start_time
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course'
+      summary: 获取课程列表
+      tags:
+        - Course
+  /tue/course/update:
+    post:
+      consumes:
+        - application/json
+      description: 更新课程基础参数，增量更新 题目、资源
+      parameters:
+        - description: 课程内容
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/schema.Course'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Course'
+      summary: 更新课程
+      tags:
+        - Course
   /tue/exam/{id}:
     get:
       consumes:

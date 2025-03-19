@@ -528,6 +528,188 @@
                 }
             }
         },
+        "/tue/course/create": {
+            "post": {
+                "description": "创建课程基础参数，绑定或创建题目、资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "创建课程",
+                "parameters": [
+                    {
+                        "description": "课程内容",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Course"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Course"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/course/list": {
+            "get": {
+                "description": "获取课程列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "获取课程列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/course/update": {
+            "post": {
+                "description": "更新课程基础参数，增量更新 题目、资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "更新课程",
+                "parameters": [
+                    {
+                        "description": "课程内容",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Course"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Course"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/course/{id}": {
+            "get": {
+                "description": "获取单个课程",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "获取单个课程",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "课程 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Course"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "删除课程",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "删除课程",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "课程 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-any"
+                        }
+                    }
+                }
+            }
+        },
         "/tue/exam/create": {
             "get": {
                 "description": "保存单个测验",
@@ -1028,6 +1210,48 @@
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Course"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Course": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Course"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-schema_Exam": {
             "type": "object",
             "properties": {
@@ -1213,6 +1437,20 @@
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_Course": {
+            "type": "object",
+            "properties": {
+                "last_page": {
+                    "type": "integer"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Course"
+                    }
+                }
+            }
+        },
         "schema.APIKey": {
             "type": "object",
             "properties": {
@@ -1228,6 +1466,104 @@
                 },
                 "provider_id": {
                     "description": "外键，指向 Provider",
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.Course": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "课程描述",
+                    "type": "string"
+                },
+                "exams": {
+                    "description": "课程考试",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.CourseExam"
+                    }
+                },
+                "id": {
+                    "description": "原始数据",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "课程名称",
+                    "type": "string"
+                },
+                "resources": {
+                    "description": "关联数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.CourseResource"
+                    }
+                },
+                "sorted_data": {
+                    "description": "排好序的数据",
+                    "type": "array",
+                    "items": {}
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.CourseExam": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "description": "关联课程ID",
+                    "type": "integer"
+                },
+                "exam": {
+                    "description": "考试详细信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Exam"
+                        }
+                    ]
+                },
+                "exam_id": {
+                    "description": "关联考试ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "description": "考试排序",
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.CourseResource": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "description": "关联课程ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "resource": {
+                    "description": "资源详细信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Resource"
+                        }
+                    ]
+                },
+                "resource_id": {
+                    "description": "关联资源ID",
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "description": "资源排序",
                     "type": "integer"
                 }
             }
@@ -1487,6 +1823,9 @@
                         }
                     ]
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "description": {
                     "description": "支持HTML/Markdown",
                     "type": "string"
@@ -1515,6 +1854,9 @@
                 },
                 "type": {
                     "$ref": "#/definitions/schema.ProblemType"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -1596,6 +1938,36 @@
                     "items": {
                         "$ref": "#/definitions/schema.Model"
                     }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.Resource": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "资源描述",
+                    "type": "string"
+                },
+                "file_key": {
+                    "description": "文件的 uuid key",
+                    "type": "string"
+                },
+                "file_name": {
+                    "description": "OSS 中的文件名",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "origin_file_name": {
+                    "description": "原始文件名",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

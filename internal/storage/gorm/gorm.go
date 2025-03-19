@@ -62,8 +62,9 @@ func NewGormStore() *GormStore {
 		&schema.BotRole{},
 		&schema.UserSession{},
 		&schema.UserUsage{},
-		&schema.Problem{},
+		&schema.Problem{}, &schema.Resource{},
 		&schema.Exam{}, &schema.ExamProblem{},
+		&schema.Course{}, &schema.CourseResource{}, &schema.CourseExam{},
 	); err != nil {
 		store.Logger.Error("failed to migrate database")
 	}

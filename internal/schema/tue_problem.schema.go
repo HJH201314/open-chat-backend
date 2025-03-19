@@ -37,6 +37,8 @@ type Problem struct {
 	Explanation string          `gorm:"type:text" json:"explanation"`                     // 答案解析
 	Difficulty  int             `gorm:"type:int;default:3" json:"difficulty"`             // 难度等级 1-5
 	Subject     string          `gorm:"type:varchar(100)" json:"subject"`                 // 所属科目/分类
+
+	AutoCreateUpdateDeleteAt
 }
 
 func (p *Problem) TableName() string {
