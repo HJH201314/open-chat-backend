@@ -18,6 +18,7 @@ type GormStore struct {
 	Redis  *redis.RedisStore
 }
 
+// NewGormStore 创建一个新的 GormStore
 func NewGormStore(redisStore *redis.RedisStore) *GormStore {
 	store := &GormStore{
 		Logger: slog.Default(),
@@ -75,5 +76,38 @@ func NewGormStore(redisStore *redis.RedisStore) *GormStore {
 	// 初始化 GORM 存储
 	store.Db = db
 	store.Logger.Info("connected to postgres")
+
+	InitDatabase(store)
 	return store
+}
+
+// InitDatabase 初始化 GORM 存储
+func InitDatabase(store *GormStore) {
+	store.Logger.Info("initializing database ...")
+	// 预插入必要数据
+	if err := store.Db.Transaction(
+		func(tx *gorm.DB) error {
+			if err := tx.Where("name = ?", "SUPER_ADMIN").FirstOrCreate(
+				&schema.Role{
+					Name:        "SUPER_ADMIN",
+					Description: "超级管理员",
+				},
+			).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("name = ?", "USER").FirstOrCreate(
+				&schema.Role{
+					Name:        "USER",
+					Description: "普通用户",
+				},
+			).Error; err != nil {
+				return err
+			}
+			return nil
+		},
+	); err != nil {
+		store.Logger.Error("failed to insert necessary data")
+		panic(err)
+	}
+	store.Logger.Info("initialize database success")
 }
