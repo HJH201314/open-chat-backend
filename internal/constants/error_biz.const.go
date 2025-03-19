@@ -2,10 +2,16 @@
 package constants
 
 type BizError struct {
-	Code int
-	Msg  string
+	Msg      string
+	HttpCode int
+	BizCode  int
+}
+
+// Error 实现 error 接口
+func (e BizError) Error() string {
+	return e.Msg
 }
 
 var (
-	ErrNoPermission = BizError{Code: 10001, Msg: "no permission"}
+	ErrNoPermission = BizError{HttpCode: 400, BizCode: 10001, Msg: "no permission"}
 )

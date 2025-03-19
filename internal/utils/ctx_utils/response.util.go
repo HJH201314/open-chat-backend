@@ -19,7 +19,11 @@ func Success[T any](c *gin.Context, data T) {
 
 // BizError 调用此函数，中断并返回有代码标记的错误
 func BizError(c *gin.Context, err constants.BizError) {
-	c.AbortWithStatusJSON(400, entity.ERR.WithCode(err.Code).WithMsg(err.Msg))
+	httpCode := 400
+	if err.HttpCode != 0 {
+		httpCode = err.HttpCode
+	}
+	c.AbortWithStatusJSON(httpCode, entity.ERR.WithCode(err.BizCode).WithMsg(err.Msg))
 }
 
 // CustomError 调用此函数，中断并返回格式化错误
