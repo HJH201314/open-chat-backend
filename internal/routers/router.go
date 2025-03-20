@@ -1,10 +1,12 @@
 package routers
 
 import (
-	"github.com/fcraft/open-chat/internal/storage/helper"
+	"gorm.io/gorm/clause"
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/fcraft/open-chat/internal/storage/helper"
 
 	_ "github.com/fcraft/open-chat/docs"
 	"github.com/fcraft/open-chat/internal/handlers"
@@ -19,7 +21,6 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/gorm/clause"
 )
 
 // RouteInfo 存储路由信息
@@ -121,22 +122,25 @@ func (r *Router) registerRoute(group *gin.RouterGroup, method, path string, desc
 
 // saveRoutesToDB 将收集到的路由信息保存到数据库
 func (r *Router) saveRoutesToDB() error {
+	var permissions []schema.Permission
 	for _, route := range r.routeInfos {
-		permission := schema.Permission{
-			Name:        route.Name,
-			Path:        route.Method + ":" + route.Path,
-			Description: route.Description,
-			Module:      route.Module,
-		}
-		// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
-		if err := r.store.Db.Clauses(
-			clause.OnConflict{
-				Columns:   []clause.Column{{Name: "path"}},
-				UpdateAll: true,
+		permissions = append(
+			permissions, schema.Permission{
+				Name:        route.Name,
+				Path:        route.Method + ":" + route.Path,
+				Description: route.Description,
+				Module:      route.Module,
 			},
-		).Create(&permission).Error; err != nil {
-			return err
-		}
+		)
+	}
+	// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
+	if err := r.store.Db.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "path"}},
+			UpdateAll: true,
+		},
+	).CreateInBatches(&permissions, 100).Error; err != nil {
+		return err
 	}
 	return nil
 }
@@ -163,9 +167,57 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"/models",
 				"获取可用的聊天模型列表",
 
-				chatHandler.GetModels,
+				chatHandler.GetModelConfig,
+			)
+			router.registerRoute(
+				chatConfigGroup,
+				GET,
+				"/bots",
+				"获取可用的 bot 角色列表",
+
+				chatHandler.GetBotConfig,
 			)
 		}
+		// routes for bot role
+		botRoleGroup := r.Group("/bot")
+		{
+			router.registerRoute(
+				botRoleGroup,
+				POST,
+				"/create",
+				"创建新的机器人角色",
+				chatHandler.CreateBotRole,
+			)
+			router.registerRoute(
+				botRoleGroup,
+				GET,
+				"/list",
+				"获取机器人角色列表",
+				chatHandler.ListBotRoles,
+			)
+			router.registerRoute(
+				botRoleGroup,
+				GET,
+				"/:id",
+				"获取指定机器人角色的详细信息",
+				chatHandler.GetBotRole,
+			)
+			router.registerRoute(
+				botRoleGroup,
+				POST,
+				"/:id/update",
+				"更新机器人角色信息",
+				chatHandler.UpdateBotRole,
+			)
+			router.registerRoute(
+				botRoleGroup,
+				POST,
+				"/:id/delete",
+				"删除指定的机器人角色",
+				chatHandler.DeleteBotRole,
+			)
+		}
+
 		chatSessionGroup := chatGroup.Group("/session")
 		{
 			router.registerRoute(

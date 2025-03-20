@@ -1,6 +1,8 @@
 definitions:
   chat.CompletionStream.userInput:
     properties:
+      bot_id:
+        type: integer
       enable_context:
         type: boolean
       model_name:
@@ -33,6 +35,20 @@ definitions:
         type: integer
       data:
         description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-array_schema_BotRole:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        items:
+          $ref: '#/definitions/schema.BotRole'
+        type: array
       msg:
         description: 消息
         type: string
@@ -281,6 +297,27 @@ definitions:
         description: 外键，指向 Provider
         type: integer
     type: object
+  schema.BotRole:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 角色描述
+        type: string
+      id:
+        description: 原始数据
+        type: integer
+      name:
+        description: 角色名称
+        type: string
+      prompt_session:
+        allOf:
+          - $ref: '#/definitions/schema.Session'
+        description: 组装数据
+      prompt_session_id:
+        description: 引用一个 session 中的对话作为 prompt
+        type: string
+    type: object
   schema.Course:
     properties:
       created_at:
@@ -502,11 +539,14 @@ definitions:
         type: string
       id:
         type: integer
+      module:
+        description: 所属模块（handler名称）
+        type: string
       name:
         description: 权限名称
         type: string
       path:
-        description: 权限路径（一般与名称相同）
+        description: 权限路径（形如：POST:/user/create）
         type: string
       updated_at:
         type: string
@@ -650,13 +690,16 @@ definitions:
     type: object
   schema.Session:
     properties:
+      context_size:
+        description: 上下文大小
+        type: integer
       created_at:
         type: string
       enable_context:
         description: 上下文开关
         type: boolean
       id:
-        description: 原始数据g
+        description: 原始数据
         type: string
       last_active:
         type: string
@@ -753,6 +796,114 @@ definitions:
 info:
   contact: {}
 paths:
+  /bot/{id}:
+    get:
+      consumes:
+        - application/json
+      description: 根据ID获取指定的机器人角色信息
+      parameters:
+        - description: 机器人角色ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 机器人角色信息
+          schema:
+            $ref: '#/definitions/schema.BotRole'
+      summary: 获取机器人角色
+      tags:
+        - BotRole
+  /bot/{id}/delete:
+    post:
+      consumes:
+        - application/json
+      description: 删除指定ID的机器人角色
+      parameters:
+        - description: 机器人角色ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            type: boolean
+      summary: 删除机器人角色
+      tags:
+        - BotRole
+  /bot/{id}/update:
+    post:
+      consumes:
+        - application/json
+      description: 更新指定ID的机器人角色信息
+      parameters:
+        - description: 机器人角色ID
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: 更新的机器人角色信息
+          in: body
+          name: role
+          required: true
+          schema:
+            $ref: '#/definitions/schema.BotRole'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 更新后的机器人角色信息
+          schema:
+            $ref: '#/definitions/schema.BotRole'
+      summary: 更新机器人角色
+      tags:
+        - BotRole
+  /bot/create:
+    post:
+      consumes:
+        - application/json
+      description: 创建一个新的机器人角色，包含名称、描述和引用的会话ID
+      parameters:
+        - description: 机器人角色信息
+          in: body
+          name: role
+          required: true
+          schema:
+            $ref: '#/definitions/schema.BotRole'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 成功创建的机器人角色
+          schema:
+            $ref: '#/definitions/schema.BotRole'
+      summary: 创建机器人角色
+      tags:
+        - BotRole
+  /bot/list:
+    get:
+      consumes:
+        - application/json
+      description: 获取所有机器人角色的列表
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 机器人角色列表
+          schema:
+            items:
+              $ref: '#/definitions/schema.BotRole'
+            type: array
+      summary: 获取机器人角色列表
+      tags:
+        - BotRole
   /chat/completion/stream/{session_id}:
     post:
       consumes:
@@ -776,11 +927,26 @@ paths:
       summary: 流式输出聊天
       tags:
       - Chat
+  /chat/config/bots:
+    get:
+      consumes:
+        - application/json
+      description: 获取 bot 角色配置
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-array_schema_BotRole'
+      summary: 获取 bot 角色配置
+      tags:
+        - config
   /chat/config/models:
     get:
       consumes:
       - application/json
-      description: 获取所有模型
+      description: 获取模型配置
       produces:
       - application/json
       responses:
@@ -788,7 +954,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/entity.CommonResponse-array_schema_ModelCache'
-      summary: 获取所有模型
+      summary: 获取模型配置
       tags:
       - config
   /chat/message/list/{session_id}:

@@ -2,34 +2,62 @@ package chat
 
 import (
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/fcraft/open-chat/internal/constants"
 	_ "github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-// GetModels
+// GetModelConfig
 //
-//	@Summary		获取所有模型
-//	@Description	获取所有模型
+//	@Summary		获取模型配置
+//	@Description	获取模型配置
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	entity.CommonResponse[[]schema.ModelCache]
 //	@Router			/chat/config/models [get]
-func (h *Handler) GetModels(c *gin.Context) {
+func (h *Handler) GetModelConfig(c *gin.Context) {
 	// 从缓存中查询
 	cacheModels, err := h.Redis.GetCachedModels()
 	if err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to get schema")
+		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	// 将 config 隐藏
-	slice.ForEach(
-		cacheModels, func(_ int, item schema.ModelCache) {
+	cacheModels = slice.Map(
+		cacheModels, func(_ int, item schema.ModelCache) schema.ModelCache {
 			item.Config = schema.ModelConfig{}
+			return item
 		},
 	)
 	ctx_utils.Success(c, cacheModels)
+}
+
+// GetBotConfig
+//
+//	@Summary		获取 bot 角色配置
+//	@Description	获取 bot 角色配置
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entity.CommonResponse[[]schema.BotRole]
+//	@Router			/chat/config/bots [get]
+func (h *Handler) GetBotConfig(c *gin.Context) {
+	// 从缓存中查询
+	cachedBotRoles, err := h.Redis.GetCachedBotRoles()
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	// 将 session 信息隐藏
+	cachedBotRoles = slice.Map(
+		cachedBotRoles, func(_ int, item schema.BotRole) schema.BotRole {
+			item.PromptSession = nil
+			item.PromptSessionId = ""
+			return item
+		},
+	)
+	ctx_utils.Success(c, cachedBotRoles)
 }

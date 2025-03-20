@@ -7,10 +7,11 @@ import (
 
 // Session 会话，一系列消息的集合
 type Session struct {
-	// 原始数据g
+	// 原始数据
 	ID            string    `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
 	Name          string    `json:"name"`
 	EnableContext bool      `json:"enable_context"` // 上下文开关
+	ContextSize   int       `json:"context_size"`   // 上下文大小
 	SystemPrompt  string    `json:"system_prompt"`  // 系统提示词
 	LastActive    time.Time `json:"last_active"`
 	AutoCreateDeleteAt

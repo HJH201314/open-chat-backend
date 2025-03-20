@@ -32,6 +32,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
 		ModelName     string  `json:"model_name" binding:"required"`    // Model.Name 准确的模型名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
+		BotID         *uint64 `json:"bot_id" binding:"-"`
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
 	var req userInput
@@ -76,14 +77,33 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		return
 	}
 
+	// 获取 bot 的提示词会话
+	var bot *schema.BotRole
+	if req.BotID != nil {
+		botRole, err := h.Helper.GetBotRole(*req.BotID)
+		if err != nil || botRole == nil || botRole.PromptSession == nil {
+			ctx_utils.CustomError(c, http.StatusNotFound, "bot role not found")
+			return
+		}
+		bot = botRole
+	}
+
 	// 上下文消息
 	enableContext := session.EnableContext // 默认使用会话配置
 	if req.EnableContext != nil {
 		enableContext = *req.EnableContext // 请求参数优先
 	}
+	if bot != nil {
+		enableContext = bot.PromptSession.EnableContext // bot 配置优先
+	}
 	var contextMessages []schema.Message
 	if enableContext {
-		messages, err := h.Store.GetLatestMessages(session.ID, 50)
+		contextSize := 50
+		if bot != nil && bot.PromptSession.ContextSize > 0 {
+			// bot 上下文窗口配置优先
+			contextSize = bot.PromptSession.ContextSize
+		}
+		messages, err := h.Store.GetLatestMessages(session.ID, contextSize)
 		if err != nil {
 			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to load context")
 			return
@@ -101,10 +121,27 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			systemPrompt = *req.SystemPrompt
 		}
 	}
+	if bot != nil {
+		// bot 提示词优先覆盖
+		systemPrompt = bot.PromptSession.SystemPrompt
+	}
 
 	// 标准格式消息列表
 	var chatMessages []chat_utils.Message
 	// 此处不加入系统提示，系统提示由工具函数内部处理
+	// 标准格式消息 - bot 提示词消息
+	if bot != nil && bot.PromptSession != nil {
+		chatMessages = append(
+			chatMessages, slice.Map(
+				bot.PromptSession.Messages, func(_ int, m schema.Message) chat_utils.Message {
+					return chat_utils.Message{
+						Role:    m.Role,
+						Content: m.Content,
+					}
+				},
+			)...,
+		)
+	}
 	// 标准格式消息 - 上下文消息
 	chatMessages = append(
 		chatMessages, slice.Map(

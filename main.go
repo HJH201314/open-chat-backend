@@ -32,7 +32,7 @@ func main() {
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
 	defer cancelCache()
-	cacheService := services.NewCacheService(store, rd)
+	cacheService := services.NewCacheService(store, rd, hp)
 	go cacheService.Start(cacheCtx, 5*time.Minute)
 
 	r := gin.Default()

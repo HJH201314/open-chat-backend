@@ -15,6 +15,171 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/bot/create": {
+            "post": {
+                "description": "创建一个新的机器人角色，包含名称、描述和引用的会话ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BotRole"
+                ],
+                "summary": "创建机器人角色",
+                "parameters": [
+                    {
+                        "description": "机器人角色信息",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.BotRole"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的机器人角色",
+                        "schema": {
+                            "$ref": "#/definitions/schema.BotRole"
+                        }
+                    }
+                }
+            }
+        },
+        "/bot/list": {
+            "get": {
+                "description": "获取所有机器人角色的列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BotRole"
+                ],
+                "summary": "获取机器人角色列表",
+                "responses": {
+                    "200": {
+                        "description": "机器人角色列表",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/schema.BotRole"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bot/{id}": {
+            "get": {
+                "description": "根据ID获取指定的机器人角色信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BotRole"
+                ],
+                "summary": "获取机器人角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "机器人角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "机器人角色信息",
+                        "schema": {
+                            "$ref": "#/definitions/schema.BotRole"
+                        }
+                    }
+                }
+            }
+        },
+        "/bot/{id}/delete": {
+            "post": {
+                "description": "删除指定ID的机器人角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BotRole"
+                ],
+                "summary": "删除机器人角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "机器人角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/bot/{id}/update": {
+            "post": {
+                "description": "更新指定ID的机器人角色信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BotRole"
+                ],
+                "summary": "更新机器人角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "机器人角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新的机器人角色信息",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.BotRole"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的机器人角色信息",
+                        "schema": {
+                            "$ref": "#/definitions/schema.BotRole"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/completion/stream/{session_id}": {
             "post": {
                 "description": "流式输出聊天",
@@ -49,9 +214,9 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/chat/config/models": {
+        "/chat/config/bots": {
             "get": {
-                "description": "获取所有模型",
+                "description": "获取 bot 角色配置",
                 "consumes": [
                     "application/json"
                 ],
@@ -61,7 +226,30 @@ const docTemplate = `{
                 "tags": [
                     "config"
                 ],
-                "summary": "获取所有模型",
+                "summary": "获取 bot 角色配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_BotRole"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/config/models": {
+            "get": {
+                "description": "获取模型配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "获取模型配置",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1054,6 +1242,9 @@ const docTemplate = `{
                 "question"
             ],
             "properties": {
+                "bot_id": {
+                    "type": "integer"
+                },
                 "enable_context": {
                     "type": "boolean"
                 },
@@ -1094,6 +1285,26 @@ const docTemplate = `{
                 },
                 "data": {
                     "description": "数据"
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-array_schema_BotRole": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.BotRole"
+                    }
                 },
                 "msg": {
                     "description": "消息",
@@ -1481,6 +1692,38 @@ const docTemplate = `{
                 }
             }
         },
+        "schema.BotRole": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "角色描述",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "原始数据",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "角色名称",
+                    "type": "string"
+                },
+                "prompt_session": {
+                    "description": "组装数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Session"
+                        }
+                    ]
+                },
+                "prompt_session_id": {
+                    "description": "引用一个 session 中的对话作为 prompt",
+                    "type": "string"
+                }
+            }
+        },
         "schema.Course": {
             "type": "object",
             "properties": {
@@ -1810,12 +2053,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "module": {
+                    "description": "所属模块（handler名称）",
+                    "type": "string"
+                },
                 "name": {
                     "description": "权限名称",
                     "type": "string"
                 },
                 "path": {
-                    "description": "权限路径（一般与名称相同）",
+                    "description": "权限路径（形如：POST:/user/create）",
                     "type": "string"
                 },
                 "updated_at": {
@@ -2017,6 +2264,10 @@ const docTemplate = `{
         "schema.Session": {
             "type": "object",
             "properties": {
+                "context_size": {
+                    "description": "上下文大小",
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2025,7 +2276,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "description": "原始数据g",
+                    "description": "原始数据",
                     "type": "string"
                 },
                 "last_active": {
