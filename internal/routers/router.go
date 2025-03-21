@@ -270,6 +270,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				chatSessionGroup,
 				POST,
+				"/flag/:session_id",
+				"更新指定聊天会话标记",
+
+				chatHandler.UpdateSessionFlag,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				POST,
 				"/share/:session_id",
 				"分享指定的聊天会话",
 

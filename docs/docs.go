@@ -351,6 +351,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/session/flag/{session_id}": {
+            "post": {
+                "description": "更新用户会话标记",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "更新用户会话标记",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "会话信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.SessionFlagInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/session/list": {
             "get": {
                 "description": "获取会话列表",
@@ -1316,7 +1357,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "share_info": {
-                    "$ref": "#/definitions/schema.ShareInfo"
+                    "$ref": "#/definitions/schema.SessionShareInfo"
                 }
             }
         },
@@ -2387,10 +2428,22 @@ const docTemplate = `{
                 "system_prompt": {
                     "description": "系统提示词",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
-        "schema.ShareInfo": {
+        "schema.SessionFlagInfo": {
+            "type": "object",
+            "properties": {
+                "star": {
+                    "description": "标星",
+                    "type": "boolean"
+                }
+            }
+        },
+        "schema.SessionShareInfo": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2441,6 +2494,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "flag_info": {
+                    "$ref": "#/definitions/schema.SessionFlagInfo"
+                },
                 "session": {
                     "description": "组装数据",
                     "allOf": [
@@ -2456,12 +2512,15 @@ const docTemplate = `{
                     "description": "分享字段",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/schema.ShareInfo"
+                            "$ref": "#/definitions/schema.SessionShareInfo"
                         }
                     ]
                 },
                 "type": {
                     "$ref": "#/definitions/schema.UserSessionType"
+                },
+                "updated_at": {
+                    "type": "string"
                 },
                 "user_id": {
                     "description": "原始数据",

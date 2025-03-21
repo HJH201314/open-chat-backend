@@ -151,8 +151,14 @@ func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page enti
 					messageTable, messageTable,
 				),
 			).
-			Where("session.deleted_at > ? OR session.updated_at > ? OR session.created_at > ?", since, since, since).
-			Order("COALESCE(session.deleted_at, session.updated_at, session.created_at) DESC").
+			Where(
+				"sessions_users.updated_at > ? OR sessions_users.deleted_at > ? OR session.updated_at > ? OR sessions_users.created_at > ?",
+				since,
+				since,
+				since,
+				since,
+			).
+			Order("COALESCE(sessions_users.deleted_at, sessions_users.updated_at, session.updated_at, sessions_users.created_at) DESC").
 			// 使用预加载读取会话和消息的数据
 			Preload("Session").Preload("Session.Messages"),
 		page,

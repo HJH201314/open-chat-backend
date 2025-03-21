@@ -26,7 +26,7 @@ definitions:
       active:
         type: boolean
       share_info:
-        $ref: '#/definitions/schema.ShareInfo'
+        $ref: '#/definitions/schema.SessionShareInfo'
     type: object
   entity.CommonResponse-any:
     properties:
@@ -744,8 +744,16 @@ definitions:
       system_prompt:
         description: 系统提示词
         type: string
+      updated_at:
+        type: string
     type: object
-  schema.ShareInfo:
+  schema.SessionFlagInfo:
+    properties:
+      star:
+        description: 标星
+        type: boolean
+    type: object
+  schema.SessionShareInfo:
     properties:
       code:
         description: 邀请码（可选）
@@ -780,6 +788,8 @@ definitions:
     properties:
       created_at:
         type: string
+      flag_info:
+        $ref: '#/definitions/schema.SessionFlagInfo'
       session:
         allOf:
           - $ref: '#/definitions/schema.Session'
@@ -788,10 +798,12 @@ definitions:
         type: string
       share_info:
         allOf:
-          - $ref: '#/definitions/schema.ShareInfo'
+          - $ref: '#/definitions/schema.SessionShareInfo'
         description: 分享字段
       type:
         $ref: '#/definitions/schema.UserSessionType'
+      updated_at:
+        type: string
       user_id:
         description: 原始数据
         type: integer
@@ -1066,6 +1078,33 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除会话
+      tags:
+        - Session
+  /chat/session/flag/{session_id}:
+    post:
+      consumes:
+        - application/json
+      description: 更新用户会话标记
+      parameters:
+        - description: 会话 ID
+          in: path
+          name: session_id
+          required: true
+          type: string
+        - description: 会话信息
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/schema.SessionFlagInfo'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新用户会话标记
       tags:
       - Session
   /chat/session/list:

@@ -25,8 +25,9 @@ func NewHandlerHelper(gormStore *gormstore.GormStore, redisStore *redisstore.Red
 
 // CheckUserSession 检查用户是否拥有会话权限
 func (s *HandlerHelper) CheckUserSession(userId uint64, sessionId string) bool {
+	ctx := context.Background()
 	// 查询 Redis user-session:{userId}:{sessionId} 是否存在
-	_, err := s.Redis.Get(context.Background(), fmt.Sprintf("user-session:%s:%d", sessionId, userId)).Result()
+	_, err := s.Redis.Get(ctx, fmt.Sprintf("user-session:%s:%d", sessionId, userId)).Result()
 	if err != nil && !errors.Is(err, redis.Nil) {
 		// 查询异常
 		return false
@@ -38,7 +39,7 @@ func (s *HandlerHelper) CheckUserSession(userId uint64, sessionId string) bool {
 		return false
 	}
 	// 存入 Redis
-	s.Redis.Set(context.Background(), fmt.Sprintf("user-session:%s:%d", sessionId, userId), 1, 1*time.Hour)
+	s.Redis.Set(ctx, fmt.Sprintf("user-session:%s:%d", sessionId, userId), 1, 1*time.Hour)
 	return true
 }
 

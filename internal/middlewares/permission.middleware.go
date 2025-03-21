@@ -12,7 +12,7 @@ import (
 func PermissionMiddleware(helper *handlers.HandlerHelper) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 忽略权限检查
-		isIgnoreAuth, exists := c.Get(AuthIgnoredKey)
+		isIgnoreAuth, exists := c.Get(constants.AuthIgnoredKey)
 		if exists && isIgnoreAuth.(bool) == true {
 			c.Next()
 			return
@@ -46,6 +46,7 @@ func PermissionMiddleware(helper *handlers.HandlerHelper) gin.HandlerFunc {
 		for _, role := range userRoles {
 			if role.Name == "SUPER_ADMIN" {
 				hasPermission = true
+				c.Set(constants.PermissionSuperAdminKey, true)
 				break
 			}
 			for _, permission := range role.Permissions {

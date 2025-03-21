@@ -241,6 +241,47 @@ func (h *Handler) UpdateSession(c *gin.Context) {
 	ctx_utils.Success(c, true)
 }
 
+// UpdateSessionFlag
+//
+//	@Summary		更新用户会话标记
+//	@Description	更新用户会话标记
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string					true	"会话 ID"
+//	@Param			req			body		schema.SessionFlagInfo	true	"会话信息"
+//	@Success		200			{object}	entity.CommonResponse[bool]
+//	@Router			/chat/session/flag/{session_id} [post]
+func (h *Handler) UpdateSessionFlag(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	var req schema.SessionFlagInfo
+	if err := c.BindJSON(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	userKey := schema.UserSession{
+		SessionID: uri.SessionId,
+		UserID:    ctx_utils.GetUserId(c),
+	}
+	updateData := map[string]interface{}{
+		"flag_star": req.Star,
+	}
+	// 验证用户对会话的所有权
+	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
+		ctx_utils.BizError(c, constants.ErrNoPermission)
+		return
+	}
+	if err := h.Db.Model(&schema.UserSession{}).Where(userKey).Updates(&updateData).Error; err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update session flags")
+		return
+	}
+	ctx_utils.Success(c, true)
+}
+
 // ShareSession
 //
 //	@Summary		分享会话
@@ -259,8 +300,8 @@ func (h *Handler) ShareSession(c *gin.Context) {
 		return
 	}
 	type ShareRequest struct {
-		ShareInfo schema.ShareInfo `json:"share_info"`
-		Active    bool             `json:"active"`
+		ShareInfo schema.SessionShareInfo `json:"share_info"`
+		Active    bool                    `json:"active"`
 	}
 	var req ShareRequest
 	if err := c.BindJSON(&req); err != nil {
