@@ -7,9 +7,11 @@ import (
 )
 
 type SortParam struct {
-	SortExpr       string `json:"sort_expr" form:"sort_expr"`
-	StabilityField string `json:"-"` // 稳定字段，由业务层注入
-	DefaultOrder   string `json:"-"` // 默认排序，由业务层注入
+	SortExpr       string   `json:"sort_expr" form:"sort_expr"`
+	StabilityField string   `json:"-"` // 稳定字段，由业务层注入
+	DefaultOrder   string   `json:"-"` // 默认排序，由业务层注入
+	ForceOrder     bool     `json:"-"` // 是否强制排序，由业务层注入
+	WhiteList      []string `json:"-"` // 字段白名单，由业务层注入
 }
 
 func (p *SortParam) WithDefault(defaultOrder string, stabilityFiled string) *SortParam {
@@ -18,7 +20,22 @@ func (p *SortParam) WithDefault(defaultOrder string, stabilityFiled string) *Sor
 	return p
 }
 
-func (p *SortParam) SafeExpr(whitelist []string) string {
+func (p *SortParam) WithForceOrder(defaultOrder string) *SortParam {
+	p.DefaultOrder = defaultOrder
+	p.ForceOrder = true
+	return p
+}
+
+func (p *SortParam) WithWhiteList(whitelist []string) *SortParam {
+	p.WhiteList = whitelist
+	return p
+}
+
+// SafeExpr 处理 SQL 排序表达式，并返回安全的 SQL 语句
+func (p *SortParam) SafeExpr() string {
+	if p.ForceOrder {
+		return p.DefaultOrder
+	}
 	// 初始化稳定性字段
 	if p.StabilityField == "" {
 		p.StabilityField = "id" // 默认值
@@ -58,7 +75,7 @@ func (p *SortParam) SafeExpr(whitelist []string) string {
 		}
 
 		// 白名单验证
-		if len(whitelist) != 0 && !slices.Contains(whitelist, field) {
+		if len(p.WhiteList) != 0 && !slices.Contains(p.WhiteList, field) {
 			continue
 		}
 

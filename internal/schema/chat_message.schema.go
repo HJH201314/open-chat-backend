@@ -16,3 +16,7 @@ type Message struct {
 	Model   *Model   `gorm:"foreignKey:ID;references:ModelID" json:"model"`
 	BotRole *BotRole `gorm:"foreignKey:ID;references:BotRoleID" json:"bot_role"`
 }
+
+func (m *Message) TableName() string {
+	return "messages"
+}

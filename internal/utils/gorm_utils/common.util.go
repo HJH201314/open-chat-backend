@@ -55,8 +55,8 @@ func GetByPageContinuous[T any](db *gorm.DB, param entity.PagingParam, sort enti
 	limit := pageSize + 1
 
 	tx := db
-	if sort.SafeExpr([]string{}) != "" {
-		tx = db.Order(sort.SafeExpr([]string{}))
+	if sort.SafeExpr() != "" {
+		tx = db.Order(sort.SafeExpr())
 	}
 	err := tx.
 		Offset(offset).
@@ -104,8 +104,8 @@ func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.So
 	}
 
 	tx := db
-	if sort.SafeExpr([]string{}) != "" {
-		tx = db.Order(sort.SafeExpr([]string{}))
+	if sort.SafeExpr() != "" {
+		tx = db.Order(sort.SafeExpr())
 	}
 	if err := tx.
 		Offset(offset).

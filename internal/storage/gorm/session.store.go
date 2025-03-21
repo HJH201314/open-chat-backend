@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
@@ -8,6 +9,20 @@ import (
 	"gorm.io/gorm"
 	"time"
 )
+
+func ScopeWithUserId(userId uint64) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("user_id = ?", userId)
+	}
+}
+
+func ScopePreloadSessionWithOneMessage(db *gorm.DB) *gorm.DB {
+	return db.Preload("Session").
+		Preload(
+			"Session.Messages",
+			"id IN (SELECT MIN(id) FROM messages GROUP BY session_id)",
+		)
+}
 
 // CreateSession 创建会话
 func (s *GormStore) CreateSession(userId uint64, session *schema.Session) error {
@@ -91,29 +106,65 @@ func (s *GormStore) DeleteSession(sessionId string) error {
 	)
 }
 
+// filterUserSessions 过滤没有关联 session 的数据并取出 session
+func filterUserSessions(userSessions []schema.UserSession) []schema.UserSession {
+	return slice.Filter(
+		userSessions, func(_ int, userSession schema.UserSession) bool {
+			return userSession.Session != nil
+		},
+	)
+}
+
 // GetSessionsByPage 分页获取会话
 func (s *GormStore) GetSessionsByPage(userId uint64, page entity.PagingParam, sort entity.SortParam) ([]schema.UserSession, *int64, error) {
 	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
-		s.Db.Where("user_id = ?", userId).
-			Preload("Session").
-			Preload(
-				"Session.Messages",
-				"id IN (SELECT MIN(id) FROM messages GROUP BY session_id)",
-			), page, sort,
+		s.Db.Scopes(ScopeWithUserId(userId), ScopePreloadSessionWithOneMessage), page, sort,
 	)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// 过滤没有关联 session 的数据并取出 session
-	sessions := slice.FilterMap(
-		userSessions, func(_ int, userSession schema.UserSession) (schema.UserSession, bool) {
-			if userSession.Session == nil {
-				return schema.UserSession{}, false
-			}
-			return userSession, true
-		},
+	sessions := filterUserSessions(userSessions)
+
+	return sessions, nextPage, nil
+}
+
+// GetSessionsForSync 分页获取用于同步数据的会话
+func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page entity.PagingParam, sort entity.SortParam) ([]schema.UserSession, *int64, error) {
+	// 关闭排序
+	sort.WithForceOrder("")
+	sessionTable := (&schema.Session{}).TableName()
+	messageTable := (&schema.Message{}).TableName()
+	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
+		s.Db.Unscoped().Where("user_id = ?", userId).
+			// 使用手动 JOIN 查询到符合条件的 session
+			Joins(
+				fmt.Sprintf(
+					"INNER JOIN %s AS session ON sessions_users.session_id = session.id",
+					sessionTable,
+				),
+			).
+			Joins(
+				fmt.Sprintf(
+					"LEFT JOIN %s AS message ON session.id = message.session_id AND message.id IN (SELECT MIN(m.id) FROM %s m GROUP BY m.session_id)",
+					messageTable, messageTable,
+				),
+			).
+			Where("session.deleted_at > ? OR session.updated_at > ? OR session.created_at > ?", since, since, since).
+			Order("COALESCE(session.deleted_at, session.updated_at, session.created_at) DESC").
+			// 使用预加载读取会话和消息的数据
+			Preload("Session").Preload("Session.Messages"),
+		page,
+		sort,
 	)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 过滤没有关联 session 的数据并取出 session
+	sessions := filterUserSessions(userSessions)
 
 	return sessions, nextPage, nil
 }

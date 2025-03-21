@@ -155,6 +155,57 @@ func (h *Handler) GetSessions(c *gin.Context) {
 	)
 }
 
+// SyncSessions
+//
+//	@Summary		同步会话列表
+//	@Description	同步会话列表
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	query		chat.SyncSessions.syncSessionParam											true	"分页参数"
+//	@Success		200	{object}	entity.CommonResponse[entity.PaginatedSyncListResponse[schema.UserSession]]	"返回数据"
+//	@Router			/chat/session/sync [get]
+func (h *Handler) SyncSessions(c *gin.Context) {
+	type syncSessionParam struct {
+		entity.PagingParam
+		LastSyncTime entity.MilliTime `json:"last_sync_time" form:"last_sync_time" swaggertype:"primitive,integer" binding:"required"` // 客户端上次同步时间戳
+	}
+	var req syncSessionParam
+	if err := c.BindQuery(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	// 查询消息
+	sessions, nextPage, err := h.Store.GetSessionsForSync(
+		ctx_utils.GetUserId(c),
+		req.LastSyncTime.Time,
+		req.PagingParam,
+		entity.SortParam{},
+	)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	var deletedSessions []schema.UserSession
+	var updatedSessions []schema.UserSession
+	for _, session := range sessions {
+		if session.DeletedAt.Valid {
+			session.Session = nil
+			deletedSessions = append(deletedSessions, session)
+		} else {
+			updatedSessions = append(updatedSessions, session)
+		}
+	}
+
+	ctx_utils.Success(
+		c, &entity.PaginatedSyncListResponse[schema.UserSession]{
+			Updated:  updatedSessions,
+			Deleted:  deletedSessions,
+			NextPage: nextPage,
+		},
+	)
+}
+
 // UpdateSession
 //
 //	@Summary		更新会话

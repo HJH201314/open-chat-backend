@@ -132,6 +132,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-entity_PaginatedSyncListResponse-schema_UserSession:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/entity.PaginatedSyncListResponse-schema_UserSession'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course:
     properties:
       code:
@@ -274,6 +287,19 @@ definitions:
         type: array
       next_page:
         type: integer
+    type: object
+  entity.PaginatedSyncListResponse-schema_UserSession:
+    properties:
+      deleted:
+        items:
+          $ref: '#/definitions/schema.UserSession'
+        type: array
+      next_page:
+        type: integer
+      updated:
+        items:
+          $ref: '#/definitions/schema.UserSession'
+        type: array
     type: object
   entity.PaginatedTotalResponse-schema_Course:
     properties:
@@ -430,6 +456,11 @@ definitions:
     type: object
   schema.Message:
     properties:
+      bot_role:
+        $ref: '#/definitions/schema.BotRole'
+      bot_role_id:
+        description: 回复所使用的模型
+        type: integer
       content:
         type: string
       created_at:
@@ -1110,6 +1141,35 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 分享会话
+      tags:
+        - Session
+  /chat/session/sync:
+    get:
+      consumes:
+        - application/json
+      description: 同步会话列表
+      parameters:
+        - description: 客户端上次同步时间戳
+          in: query
+          name: last_sync_time
+          required: true
+          type: integer
+        - description: 分页参数
+          in: query
+          name: page_num
+          required: true
+          type: integer
+        - in: query
+          name: page_size
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedSyncListResponse-schema_UserSession'
+      summary: 同步会话列表
       tags:
         - Session
   /chat/session/update/{session_id}:

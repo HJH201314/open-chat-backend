@@ -456,6 +456,50 @@
                 }
             }
         },
+        "/chat/session/sync": {
+            "get": {
+                "description": "同步会话列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "同步会话列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "客户端上次同步时间戳",
+                        "name": "last_sync_time",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedSyncListResponse-schema_UserSession"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/session/update/{session_id}": {
             "post": {
                 "description": "更新会话",
@@ -1421,6 +1465,27 @@
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedSyncListResponse-schema_UserSession": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedSyncListResponse-schema_UserSession"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course": {
             "type": "object",
             "properties": {
@@ -1645,6 +1710,26 @@
                 },
                 "next_page": {
                     "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedSyncListResponse-schema_UserSession": {
+            "type": "object",
+            "properties": {
+                "deleted": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.UserSession"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.UserSession"
+                    }
                 }
             }
         },
@@ -1879,6 +1964,13 @@
         "schema.Message": {
             "type": "object",
             "properties": {
+                "bot_role": {
+                    "$ref": "#/definitions/schema.BotRole"
+                },
+                "bot_role_id": {
+                    "description": "回复所使用的模型",
+                    "type": "integer"
+                },
                 "content": {
                     "type": "string"
                 },

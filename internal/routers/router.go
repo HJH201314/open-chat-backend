@@ -239,6 +239,13 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				chatSessionGroup,
 				GET,
+				"/sync",
+				"同步聊天会话列表",
+				chatHandler.SyncSessions,
+			)
+			router.registerRoute(
+				chatSessionGroup,
+				GET,
 				"/:session_id",
 				"获取指定会话的详细信息",
 

@@ -79,7 +79,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 
 	// 获取 bot 的提示词会话
 	var bot *schema.BotRole
-	if req.BotID != nil {
+	if req.BotID != nil && *req.BotID > 0 {
 		botRole, err := h.Helper.GetBotRole(*req.BotID)
 		if err != nil || botRole == nil || botRole.PromptSession == nil {
 			ctx_utils.CustomError(c, http.StatusNotFound, "bot role not found")
@@ -227,19 +227,21 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			}
 
 			switch event.Type {
-			case "content":
+			case chat_utils.ContentEventType:
 				// 消息内容
 				sendStreamMessageEvent(c, event.Content, false)
-			case "reasoning_content":
+				return true
+			case chat_utils.ReasoningContentEventType:
 				// 思考内容
 				sendStreamMessageEvent(c, event.Content, true)
-			case "error":
+				return true
+			case chat_utils.ErrorEventType:
 				// 错误信息（记录日志并终止流）
 				c.SSEvent(
 					"error", (&entity.CommonResponse[any]{}).WithError(event.Error).WithCode(500),
 				)
 				return false
-			case "done":
+			case chat_utils.DoneEventType:
 				// 用量信息
 				c.SSEvent("usage", event.Metadata)
 				resp, ok := event.Metadata.(chat_utils.DoneResponse)
@@ -249,8 +251,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 				// 结束标记
 				c.SSEvent("done", "[DONE]")
 				return false
+			default:
+				return true
 			}
-			return true
 		},
 	)
 }

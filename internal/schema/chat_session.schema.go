@@ -14,10 +14,14 @@ type Session struct {
 	ContextSize   int       `json:"context_size"`   // 上下文大小
 	SystemPrompt  string    `json:"system_prompt"`  // 系统提示词
 	LastActive    time.Time `json:"last_active"`
-	AutoCreateDeleteAt
+	AutoCreateUpdateDeleteAt
 
 	// 组装数据
 	Messages []Message `gorm:"foreignKey:SessionID;references:ID" json:"messages"`
+}
+
+func (s *Session) TableName() string {
+	return "sessions"
 }
 
 type UserSessionType int
@@ -46,7 +50,7 @@ type UserSession struct {
 	Type      UserSessionType `json:"type"`
 	ShareInfo ShareInfo       `gorm:"embedded;embeddedPrefix:share_" json:"share_info"` // 分享字段
 
-	AutoCreateAt
+	AutoCreateUpdateDeleteAt
 
 	// 组装数据
 	Session *Session `gorm:"foreignKey:ID;references:SessionID" json:"session"`

@@ -134,12 +134,12 @@ streamingLoop:
 				reasoningContent, _ = strings.CutSuffix(reasoningContent, "\"")
 				accReasoningContent += reasoningContent
 				eventChan <- StreamEvent{
-					Type:    "reasoning_content",
+					Type:    ReasoningContentEventType,
 					Content: reasoningContent,
 				}
 			} else {
 				eventChan <- StreamEvent{
-					Type:    "content",
+					Type:    ContentEventType,
 					Content: choiceDelta.Content,
 				}
 			}
@@ -148,7 +148,7 @@ streamingLoop:
 
 	// 发送完成事件
 	eventChan <- StreamEvent{
-		Type: "done", Metadata: DoneResponse{
+		Type: DoneEventType, Metadata: DoneResponse{
 			Content:          acc.Choices[0].Message.Content,
 			ReasoningContent: accReasoningContent,
 			Usage: DoneResponseUsage{
@@ -162,7 +162,7 @@ streamingLoop:
 // 发送错误事件
 func sendError(ch chan<- StreamEvent, err error) {
 	ch <- StreamEvent{
-		Type:  "error",
+		Type:  ErrorEventType,
 		Error: err,
 	}
 }
@@ -198,12 +198,21 @@ func UserMessage(content string) Message {
 	}
 }
 
+type StreamEventType string
+
+var (
+	ReasoningContentEventType StreamEventType = "reasoning_content"
+	ContentEventType          StreamEventType = "content"
+	ErrorEventType            StreamEventType = "error"
+	DoneEventType             StreamEventType = "done"
+)
+
 // StreamEvent 表示流式事件的数据结构
 type StreamEvent struct {
-	Type     string      // 事件类型：content/error/done
-	Content  string      // 内容（当 Type=content 时有效）
-	Error    error       // 错误对象（当 Type=error 时有效）
-	Metadata interface{} // 附加元数据
+	Type     StreamEventType // 事件类型：content/error/done
+	Content  string          // 内容（当 Type=content 时有效）
+	Error    error           // 错误对象（当 Type=error 时有效）
+	Metadata interface{}     // 附加元数据
 }
 
 // CompletionStreamOptions 流式请求配置
