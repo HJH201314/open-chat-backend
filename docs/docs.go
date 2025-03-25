@@ -1961,6 +1961,10 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "limit_time": {
+                    "description": "考试限时（单位：秒）",
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },

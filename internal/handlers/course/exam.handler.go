@@ -52,7 +52,15 @@ func (h *Handler) CreateExam(c *gin.Context) {
 		return
 	}
 
+	// 1. 保存测验
 	if err := gorm_utils.Save(h.Store.Db, &req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
+	// 2. 更新测验总分
+	err := h.Store.UpdateExamTotalScore(req.ID)
+	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}

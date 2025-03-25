@@ -2,7 +2,6 @@ package helper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/fcraft/open-chat/internal/schema"
 	gormstore "github.com/fcraft/open-chat/internal/storage/gorm"
@@ -28,9 +27,9 @@ func (s *HandlerHelper) CheckUserSession(userId uint64, sessionId string) bool {
 	ctx := context.Background()
 	// 查询 Redis user-session:{userId}:{sessionId} 是否存在
 	_, err := s.Redis.Get(ctx, fmt.Sprintf("user-session:%s:%d", sessionId, userId)).Result()
-	if err != nil && !errors.Is(err, redis.Nil) {
-		// 查询异常
-		return false
+	if err == nil {
+		// 查询到结果
+		return true
 	}
 	// 查询 GORM 是否存在
 	var userSession schema.UserSession

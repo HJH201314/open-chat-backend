@@ -51,9 +51,20 @@ func (h *Handler) CreateCourse(c *gin.Context) {
 		return
 	}
 
+	// 1. 创建课程
 	if err := h.Store.CreateCourse(&req); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
+	}
+
+	// 2. 为课程中的测验进行总分计算
+	if req.Exams != nil {
+		for _, exam := range req.Exams {
+			if err := h.Store.UpdateExamTotalScore(exam.ExamID); err != nil {
+				ctx_utils.HttpError(c, constants.ErrInternal)
+				return
+			}
+		}
 	}
 
 	ctx_utils.Success(c, req)

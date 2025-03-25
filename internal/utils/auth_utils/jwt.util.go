@@ -1,12 +1,13 @@
 package auth_utils
 
 import (
+	"os"
+	"time"
+
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"os"
-	"time"
 )
 
 // SignAuthTokenForUser 为用户签发 token
@@ -15,11 +16,10 @@ func SignAuthTokenForUser(userId uint64) (string, error) {
 	claims := entity.UserClaims{
 		ID: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 过期时间
-			IssuedAt:  jwt.NewNumericDate(time.Now()),                     // 签发时间
-			NotBefore: jwt.NewNumericDate(time.Now()),                     // 生效时间
-			Issuer:    "open-chat",                                        // 签发者
-			Subject:   "user-auth",                                        // 主题
+			IssuedAt:  jwt.NewNumericDate(time.Now()), // 签发时间
+			NotBefore: jwt.NewNumericDate(time.Now()), // 生效时间
+			Issuer:    "open-chat",                    // 签发者
+			Subject:   "user-auth",                    // 主题
 		},
 	}
 

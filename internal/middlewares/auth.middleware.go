@@ -1,14 +1,15 @@
 package middlewares
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
 	redisstore "github.com/fcraft/open-chat/internal/storage/redis"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
-	"slices"
-	"strings"
 )
 
 var ignorePaths = []string{"/swagger", "/user/refresh", "/user/login", "/user/logout", "/user/register"}
@@ -33,15 +34,24 @@ func AuthMiddleware(redisStore *redisstore.RedisStore) gin.HandlerFunc {
 			ctx_utils.HttpError(c, constants.ErrUnauthorized)
 			return
 		}
+
 		// 2. 通过缓存验证 token 是否被清理
-		if _, err := redisStore.FindUserIdByToken(token.Raw); err != nil {
+		userId, err := redisStore.FindUserIdByToken(token.Raw)
+		if err != nil {
 			ctx_utils.HttpError(c, constants.ErrUnauthorized)
 			return
 		}
+
 		// 3. 转换 claims
 		claims, ok := token.Claims.(*entity.UserClaims)
 		if !ok {
 			ctx_utils.HttpError(c, constants.ErrUnauthorized)
+			return
+		}
+
+		// 4. 续期 token
+		if err := redisStore.CacheUserToken(userId, token.Raw, constants.RefreshTokenExpire); err != nil {
+			ctx_utils.HttpError(c, constants.ErrInternal)
 			return
 		}
 
