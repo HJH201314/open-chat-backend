@@ -12,7 +12,7 @@ import (
 )
 
 // CompletionStream 流式聊天
-func CompletionStream(ctx context.Context, opts CompletionStreamOptions) (chan StreamEvent, error) {
+func CompletionStream(ctx context.Context, opts CompletionOptions) (chan StreamEvent, error) {
 	// 参数校验
 	if err := validateOptions(opts); err != nil {
 		return nil, fmt.Errorf("invalid options: %w", err)
@@ -34,7 +34,7 @@ func CompletionStream(ctx context.Context, opts CompletionStreamOptions) (chan S
 }
 
 // 参数校验逻辑
-func validateOptions(opts CompletionStreamOptions) error {
+func validateOptions(opts CompletionOptions) error {
 	if len(opts.Messages) == 0 {
 		return errors.New("messages cannot be empty")
 	}
@@ -45,11 +45,11 @@ func validateOptions(opts CompletionStreamOptions) error {
 }
 
 // 消息预处理
-func buildMessages(opts CompletionStreamOptions) []Message {
+func buildMessages(opts CompletionOptions) []Message {
 	messages := make([]Message, 0, len(opts.Messages)+1)
 
 	// 添加系统提示
-	if opts.SystemPrompt != "" {
+	if opts.SystemPrompt != "" && (len(opts.Messages) <= 0 || opts.Messages[0].Role != "system") {
 		messages = append(
 			messages, Message{
 				Role:    "system",
@@ -64,7 +64,7 @@ func buildMessages(opts CompletionStreamOptions) []Message {
 }
 
 // 流式处理核心逻辑
-func processStreaming(ctx context.Context, client *openai.Client, messages []Message, opts CompletionStreamOptions, eventChan chan<- StreamEvent) {
+func processStreaming(ctx context.Context, client *openai.Client, messages []Message, opts CompletionOptions, eventChan chan<- StreamEvent) {
 	defer close(eventChan) // 确保通道关闭
 
 	// 将消息转换为 OpenAI 的请求格式，ChatCompletionMessage 是 ChatCompletionMessageParamUnion 的特例
@@ -215,8 +215,8 @@ type StreamEvent struct {
 	Metadata interface{}     // 附加元数据
 }
 
-// CompletionStreamOptions 流式请求配置
-type CompletionStreamOptions struct {
+// CompletionOptions 流式请求配置
+type CompletionOptions struct {
 	Provider     Provider  // 服务提供商
 	Model        string    // 模型名称
 	Messages     []Message // 消息列表
@@ -225,9 +225,8 @@ type CompletionStreamOptions struct {
 }
 
 type CompletionModelConfig struct {
-	Temperature   float64 // 温度系数
-	MaxTokens     int64   // 最大 token 数
-	ContextWindow int64   // 上下文窗口大小
+	Temperature float64 // 温度系数
+	MaxTokens   int64   // 最大 token 数
 }
 
 // DoneResponse 结果响应

@@ -44,7 +44,7 @@ func (h *Handler) GetExam(c *gin.Context) {
 //	@Produce		json
 //	@Param			req	body		schema.Exam							true	"测验内容"
 //	@Success		200	{object}	entity.CommonResponse[schema.Exam]	"返回数据"
-//	@Router			/tue/exam/create [get]
+//	@Router			/tue/exam/create [post]
 func (h *Handler) CreateExam(c *gin.Context) {
 	var req schema.Exam
 	if err := c.ShouldBindJSON(&req); err != nil {

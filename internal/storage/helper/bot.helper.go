@@ -4,87 +4,87 @@ import (
 	"github.com/fcraft/open-chat/internal/schema"
 )
 
-// CreateBotRole 创建机器人角色并缓存
-func (s *HandlerHelper) CreateBotRole(role *schema.BotRole) error {
+// CreatePreset 创建预设并缓存
+func (s *HandlerHelper) CreatePreset(role *schema.Preset) error {
 	// 创建角色
-	if err := s.GormStore.CreateBotRole(role); err != nil {
+	if err := s.GormStore.CreatePreset(role); err != nil {
 		return err
 	}
 
 	// 缓存角色
-	if err := s.RedisStore.CacheBotRole(role); err != nil {
+	if err := s.RedisStore.CachePreset(role); err != nil {
 		// 缓存失败不影响主流程
 	}
 
 	return nil
 }
 
-// GetBotRole 获取机器人角色，优先从缓存获取
-func (s *HandlerHelper) GetBotRole(id uint64) (*schema.BotRole, error) {
+// GetPreset 获取预设，优先从缓存获取
+func (s *HandlerHelper) GetPreset(id uint64) (*schema.Preset, error) {
 	// 先尝试从缓存获取
-	if role, err := s.RedisStore.GetCachedBotRole(id); err == nil {
+	if role, err := s.RedisStore.GetCachedPreset(id); err == nil {
 		return role, nil
 	}
 
 	// 从数据库获取
-	role, err := s.GormStore.GetBotRole(id)
+	role, err := s.GormStore.GetPreset(id)
 	if err != nil {
 		return nil, err
 	}
 
 	// 缓存角色
-	if err := s.RedisStore.CacheBotRole(role); err != nil {
+	if err := s.RedisStore.CachePreset(role); err != nil {
 		// 缓存失败不影响主流程
 	}
 
 	return role, nil
 }
 
-// ListBotRoles 获取机器人角色列表，优先从缓存获取
-func (s *HandlerHelper) ListBotRoles() ([]schema.BotRole, error) {
+// ListPresets 获取预设列表，优先从缓存获取
+func (s *HandlerHelper) ListPresets() ([]schema.Preset, error) {
 	// 先尝试从缓存获取
-	if roles, err := s.RedisStore.GetCachedBotRoles(); err == nil {
+	if roles, err := s.RedisStore.GetCachedPresets(); err == nil {
 		return roles, nil
 	}
 
 	// 从数据库获取
-	roles, err := s.GormStore.ListBotRoles()
+	roles, err := s.GormStore.ListPresets()
 	if err != nil {
 		return nil, err
 	}
 
 	// 缓存角色列表
-	if err := s.RedisStore.CacheBotRoles(roles); err != nil {
+	if err := s.RedisStore.CachePresets(roles); err != nil {
 		// 缓存失败不影响主流程
 	}
 
 	return roles, nil
 }
 
-// UpdateBotRole 更新机器人角色并更新缓存
-func (s *HandlerHelper) UpdateBotRole(role *schema.BotRole) error {
+// UpdatePreset 更新预设并更新缓存
+func (s *HandlerHelper) UpdatePreset(role *schema.Preset) error {
 	// 更新角色
-	if err := s.GormStore.UpdateBotRole(role); err != nil {
+	if err := s.GormStore.UpdatePreset(role); err != nil {
 		return err
 	}
 
 	// 删除缓存
-	if err := s.RedisStore.DeleteBotRoleCache(role.ID); err != nil {
+	if err := s.RedisStore.DeletePresetCache(role.ID); err != nil {
 		// 缓存删除失败不影响主流程
 	}
 
 	return nil
 }
 
-// DeleteBotRole 删除机器人角色并删除缓存
-func (s *HandlerHelper) DeleteBotRole(id uint64) error {
+// DeletePreset 删除预设并删除缓存
+func (s *HandlerHelper) DeletePreset(id uint64) error {
 	// 删除角色
-	if err := s.GormStore.DeleteBotRole(id); err != nil {
+	if err := s.GormStore.DeletePreset(id); err != nil {
 		return err
 	}
 
 	// 删除缓存
-	if err := s.RedisStore.DeleteBotRoleCache(id); err != nil {
+	if err := s.RedisStore.DeletePresetCache(id); err != nil {
 		// 缓存删除失败不影响主流程
 	}
 

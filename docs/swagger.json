@@ -4,171 +4,6 @@
         "contact": {}
     },
     "paths": {
-        "/bot/create": {
-            "post": {
-                "description": "创建一个新的机器人角色，包含名称、描述和引用的会话ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BotRole"
-                ],
-                "summary": "创建机器人角色",
-                "parameters": [
-                    {
-                        "description": "机器人角色信息",
-                        "name": "role",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/schema.BotRole"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功创建的机器人角色",
-                        "schema": {
-                            "$ref": "#/definitions/schema.BotRole"
-                        }
-                    }
-                }
-            }
-        },
-        "/bot/list": {
-            "get": {
-                "description": "获取所有机器人角色的列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BotRole"
-                ],
-                "summary": "获取机器人角色列表",
-                "responses": {
-                    "200": {
-                        "description": "机器人角色列表",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/schema.BotRole"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/bot/{id}": {
-            "get": {
-                "description": "根据ID获取指定的机器人角色信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BotRole"
-                ],
-                "summary": "获取机器人角色",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "机器人角色ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "机器人角色信息",
-                        "schema": {
-                            "$ref": "#/definitions/schema.BotRole"
-                        }
-                    }
-                }
-            }
-        },
-        "/bot/{id}/delete": {
-            "post": {
-                "description": "删除指定ID的机器人角色",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BotRole"
-                ],
-                "summary": "删除机器人角色",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "机器人角色ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    }
-                }
-            }
-        },
-        "/bot/{id}/update": {
-            "post": {
-                "description": "更新指定ID的机器人角色信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BotRole"
-                ],
-                "summary": "更新机器人角色",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "机器人角色ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新的机器人角色信息",
-                        "name": "role",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/schema.BotRole"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "更新后的机器人角色信息",
-                        "schema": {
-                            "$ref": "#/definitions/schema.BotRole"
-                        }
-                    }
-                }
-            }
-        },
         "/chat/completion/stream/{session_id}": {
             "post": {
                 "description": "流式输出聊天",
@@ -220,7 +55,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-array_schema_BotRole"
+                          "$ref": "#/definitions/entity.CommonResponse-array_schema_Preset"
                         }
                     }
                 }
@@ -801,6 +636,171 @@
                 }
             }
         },
+      "/preset/create": {
+        "post": {
+          "description": "创建一个新的预设，包含名称、描述和引用的会话ID",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "Preset"
+          ],
+          "summary": "创建预设",
+          "parameters": [
+            {
+              "description": "预设信息",
+              "name": "role",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/schema.Preset"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "成功创建的预设",
+              "schema": {
+                "$ref": "#/definitions/schema.Preset"
+              }
+            }
+          }
+        }
+      },
+      "/preset/list": {
+        "get": {
+          "description": "获取所有预设的列表",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "Preset"
+          ],
+          "summary": "获取预设列表",
+          "responses": {
+            "200": {
+              "description": "预设列表",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/schema.Preset"
+                }
+              }
+            }
+          }
+        }
+      },
+      "/preset/{id}": {
+        "get": {
+          "description": "根据ID获取指定的预设信息",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "Preset"
+          ],
+          "summary": "获取预设",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "预设ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "预设信息",
+              "schema": {
+                "$ref": "#/definitions/schema.Preset"
+              }
+            }
+          }
+        }
+      },
+      "/preset/{id}/delete": {
+        "post": {
+          "description": "删除指定ID的预设",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "Preset"
+          ],
+          "summary": "删除预设",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "预设ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "删除成功",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "/preset/{id}/update": {
+        "post": {
+          "description": "更新指定ID的预设信息",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "Preset"
+          ],
+          "summary": "更新预设",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "预设ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            },
+            {
+              "description": "更新的预设信息",
+              "name": "role",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/schema.Preset"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "更新后的预设信息",
+              "schema": {
+                "$ref": "#/definitions/schema.Preset"
+              }
+            }
+          }
+        }
+      },
         "/tue/course/create": {
             "post": {
                 "description": "创建课程基础参数，绑定或创建题目、资源",
@@ -984,7 +984,7 @@
             }
         },
         "/tue/exam/create": {
-            "get": {
+          "post": {
                 "description": "保存单个测验",
                 "consumes": [
                     "application/json"
@@ -1049,6 +1049,104 @@
                 }
             }
         },
+      "/tue/exam/{id}/records": {
+        "get": {
+          "description": "获取用户的考试评分结果",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "考试"
+          ],
+          "summary": "获取考试结果",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "考试记录ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+              }
+            }
+          }
+        }
+      },
+      "/tue/exam/{id}/rescore": {
+        "post": {
+          "description": "管理员重新评分考试",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "考试"
+          ],
+          "summary": "重新评分考试",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "考试记录ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            }
+          ],
+          "responses": {}
+        }
+      },
+      "/tue/exam/{id}/submit": {
+        "post": {
+          "description": "提交用户的考试答案并进行评分",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "考试"
+          ],
+          "summary": "提交考试答案",
+          "parameters": [
+            {
+              "type": "integer",
+              "description": "考试ID",
+              "name": "id",
+              "in": "path",
+              "required": true
+            },
+            {
+              "description": "提交信息",
+              "name": "request",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/exam.SubmitExamRequest"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/entity.CommonResponse-exam_SubmitExamResponse"
+              }
+            }
+          }
+        }
+      },
         "/tue/problem/create": {
             "post": {
                 "description": "创建单个题目",
@@ -1366,7 +1464,7 @@
                 }
             }
         },
-        "entity.CommonResponse-array_schema_BotRole": {
+      "entity.CommonResponse-array_schema_ModelCache": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1377,7 +1475,7 @@
                     "description": "数据",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schema.BotRole"
+                      "$ref": "#/definitions/schema.ModelCache"
                     }
                 },
                 "msg": {
@@ -1386,7 +1484,7 @@
                 }
             }
         },
-        "entity.CommonResponse-array_schema_ModelCache": {
+      "entity.CommonResponse-array_schema_Preset": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1397,7 +1495,7 @@
                     "description": "数据",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schema.ModelCache"
+                      "$ref": "#/definitions/schema.Preset"
                     }
                 },
                 "msg": {
@@ -1548,6 +1646,27 @@
                 }
             }
         },
+      "entity.CommonResponse-exam_SubmitExamResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "description": "代码",
+            "type": "integer"
+          },
+          "data": {
+            "description": "数据",
+            "allOf": [
+              {
+                "$ref": "#/definitions/exam.SubmitExamResponse"
+              }
+            ]
+          },
+          "msg": {
+            "description": "消息",
+            "type": "string"
+          }
+        }
+      },
         "entity.CommonResponse-schema_Course": {
             "type": "object",
             "properties": {
@@ -1584,6 +1703,27 @@
                         }
                     ]
                 },
+              "msg": {
+                "description": "消息",
+                "type": "string"
+              }
+            }
+        },
+      "entity.CommonResponse-schema_ExamUserRecord": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "description": "代码",
+            "type": "integer"
+          },
+          "data": {
+            "description": "数据",
+            "allOf": [
+              {
+                "$ref": "#/definitions/schema.ExamUserRecord"
+              }
+            ]
+          },
                 "msg": {
                     "description": "消息",
                     "type": "string"
@@ -1788,6 +1928,40 @@
                 }
             }
         },
+      "exam.SubmitExamRequest": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "description": "答案列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/exam.SubmitExamRequestAnswer"
+            }
+          },
+          "time_spent": {
+            "description": "答题用时（秒）",
+            "type": "integer"
+          }
+        }
+      },
+      "exam.SubmitExamRequestAnswer": {
+        "type": "object",
+        "properties": {
+          "answer": {},
+          "problem_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "exam.SubmitExamResponse": {
+        "type": "object",
+        "properties": {
+          "record_id": {
+            "description": "记录ID",
+            "type": "integer"
+          }
+        }
+      },
         "schema.APIKey": {
             "type": "object",
             "properties": {
@@ -1804,38 +1978,6 @@
                 "provider_id": {
                     "description": "外键，指向 Provider",
                     "type": "integer"
-                }
-            }
-        },
-        "schema.BotRole": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "description": "角色描述",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "原始数据",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "角色名称",
-                    "type": "string"
-                },
-                "prompt_session": {
-                    "description": "组装数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/schema.Session"
-                        }
-                    ]
-                },
-                "prompt_session_id": {
-                    "description": "引用一个 session 中的对话作为 prompt",
-                    "type": "string"
                 }
             }
         },
@@ -2006,16 +2148,95 @@
                 }
             }
         },
-        "schema.Message": {
+      "schema.ExamUserRecord": {
             "type": "object",
             "properties": {
-                "bot_role": {
-                    "$ref": "#/definitions/schema.BotRole"
+              "answers": {
+                "description": "用户答案（关联表储存）",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/schema.ExamUserRecordAnswer"
+                }
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "exam": {
+                "description": "组装字段",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/schema.Exam"
+                  }
+                ]
+              },
+              "exam_id": {
+                "description": "考试ID",
+                "type": "integer"
                 },
-                "bot_role_id": {
-                    "description": "回复所使用的模型",
+              "id": {
+                "description": "普通字段",
+                "type": "integer"
+              },
+              "status": {
+                "description": "总评分状态",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/schema.ScoreStatus"
+                  }
+                ]
+              },
+              "time_spent": {
+                "description": "答题用时（单位：秒）",
+                "type": "integer"
+              },
+              "total_score": {
+                "description": "总得分（单位：0.01分）",
+                "type": "integer"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "user_id": {
+                "description": "用户ID",
+                "type": "integer"
+              }
+            }
+      },
+      "schema.ExamUserRecordAnswer": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "description": "用户答案"
+          },
+          "comments": {
+            "description": "评语/反馈",
+            "type": "string"
+          },
+          "exam_id": {
+            "description": "测验 ID",
+            "type": "integer"
+          },
+          "problem_id": {
+            "description": "题目 ID",
+            "type": "integer"
+          },
+          "score": {
+            "description": "得分（单位：0.01分）",
                     "type": "integer"
                 },
+          "status": {
+            "description": "评分状态",
+            "allOf": [
+              {
+                "$ref": "#/definitions/schema.ScoreStatus"
+              }
+            ]
+          }
+        }
+      },
+      "schema.Message": {
+        "type": "object",
+        "properties": {
                 "content": {
                     "type": "string"
                 },
@@ -2037,6 +2258,13 @@
                 "model_id": {
                     "description": "回复所使用的模型",
                     "type": "integer"
+                },
+          "preset": {
+            "$ref": "#/definitions/schema.Preset"
+          },
+          "preset_id": {
+            "description": "回复所使用的模型",
+            "type": "integer"
                 },
                 "reasoning_content": {
                     "type": "string"
@@ -2076,12 +2304,21 @@
                     "type": "string"
                 },
                 "id": {
+                  "description": "原始数据",
                     "type": "integer"
                 },
                 "name": {
                     "description": "模型名称",
                     "type": "string"
                 },
+              "provider": {
+                "description": "组装数据",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/schema.Provider"
+                  }
+                ]
+              },
                 "provider_id": {
                     "description": "关联的 Provider ID",
                     "type": "integer"
@@ -2114,12 +2351,21 @@
                     "type": "string"
                 },
                 "id": {
+                  "description": "原始数据",
                     "type": "integer"
                 },
                 "name": {
                     "description": "模型名称",
                     "type": "string"
                 },
+              "provider": {
+                "description": "组装数据",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/schema.Provider"
+                  }
+                ]
+              },
                 "provider_display_name": {
                     "description": "关联的 Provider DisplayName",
                     "type": "string"
@@ -2193,6 +2439,42 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+      "schema.Preset": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "description": {
+            "description": "角色描述",
+            "type": "string"
+          },
+          "id": {
+            "description": "原始数据",
+            "type": "integer"
+          },
+          "name": {
+            "description": "角色名称",
+            "type": "string"
+          },
+          "prompt_session": {
+            "description": "组装数据",
+            "allOf": [
+              {
+                "$ref": "#/definitions/schema.Session"
+              }
+            ]
+          },
+          "prompt_session_id": {
+            "description": "引用一个 session 中的对话作为 prompt",
+            "type": "string"
+          },
+          "type": {
+            "description": "角色所属模块（chat、tue 等）",
+            "type": "string"
                 }
             }
         },
@@ -2387,6 +2669,27 @@
                 }
             }
         },
+      "schema.ScoreStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "scoring",
+          "completed",
+          "failed"
+        ],
+        "x-enum-comments": {
+          "StatusCompleted": "评分完成",
+          "StatusFailed": "评分失败",
+          "StatusPending": "待评分",
+          "StatusScoring": "评分中"
+        },
+        "x-enum-varnames": [
+          "StatusPending",
+          "StatusScoring",
+          "StatusCompleted",
+          "StatusFailed"
+        ]
+      },
         "schema.Session": {
             "type": "object",
             "properties": {

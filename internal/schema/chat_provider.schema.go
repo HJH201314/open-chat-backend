@@ -13,18 +13,22 @@ type Provider struct {
 
 type APIKey struct {
 	ID         uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
-	Key        string `gorm:"not null" json:"key"`         // API 密钥
-	ProviderID uint64 `gorm:"not null" json:"provider_id"` // 外键，指向 Provider
+	ProviderID uint64 `gorm:"index;not null" json:"provider_id"` // 外键，指向 Provider
+	Key        string `gorm:"not null" json:"key"`               // API 密钥
 	AutoCreateAt
 }
 
 type Model struct {
+	// 原始数据
 	ID          uint64      `gorm:"primaryKey;autoIncrement" json:"id"`
-	ProviderID  uint64      `gorm:"not null" json:"provider_id"`             // 关联的 Provider ID
+	ProviderID  uint64      `gorm:"index;not null" json:"provider_id"`       // 关联的 Provider ID
 	Name        string      `gorm:"not null" json:"name"`                    // 模型名称
 	DisplayName string      `gorm:"" json:"display_name"`                    // 对外展示模型名称
 	Description string      `gorm:"" json:"description"`                     // 额外模型描述
 	Config      ModelConfig `gorm:"type:json;serializer:json" json:"config"` // 使用 JSON 储存配置
+
+	// 组装数据
+	Provider *Provider `gorm:"foreignKey:ProviderID" json:"provider"`
 	AutoCreateUpdateAt
 }
 

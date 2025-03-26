@@ -11,7 +11,7 @@ import (
 )
 
 // Completion 非流式聊天完成
-func Completion(ctx context.Context, opts CompletionStreamOptions) (*CompletionResponse, error) {
+func Completion(ctx context.Context, opts CompletionOptions) (*CompletionResponse, error) {
 	// 参数校验
 	if err := validateOptions(opts); err != nil {
 		return nil, fmt.Errorf("invalid options: %w", err)

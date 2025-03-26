@@ -50,7 +50,7 @@ func (s *CacheService) Start(ctx context.Context, interval time.Duration) {
 
 func (s *CacheService) syncAll() {
 	s.syncCacheProviders()
-	s.cacheBotRoles()
+	s.cachePresets()
 }
 
 // syncCacheProviders 缓存 provider
@@ -72,18 +72,18 @@ func (s *CacheService) syncCacheProviders() {
 	s.Logger.Info(fmt.Sprintf("Cache %d providers successfully", len(data)))
 }
 
-// cacheBotRoles 缓存 botRoles
-func (s *CacheService) cacheBotRoles() {
+// cachePresets 缓存 presets
+func (s *CacheService) cachePresets() {
 	// 1. 查询数据库
-	data, err := s.GormStore.ListBotRoles()
+	data, err := s.GormStore.ListPresets()
 	if err != nil {
-		s.Logger.Error("bot_role failed to query store" + err.Error())
+		s.Logger.Error("preset failed to query store" + err.Error())
 		return
 	}
 
 	// 2. 写入Redis
-	if err := s.RedisStore.CacheBotRoles(data); err != nil {
-		s.Logger.Error("bot_role failed to save to redis: " + err.Error())
+	if err := s.RedisStore.CachePresets(data); err != nil {
+		s.Logger.Error("preset failed to save to redis: " + err.Error())
 		return
 	}
 

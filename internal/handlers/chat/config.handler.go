@@ -42,22 +42,22 @@ func (h *Handler) GetModelConfig(c *gin.Context) {
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[[]schema.BotRole]
+//	@Success		200	{object}	entity.CommonResponse[[]schema.Preset]
 //	@Router			/chat/config/bots [get]
 func (h *Handler) GetBotConfig(c *gin.Context) {
 	// 从缓存中查询
-	cachedBotRoles, err := h.Redis.GetCachedBotRoles()
+	cachedPresets, err := h.Redis.GetCachedPresetsByModule("chat")
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	// 将 session 信息隐藏
-	cachedBotRoles = slice.Map(
-		cachedBotRoles, func(_ int, item schema.BotRole) schema.BotRole {
+	cachedPresets = slice.Map(
+		cachedPresets, func(_ int, item schema.Preset) schema.Preset {
 			item.PromptSession = nil
 			item.PromptSessionId = ""
 			return item
 		},
 	)
-	ctx_utils.Success(c, cachedBotRoles)
+	ctx_utils.Success(c, cachedPresets)
 }

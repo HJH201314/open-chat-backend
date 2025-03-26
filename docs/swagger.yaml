@@ -39,20 +39,6 @@ definitions:
         description: 消息
         type: string
     type: object
-  entity.CommonResponse-array_schema_BotRole:
-    properties:
-      code:
-        description: 代码
-        type: integer
-      data:
-        description: 数据
-        items:
-          $ref: '#/definitions/schema.BotRole'
-        type: array
-      msg:
-        description: 消息
-        type: string
-    type: object
   entity.CommonResponse-array_schema_ModelCache:
     properties:
       code:
@@ -62,6 +48,20 @@ definitions:
         description: 数据
         items:
           $ref: '#/definitions/schema.ModelCache'
+        type: array
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-array_schema_Preset:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        items:
+          $ref: '#/definitions/schema.Preset'
         type: array
       msg:
         description: 消息
@@ -158,6 +158,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-exam_SubmitExamResponse:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/exam.SubmitExamResponse'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-schema_Course:
     properties:
       code:
@@ -179,6 +192,19 @@ definitions:
       data:
         allOf:
           - $ref: '#/definitions/schema.Exam'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-schema_ExamUserRecord:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/schema.ExamUserRecord'
         description: 数据
       msg:
         description: 消息
@@ -310,6 +336,29 @@ definitions:
           $ref: '#/definitions/schema.Course'
         type: array
     type: object
+  exam.SubmitExamRequest:
+    properties:
+      answers:
+        description: 答案列表
+        items:
+          $ref: '#/definitions/exam.SubmitExamRequestAnswer'
+        type: array
+      time_spent:
+        description: 答题用时（秒）
+        type: integer
+    type: object
+  exam.SubmitExamRequestAnswer:
+    properties:
+      answer: { }
+      problem_id:
+        type: integer
+    type: object
+  exam.SubmitExamResponse:
+    properties:
+      record_id:
+        description: 记录ID
+        type: integer
+    type: object
   schema.APIKey:
     properties:
       created_at:
@@ -322,27 +371,6 @@ definitions:
       provider_id:
         description: 外键，指向 Provider
         type: integer
-    type: object
-  schema.BotRole:
-    properties:
-      created_at:
-        type: string
-      description:
-        description: 角色描述
-        type: string
-      id:
-        description: 原始数据
-        type: integer
-      name:
-        description: 角色名称
-        type: string
-      prompt_session:
-        allOf:
-          - $ref: '#/definitions/schema.Session'
-        description: 组装数据
-      prompt_session_id:
-        description: 引用一个 session 中的对话作为 prompt
-        type: string
     type: object
   schema.Course:
     properties:
@@ -457,13 +485,64 @@ definitions:
         description: 题目排序
         type: integer
     type: object
+  schema.ExamUserRecord:
+    properties:
+      answers:
+        description: 用户答案（关联表储存）
+        items:
+          $ref: '#/definitions/schema.ExamUserRecordAnswer'
+        type: array
+      created_at:
+        type: string
+      exam:
+        allOf:
+          - $ref: '#/definitions/schema.Exam'
+        description: 组装字段
+      exam_id:
+        description: 考试ID
+        type: integer
+      id:
+        description: 普通字段
+        type: integer
+      status:
+        allOf:
+          - $ref: '#/definitions/schema.ScoreStatus'
+        description: 总评分状态
+      time_spent:
+        description: 答题用时（单位：秒）
+        type: integer
+      total_score:
+        description: 总得分（单位：0.01分）
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        description: 用户ID
+        type: integer
+    type: object
+  schema.ExamUserRecordAnswer:
+    properties:
+      answer:
+        description: 用户答案
+      comments:
+        description: 评语/反馈
+        type: string
+      exam_id:
+        description: 测验 ID
+        type: integer
+      problem_id:
+        description: 题目 ID
+        type: integer
+      score:
+        description: 得分（单位：0.01分）
+        type: integer
+      status:
+        allOf:
+          - $ref: '#/definitions/schema.ScoreStatus'
+        description: 评分状态
+    type: object
   schema.Message:
     properties:
-      bot_role:
-        $ref: '#/definitions/schema.BotRole'
-      bot_role_id:
-        description: 回复所使用的模型
-        type: integer
       content:
         type: string
       created_at:
@@ -476,6 +555,11 @@ definitions:
           - $ref: '#/definitions/schema.Model'
         description: 组装结构
       model_id:
+        description: 回复所使用的模型
+        type: integer
+      preset:
+        $ref: '#/definitions/schema.Preset'
+      preset_id:
         description: 回复所使用的模型
         type: integer
       reasoning_content:
@@ -503,10 +587,15 @@ definitions:
         description: 对外展示模型名称
         type: string
       id:
+        description: 原始数据
         type: integer
       name:
         description: 模型名称
         type: string
+      provider:
+        allOf:
+          - $ref: '#/definitions/schema.Provider'
+        description: 组装数据
       provider_id:
         description: 关联的 Provider ID
         type: integer
@@ -528,10 +617,15 @@ definitions:
         description: 对外展示模型名称
         type: string
       id:
+        description: 原始数据
         type: integer
       name:
         description: 模型名称
         type: string
+      provider:
+        allOf:
+          - $ref: '#/definitions/schema.Provider'
+        description: 组装数据
       provider_display_name:
         description: 关联的 Provider DisplayName
         type: string
@@ -583,6 +677,30 @@ definitions:
         description: 权限路径（形如：POST:/user/create）
         type: string
       updated_at:
+        type: string
+    type: object
+  schema.Preset:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 角色描述
+        type: string
+      id:
+        description: 原始数据
+        type: integer
+      name:
+        description: 角色名称
+        type: string
+      prompt_session:
+        allOf:
+          - $ref: '#/definitions/schema.Session'
+        description: 组装数据
+      prompt_session_id:
+        description: 引用一个 session 中的对话作为 prompt
+        type: string
+      type:
+        description: 角色所属模块（chat、tue 等）
         type: string
     type: object
   schema.Problem:
@@ -722,6 +840,23 @@ definitions:
       updated_at:
         type: string
     type: object
+  schema.ScoreStatus:
+    enum:
+      - pending
+      - scoring
+      - completed
+      - failed
+    type: string
+    x-enum-comments:
+      StatusCompleted: 评分完成
+      StatusFailed: 评分失败
+      StatusPending: 待评分
+      StatusScoring: 评分中
+    x-enum-varnames:
+      - StatusPending
+      - StatusScoring
+      - StatusCompleted
+      - StatusFailed
   schema.Session:
     properties:
       context_size:
@@ -842,114 +977,6 @@ definitions:
 info:
   contact: {}
 paths:
-  /bot/{id}:
-    get:
-      consumes:
-        - application/json
-      description: 根据ID获取指定的机器人角色信息
-      parameters:
-        - description: 机器人角色ID
-          in: path
-          name: id
-          required: true
-          type: integer
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: 机器人角色信息
-          schema:
-            $ref: '#/definitions/schema.BotRole'
-      summary: 获取机器人角色
-      tags:
-        - BotRole
-  /bot/{id}/delete:
-    post:
-      consumes:
-        - application/json
-      description: 删除指定ID的机器人角色
-      parameters:
-        - description: 机器人角色ID
-          in: path
-          name: id
-          required: true
-          type: integer
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: 删除成功
-          schema:
-            type: boolean
-      summary: 删除机器人角色
-      tags:
-        - BotRole
-  /bot/{id}/update:
-    post:
-      consumes:
-        - application/json
-      description: 更新指定ID的机器人角色信息
-      parameters:
-        - description: 机器人角色ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 更新的机器人角色信息
-          in: body
-          name: role
-          required: true
-          schema:
-            $ref: '#/definitions/schema.BotRole'
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: 更新后的机器人角色信息
-          schema:
-            $ref: '#/definitions/schema.BotRole'
-      summary: 更新机器人角色
-      tags:
-        - BotRole
-  /bot/create:
-    post:
-      consumes:
-        - application/json
-      description: 创建一个新的机器人角色，包含名称、描述和引用的会话ID
-      parameters:
-        - description: 机器人角色信息
-          in: body
-          name: role
-          required: true
-          schema:
-            $ref: '#/definitions/schema.BotRole'
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: 成功创建的机器人角色
-          schema:
-            $ref: '#/definitions/schema.BotRole'
-      summary: 创建机器人角色
-      tags:
-        - BotRole
-  /bot/list:
-    get:
-      consumes:
-        - application/json
-      description: 获取所有机器人角色的列表
-      produces:
-        - application/json
-      responses:
-        "200":
-          description: 机器人角色列表
-          schema:
-            items:
-              $ref: '#/definitions/schema.BotRole'
-            type: array
-      summary: 获取机器人角色列表
-      tags:
-        - BotRole
   /chat/completion/stream/{session_id}:
     post:
       consumes:
@@ -984,7 +1011,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-array_schema_BotRole'
+            $ref: '#/definitions/entity.CommonResponse-array_schema_Preset'
       summary: 获取 bot 角色配置
       tags:
         - config
@@ -1363,6 +1390,114 @@ paths:
       summary: 更新 API 提供商
       tags:
       - Provider
+  /preset/{id}:
+    get:
+      consumes:
+        - application/json
+      description: 根据ID获取指定的预设信息
+      parameters:
+        - description: 预设ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 预设信息
+          schema:
+            $ref: '#/definitions/schema.Preset'
+      summary: 获取预设
+      tags:
+        - Preset
+  /preset/{id}/delete:
+    post:
+      consumes:
+        - application/json
+      description: 删除指定ID的预设
+      parameters:
+        - description: 预设ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            type: boolean
+      summary: 删除预设
+      tags:
+        - Preset
+  /preset/{id}/update:
+    post:
+      consumes:
+        - application/json
+      description: 更新指定ID的预设信息
+      parameters:
+        - description: 预设ID
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: 更新的预设信息
+          in: body
+          name: role
+          required: true
+          schema:
+            $ref: '#/definitions/schema.Preset'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 更新后的预设信息
+          schema:
+            $ref: '#/definitions/schema.Preset'
+      summary: 更新预设
+      tags:
+        - Preset
+  /preset/create:
+    post:
+      consumes:
+        - application/json
+      description: 创建一个新的预设，包含名称、描述和引用的会话ID
+      parameters:
+        - description: 预设信息
+          in: body
+          name: role
+          required: true
+          schema:
+            $ref: '#/definitions/schema.Preset'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 成功创建的预设
+          schema:
+            $ref: '#/definitions/schema.Preset'
+      summary: 创建预设
+      tags:
+        - Preset
+  /preset/list:
+    get:
+      consumes:
+        - application/json
+      description: 获取所有预设的列表
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 预设列表
+          schema:
+            items:
+              $ref: '#/definitions/schema.Preset'
+            type: array
+      summary: 获取预设列表
+      tags:
+        - Preset
   /tue/course/{id}:
     get:
       consumes:
@@ -1502,8 +1637,73 @@ paths:
       summary: 获取单个测验
       tags:
         - Exam
-  /tue/exam/create:
+  /tue/exam/{id}/records:
     get:
+      consumes:
+        - application/json
+      description: 获取用户的考试评分结果
+      parameters:
+        - description: 考试记录ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
+      summary: 获取考试结果
+      tags:
+        - 考试
+  /tue/exam/{id}/rescore:
+    post:
+      consumes:
+        - application/json
+      description: 管理员重新评分考试
+      parameters:
+        - description: 考试记录ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      produces:
+        - application/json
+      responses: { }
+      summary: 重新评分考试
+      tags:
+        - 考试
+  /tue/exam/{id}/submit:
+    post:
+      consumes:
+        - application/json
+      description: 提交用户的考试答案并进行评分
+      parameters:
+        - description: 考试ID
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: 提交信息
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/exam.SubmitExamRequest'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-exam_SubmitExamResponse'
+      summary: 提交考试答案
+      tags:
+        - 考试
+  /tue/exam/create:
+    post:
       consumes:
         - application/json
       description: 保存单个测验

@@ -1,10 +1,11 @@
 package routers
 
 import (
-	"gorm.io/gorm/clause"
 	"reflect"
 	"runtime"
 	"strings"
+
+	"gorm.io/gorm/clause"
 
 	"github.com/fcraft/open-chat/internal/storage/helper"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/handlers/chat"
 	"github.com/fcraft/open-chat/internal/handlers/course"
+	"github.com/fcraft/open-chat/internal/handlers/exam"
 	"github.com/fcraft/open-chat/internal/handlers/manage"
 	"github.com/fcraft/open-chat/internal/handlers/user"
 	"github.com/fcraft/open-chat/internal/schema"
@@ -136,7 +138,7 @@ func (r *Router) saveRoutesToDB() error {
 	// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
 	if err := r.store.Db.Clauses(
 		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "path"}},
+			Columns:   []clause.Column{{Name: "name"}},
 			UpdateAll: true,
 		},
 	).CreateInBatches(&permissions, 100).Error; err != nil {
@@ -178,43 +180,43 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				chatHandler.GetBotConfig,
 			)
 		}
-		// routes for bot role
-		botRoleGroup := r.Group("/bot")
+		// routes for preset
+		botRoleGroup := r.Group("/preset")
 		{
 			router.registerRoute(
 				botRoleGroup,
 				POST,
 				"/create",
-				"创建新的机器人角色",
-				chatHandler.CreateBotRole,
+				"创建新的预设",
+				chatHandler.CreatePreset,
 			)
 			router.registerRoute(
 				botRoleGroup,
 				GET,
 				"/list",
-				"获取机器人角色列表",
-				chatHandler.ListBotRoles,
+				"获取预设列表",
+				chatHandler.ListPresets,
 			)
 			router.registerRoute(
 				botRoleGroup,
 				GET,
 				"/:id",
-				"获取指定机器人角色的详细信息",
-				chatHandler.GetBotRole,
+				"获取指定预设的详细信息",
+				chatHandler.GetPreset,
 			)
 			router.registerRoute(
 				botRoleGroup,
 				POST,
 				"/:id/update",
-				"更新机器人角色信息",
-				chatHandler.UpdateBotRole,
+				"更新预设信息",
+				chatHandler.UpdatePreset,
 			)
 			router.registerRoute(
 				botRoleGroup,
 				POST,
 				"/:id/delete",
-				"删除指定的机器人角色",
-				chatHandler.DeleteBotRole,
+				"删除指定的预设",
+				chatHandler.DeletePreset,
 			)
 		}
 
@@ -473,6 +475,29 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 		{
 			router.registerRoute(tueExamGroup, GET, "/:id", "获取指定考试的详细信息", tueHandler.GetExam)
 			router.registerRoute(tueExamGroup, POST, "/create", "创建新的考试", tueHandler.CreateExam)
+			// 考试提交
+			examHandler := exam.NewExamHandler(baseHandler)
+			router.registerRoute(
+				tueExamGroup,
+				POST,
+				"/:id/submit",
+				"提交考试答案",
+				examHandler.SubmitExam,
+			)
+			router.registerRoute(
+				tueExamGroup,
+				GET,
+				"/:id/records",
+				"获取考试结果",
+				examHandler.GetExamResult,
+			)
+			router.registerRoute(
+				tueExamGroup,
+				POST,
+				"/:id/rescore",
+				"重新评分考试",
+				examHandler.RescoreExam,
+			)
 		}
 		tueCourseGroup := tueGroup.Group("/course")
 		{

@@ -78,9 +78,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 获取 bot 的提示词会话
-	var bot *schema.BotRole
+	var bot *schema.Preset
 	if req.BotID != nil && *req.BotID > 0 {
-		botRole, err := h.Helper.GetBotRole(*req.BotID)
+		botRole, err := h.Helper.GetPreset(*req.BotID)
 		if err != nil || botRole == nil || botRole.PromptSession == nil {
 			ctx_utils.CustomError(c, http.StatusNotFound, "bot role not found")
 			return
@@ -191,7 +191,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}()
 
 	eventChan, err := chat_utils.CompletionStream(
-		c.Request.Context(), chat_utils.CompletionStreamOptions{
+		c.Request.Context(), chat_utils.CompletionOptions{
 			Provider: chat_utils.Provider{
 				BaseUrl: providerBaseUrl,
 				ApiKey:  providerKey.Key,
