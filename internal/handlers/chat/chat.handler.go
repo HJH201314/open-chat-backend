@@ -175,6 +175,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			messages[1].Content = doneResp.Content
 			messages[1].ReasoningContent = doneResp.ReasoningContent
 			messages[1].TokenUsage = doneResp.Usage.CompletionTokens
+			if bot != nil {
+				messages[1].PresetID = bot.ID
+			}
 			if err := h.Store.SaveMessages(&messages); err != nil {
 				// do nothing
 			}

@@ -60,7 +60,7 @@ func NewGormStore() *GormStore {
 		&schema.UserRole{},
 		&schema.Provider{},
 		&schema.APIKey{},
-		&schema.Model{},
+		&schema.Model{}, &schema.ModelCollection{},
 		&schema.Preset{},
 		&schema.UserSession{},
 		&schema.UserUsage{},

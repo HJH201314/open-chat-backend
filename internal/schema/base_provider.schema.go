@@ -59,3 +59,13 @@ var DefaultModelConfig = ModelConfig{
 	FrequencyPenalty:   0.0,
 	PresencePenalty:    0.0,
 }
+
+// ModelCollection 是多个相似模型的集合，用于负载均衡/统一名称，这在对接多个供应商服务的时候很有用
+type ModelCollection struct {
+	ID          uint64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name        string  `gorm:"not null;unique" json:"name"`                       // 唯一标识名称
+	DisplayName string  `json:"display_name"`                                      // 展示名称
+	Description string  `json:"description"`                                       // 额外描述
+	Models      []Model `gorm:"many2many:model_collections_models;" json:"models"` // 关联的模型
+	AutoCreateAt
+}

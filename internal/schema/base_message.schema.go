@@ -6,7 +6,7 @@ type Message struct {
 	SessionID        string `gorm:"index" json:"session_id"`
 	Role             string `json:"role"`      // user/assistant/system
 	ModelID          uint64 `json:"model_id"`  // 回复所使用的模型
-	PresetID         uint64 `json:"preset_id"` // 回复所使用的模型
+	PresetID         uint64 `json:"preset_id"` // 回复所使用的预设
 	Content          string `json:"content"`
 	ReasoningContent string `json:"reasoning_content"`
 	TokenUsage       int64  `gorm:"default:0" json:"token_usage"`

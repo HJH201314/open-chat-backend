@@ -157,7 +157,7 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 	}
 	preset := presetService.GetBuiltinPreset(presetName)
 
-	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置
+	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置聚合 API
 	var model schema.Model
 	if err := presetService.Gorm.Model(&model).Preload("Provider").Preload("Provider.APIKeys").Where(
 		"id = ?",
