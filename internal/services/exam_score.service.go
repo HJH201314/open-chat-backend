@@ -15,16 +15,6 @@ import (
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 )
 
-// ExamScoreService 考试评分服务
-type ExamScoreService struct {
-	db *gorm.DB
-}
-
-// NewExamScoreService 创建新的考试评分服务
-func NewExamScoreService(db *gorm.DB) *ExamScoreService {
-	return &ExamScoreService{db: db}
-}
-
 // ScoreExam 评分整个考试
 func (s *ExamScoreService) ScoreExam(ctx context.Context, recordID uint64) error {
 	// 查询考试记录
@@ -294,67 +284,18 @@ func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Probl
 		standardAnswer = "无标准答案" // 如果没有标准答案，设置为空
 	}
 
-	// 构建评分提示
-	prompt := fmt.Sprintf(
-		`你是一个专业的教育评分助手。请评估以下答案的质量和准确性。
-
-问题: %s
-
-标准答案: %s
-
-学生答案: %s
-
-请根据以下标准进行评分:
-1. 内容准确性: 答案是否准确，与标准答案相符
-2. 完整性: 是否涵盖了问题的所有方面
-3. 清晰度: 表达是否清晰
-
-请提供:
-1. 分数评估(满分100分)
-2. 简短评语(不超过100字)
-3. 改进建议(如果有)
-
-最后，按照以下 tag 格式返回:
-<score>分数(0-100之间的整数)</score>
-<comment>评语</comment>
-<suggestion>改进建议</suggestion>
-`, problem.Description, standardAnswer, userAnswer,
-	)
-
-	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置
-	var model schema.Model
-	if err := s.db.Model(&model).Preload("Provider").Preload("Provider.APIKeys").Where(
-		"id = ?",
-		4,
-	).First(&model).Error; err != nil {
-		return 0, "", fmt.Errorf("failed to get default AI provider: %w", err)
-	}
-
 	// 调用AI接口进行评分
-	resp, err := chat_utils.Completion(
-		ctx, chat_utils.GetCommonCompletionOptions(
-			&model, &chat_utils.CompletionOptions{
-				CompletionModelConfig: chat_utils.CompletionModelConfig{
-					MaxTokens:   1000, // 输出长度限制
-					Temperature: 0.3,  // 较低的温度，提高一致性
-				},
-				SystemPrompt: "你是一个专业的教育评分助手，请客观公正地评价学生答案，并提供有建设性的反馈。",
-				Messages: []chat_utils.Message{
-					{
-						Role:    "user",
-						Content: prompt,
-					},
-				},
-			},
-		),
+	aiResponse, err := BuiltinPresetCompletion(
+		ExamScoreShortAnswerPresetName, map[string]string{
+			"question":        problem.Description,
+			"standard_answer": standardAnswer,
+			"user_answer":     userAnswer,
+		},
 	)
 
 	if err != nil {
 		return 0, "AI评分失败", fmt.Errorf("AI scoring failed: %w", err)
 	}
-
-	// 解析AI响应（这里简化处理，实际应解析JSON）
-	aiResponse := resp.Content
 
 	// 简单解析，尽量规避 JSON 格式异常
 	scoreStr := strutil.SubInBetween(aiResponse, "<score>", "</score>")
@@ -375,4 +316,52 @@ func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Probl
 	finalScore := uint64(float64(fullScore) * aiScore / 100)
 
 	return finalScore, comments, nil
+}
+
+const (
+	ExamScoreShortAnswerPresetName = "tue_exam_score_short_answer"
+)
+
+// ExamScoreService 考试评分服务
+type ExamScoreService struct {
+	db *gorm.DB
+}
+
+// NewExamScoreService 创建新的考试评分服务
+func NewExamScoreService(db *gorm.DB) *ExamScoreService {
+	// 注册题目评分预设
+	presetService := GetPresetService()
+	presetService.RegisterBuiltinPresetsSimple(
+		ExamScoreShortAnswerPresetName,
+		"TUE 简答题评分",
+		1,
+		"你是一个专业的教育评分助手，请客观公正地评价学生答案，并提供有建设性的反馈。",
+		[]chat_utils.Message{
+			chat_utils.UserMessage(
+				`你是一个专业的教育评分助手。请评估以下答案的质量和准确性。
+
+问题: {question}
+
+标准答案: {standard_answer}
+
+学生答案: {user_answer}
+
+请根据以下标准进行评分:
+1. 内容准确性: 答案是否准确，与标准答案相符
+2. 完整性: 是否涵盖了问题的所有方面
+3. 清晰度: 表达是否清晰
+
+请提供:
+1. 分数评估(满分100分)
+2. 简短评语(不超过100字)
+3. 改进建议(如果有)
+
+最后，按照以下 tag 格式返回:
+<score>分数(0-100之间的整数)</score>
+<comment>评语</comment>
+<suggestion>改进建议</suggestion>`,
+			),
+		},
+	)
+	return &ExamScoreService{db: db}
 }

@@ -5,15 +5,30 @@ import (
 	"gorm.io/gorm"
 )
 
+// PresetFullScope 预设查询预设完整数据
+func PresetFullScope(db *gorm.DB) *gorm.DB {
+	return db.Preload("PromptSession").Preload("PromptSession.Messages")
+}
+
 // CreatePreset 创建预设
 func (s *GormStore) CreatePreset(role *schema.Preset) error {
 	return s.Db.Create(role).Error
 }
 
-// GetPreset 获取预设
+// GetPreset 获取预设基本信息
 func (s *GormStore) GetPreset(id uint64) (*schema.Preset, error) {
 	var role schema.Preset
-	err := s.Db.Preload("PromptSession").First(&role, id).Error
+	err := s.Db.First(&role, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+// QueryPreset 获取预设完整数据
+func (s *GormStore) QueryPreset(id uint64) (*schema.Preset, error) {
+	var role schema.Preset
+	err := s.Db.Scopes(PresetFullScope).First(&role, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +58,7 @@ func (s *GormStore) DeletePreset(id uint64) error {
 // GetPresetByPromptSessionId 根据 prompt session id 获取预设
 func (s *GormStore) GetPresetByPromptSessionId(sessionId string) (*schema.Preset, error) {
 	var role schema.Preset
-	err := s.Db.Preload("PromptSession").Preload("PromptSession.Messages").Where(
+	err := s.Db.Scopes(PresetFullScope).Where(
 		"prompt_session_id = ?",
 		sessionId,
 	).First(&role).Error

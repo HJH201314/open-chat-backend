@@ -3,32 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
-	gormstore "github.com/fcraft/open-chat/internal/storage/gorm"
-	"github.com/fcraft/open-chat/internal/storage/helper"
-	redisstore "github.com/fcraft/open-chat/internal/storage/redis"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
-	"log/slog"
 	"time"
 )
 
 type CacheService struct {
-	Gorm       *gorm.DB
-	GormStore  *gormstore.GormStore
-	Redis      *redis.Client
-	RedisStore *redisstore.RedisStore
-	Helper     *helper.HandlerHelper
-	Logger     *slog.Logger
+	BaseService
 }
 
-func NewCacheService(gormStore *gormstore.GormStore, redisClient *redisstore.RedisStore, handlerHelper *helper.HandlerHelper) *CacheService {
+func NewCacheService(baseService *BaseService) *CacheService {
 	return &CacheService{
-		Gorm:       gormStore.Db,
-		GormStore:  gormStore,
-		Redis:      redisClient.Client,
-		RedisStore: redisClient,
-		Helper:     handlerHelper,
-		Logger:     slog.Default(),
+		BaseService: *baseService,
 	}
 }
 

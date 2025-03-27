@@ -8,6 +8,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/ssestream"
+	"log/slog"
 	"strings"
 )
 
@@ -60,6 +61,7 @@ func buildMessages(opts CompletionOptions) []Message {
 
 	// 添加上下文消息
 	messages = append(messages, opts.Messages...)
+	slog.Default().Info("messages: %v", messages)
 	return messages
 }
 

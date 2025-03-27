@@ -147,7 +147,7 @@ func (r *Router) saveRoutesToDB() error {
 	return nil
 }
 
-func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, helper *helper.HandlerHelper, cache *services.CacheService) Router {
+func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, helper *helper.QueryHelper, cache *services.CacheService) Router {
 	router := Router{
 		Engine: r,
 		store:  store,

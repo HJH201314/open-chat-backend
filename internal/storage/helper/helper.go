@@ -11,19 +11,19 @@ import (
 	"time"
 )
 
-type HandlerHelper struct {
+type QueryHelper struct {
 	Gorm       *gorm.DB
 	GormStore  *gormstore.GormStore
 	Redis      *redis.Client
 	RedisStore *redisstore.RedisStore
 }
 
-func NewHandlerHelper(gormStore *gormstore.GormStore, redisStore *redisstore.RedisStore) *HandlerHelper {
-	return &HandlerHelper{Gorm: gormStore.Db, GormStore: gormStore, Redis: redisStore.Client, RedisStore: redisStore}
+func NewHandlerHelper(gormStore *gormstore.GormStore, redisStore *redisstore.RedisStore) *QueryHelper {
+	return &QueryHelper{Gorm: gormStore.Db, GormStore: gormStore, Redis: redisStore.Client, RedisStore: redisStore}
 }
 
 // CheckUserSession 检查用户是否拥有会话权限
-func (s *HandlerHelper) CheckUserSession(userId uint64, sessionId string) bool {
+func (s *QueryHelper) CheckUserSession(userId uint64, sessionId string) bool {
 	ctx := context.Background()
 	// 查询 Redis user-session:{userId}:{sessionId} 是否存在
 	_, err := s.Redis.Get(ctx, fmt.Sprintf("user-session:%s:%d", sessionId, userId)).Result()
@@ -43,7 +43,7 @@ func (s *HandlerHelper) CheckUserSession(userId uint64, sessionId string) bool {
 }
 
 // DeleteSession 删除会话
-func (s *HandlerHelper) DeleteSession(sessionId string) error {
+func (s *QueryHelper) DeleteSession(sessionId string) error {
 	// 删除数据
 	if err := s.GormStore.DeleteSession(sessionId); err != nil {
 		return err

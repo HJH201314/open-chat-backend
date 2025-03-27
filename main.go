@@ -32,15 +32,17 @@ func main() {
 	// 启动缓存服务
 	cacheCtx, cancelCache := context.WithCancel(context.Background())
 	defer cancelCache()
-	cacheService := services.NewCacheService(store, rd, hp)
-	go cacheService.Start(cacheCtx, 5*time.Minute)
+	baseService := services.NewBaseService(store, rd, hp)         // 基础服务
+	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
+	go intervalCacheService.Start(cacheCtx, 10*time.Minute)
+	services.InitPresetService(baseService) // 初始化预设缓存服务
 
 	r := gin.Default()
 	// 初始化中间件
 	r.Use(middlewares.AuthMiddleware(rd))
 	r.Use(middlewares.PermissionMiddleware(hp))
 	// 初始化路由
-	routers.InitRouter(r, store, rd, hp, cacheService)
+	routers.InitRouter(r, store, rd, hp, intervalCacheService)
 
 	// 在 9033 端口启动服务
 	if err := r.Run("0.0.0.0:9033"); err != nil {

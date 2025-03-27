@@ -9,7 +9,7 @@ import (
 )
 
 // PermissionMiddleware 权限检查中间件
-func PermissionMiddleware(helper *handlers.HandlerHelper) gin.HandlerFunc {
+func PermissionMiddleware(helper *handlers.QueryHelper) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 忽略权限检查
 		isIgnoreAuth, exists := c.Get(constants.AuthIgnoredKey)

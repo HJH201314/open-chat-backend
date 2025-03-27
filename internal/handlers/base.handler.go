@@ -13,10 +13,10 @@ type BaseHandler struct {
 	Db     *gorm.DB
 	Redis  *redisstore.RedisStore
 	Cache  *services.CacheService
-	Helper *storehelper.HandlerHelper
+	Helper *storehelper.QueryHelper
 }
 
-func NewBaseHandler(store *gormstore.GormStore, redis *redisstore.RedisStore, helper *storehelper.HandlerHelper, cache *services.CacheService) *BaseHandler {
+func NewBaseHandler(store *gormstore.GormStore, redis *redisstore.RedisStore, helper *storehelper.QueryHelper, cache *services.CacheService) *BaseHandler {
 	return &BaseHandler{
 		Store:  store,
 		Db:     store.Db,

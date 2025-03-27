@@ -13,7 +13,8 @@ import (
 // CachePreset 缓存预设
 func (r *RedisStore) CachePreset(role *schema.Preset) error {
 	ctx := context.Background()
-	key := fmt.Sprintf("preset:%d", role.ID)
+	keyID := fmt.Sprintf("preset:%d", role.ID)
+	keyName := fmt.Sprintf("preset:%s", role.Name)
 
 	// 序列化角色数据
 	data, err := json.Marshal(role)
@@ -22,11 +23,17 @@ func (r *RedisStore) CachePreset(role *schema.Preset) error {
 	}
 
 	// 存储到 Redis，设置1小时过期
-	return r.Client.Set(ctx, key, data, 1*time.Hour).Err()
+	if err := r.Client.Set(ctx, keyID, data, 1*time.Hour).Err(); err != nil {
+		return err
+	}
+	if err := r.Client.Set(ctx, keyName, data, 1*time.Hour).Err(); err != nil {
+		return err
+	}
+	return nil
 }
 
-// GetCachedPreset 获取缓存的预设
-func (r *RedisStore) GetCachedPreset(id uint64) (*schema.Preset, error) {
+// GetCachedPresetByID 获取缓存的预设
+func (r *RedisStore) GetCachedPresetByID(id uint64) (*schema.Preset, error) {
 	ctx := context.Background()
 	key := fmt.Sprintf("preset:%d", id)
 
@@ -45,20 +52,47 @@ func (r *RedisStore) GetCachedPreset(id uint64) (*schema.Preset, error) {
 	return &role, nil
 }
 
-// DeletePresetCache 删除预设缓存
-func (r *RedisStore) DeletePresetCache(id uint64) error {
+// GetCachedPresetByName 获取缓存的预设
+func (r *RedisStore) GetCachedPresetByName(name string) (*schema.Preset, error) {
 	ctx := context.Background()
-	key := fmt.Sprintf("preset:%d", id)
-	return r.Client.Del(ctx, key).Err()
+	key := fmt.Sprintf("preset:%s", name)
+
+	// 从 Redis 获取数据
+	data, err := r.Client.Get(ctx, key).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	// 反序列化角色数据
+	var role schema.Preset
+	if err := json.Unmarshal(data, &role); err != nil {
+		return nil, err
+	}
+
+	return &role, nil
+}
+
+// DeletePresetCache 删除预设缓存
+func (r *RedisStore) DeletePresetCache(id uint64, name string) error {
+	ctx := context.Background()
+	keyID := fmt.Sprintf("preset:%d", id)
+	keyName := fmt.Sprintf("preset:%s", name)
+	if err := r.Client.Del(ctx, keyID).Err(); err != nil {
+		return err
+	}
+	if err := r.Client.Del(ctx, keyName).Err(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // CachePresets 缓存预设列表
-func (r *RedisStore) CachePresets(roles []schema.Preset) error {
+func (r *RedisStore) CachePresets(presets []schema.Preset) error {
 	ctx := context.Background()
 	key := "presets:list"
 
 	// 序列化角色列表数据
-	data, err := json.Marshal(roles)
+	data, err := json.Marshal(presets)
 	if err != nil {
 		return err
 	}
@@ -68,20 +102,20 @@ func (r *RedisStore) CachePresets(roles []schema.Preset) error {
 	}
 
 	// 按照类别进行分组
-	rolesMap := slice.GroupWith(
-		roles, func(item schema.Preset) string {
+	presetsMap := slice.GroupWith(
+		presets, func(item schema.Preset) string {
 			return item.Module
 		},
 	)
-	for module, roles := range rolesMap {
+	for module, presetsInModule := range presetsMap {
 		// 序列化角色列表数据
-		data, err := json.Marshal(roles)
+		jsonData, err := json.Marshal(presetsInModule)
 		if err != nil {
 			return err
 		}
 
 		// 存储到 Redis，设置1小时过期
-		if err := r.Client.Set(ctx, fmt.Sprintf("presets:list:%s", module), data, 1*time.Hour).Err(); err != nil {
+		if err := r.Client.Set(ctx, fmt.Sprintf("presets:list:%s", module), jsonData, 1*time.Hour).Err(); err != nil {
 			return err
 		}
 	}
