@@ -7,7 +7,7 @@ type Provider struct {
 	BaseURL     string   `gorm:"not null" json:"base_url"`              // API 的基本 URL
 	Description string   `gorm:"" json:"description"`                   // 额外提供商描述
 	APIKeys     []APIKey `gorm:"foreignKey:ProviderID" json:"api_keys"` // 一对多关系，与 APIKey 模型关联
-	Models      []Model  `gorm:"foreignKey:ProviderID" json:"schema"`   // 一对多关系，与 Model 模型关联
+	Models      []Model  `gorm:"foreignKey:ProviderID" json:"models"`   // 一对多关系，与 Model 模型关联
 	AutoCreateUpdateAt
 }
 

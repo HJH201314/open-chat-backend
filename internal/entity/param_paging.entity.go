@@ -47,6 +47,6 @@ type PaginatedSyncListResponse[T any] struct {
 
 // PaginatedTotalResponse 用于传统页码分页（支持跳页和总页数感知）
 type PaginatedTotalResponse[T any] struct {
-	List     []T    `json:"list"`
-	LastPage *int64 `json:"last_page"`
+	List  []T    `json:"list"`
+	Total *int64 `json:"total"`
 }

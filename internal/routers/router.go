@@ -325,6 +325,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 		router.registerRoute(userGroup, POST, "/ping", "检查用户登录状态", userHandler.Ping)
 		router.registerRoute(userGroup, GET, "/refresh", "刷新用户的访问令牌", userHandler.Refresh)
 		router.registerRoute(userGroup, POST, "/login", "用户登录接口", userHandler.Login)
+		router.registerRoute(userGroup, GET, "/current", "当前用户信息", userHandler.Current)
 		router.registerRoute(userGroup, POST, "/logout", "用户登出接口", userHandler.Logout)
 		router.registerRoute(userGroup, POST, "/register", "新用户注册接口", userHandler.Register)
 	}
@@ -355,14 +356,22 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				manageProviderGroup,
 				GET,
 				"/list",
-				"获取所有AI提供商列表",
+				"分页获取AI提供商列表",
 
 				manageHandler.GetProviders,
 			)
 			router.registerRoute(
 				manageProviderGroup,
+				GET,
+				"/all",
+				"获取所有AI提供商列表",
+
+				manageHandler.GetAllProviders,
+			)
+			router.registerRoute(
+				manageProviderGroup,
 				POST,
-				"/update",
+				"/:id/update",
 				"更新AI提供商信息",
 
 				manageHandler.UpdateProvider,
@@ -370,7 +379,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				manageProviderGroup,
 				POST,
-				"/delete/:provider_id",
+				"/:id/delete",
 				"删除指定的AI提供商",
 
 				manageHandler.DeleteProvider,
@@ -389,13 +398,21 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				manageApiKeyGroup,
 				POST,
-				"/delete/:key_id",
+				"/:id/delete",
 				"删除指定的API访问密钥",
 
 				manageHandler.DeleteAPIKey,
 			)
+			router.registerRoute(
+				manageApiKeyGroup,
+				GET,
+				"/list/provider/:id",
+				"分页获取 API Key",
+
+				manageHandler.GetAPIKeyByProvider,
+			)
 		}
-		manageModelGroup := manageGroup.Group("/schema")
+		manageModelGroup := manageGroup.Group("/model")
 		{
 			router.registerRoute(
 				manageModelGroup,
@@ -416,7 +433,15 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				manageModelGroup,
 				GET,
-				"/list/:provider_id",
+				"/list",
+				"分页获取所有模型列表",
+
+				manageHandler.GetModels,
+			)
+			router.registerRoute(
+				manageModelGroup,
+				GET,
+				"/provider/:provider_id",
 				"获取指定提供商的所有模型列表",
 
 				manageHandler.GetModelsByProvider,
@@ -436,6 +461,41 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"删除指定的AI模型",
 
 				manageHandler.DeleteModel,
+			)
+		}
+		manageCollectionGroup := manageGroup.Group("/collection")
+		{
+			router.registerRoute(
+				manageCollectionGroup,
+				POST,
+				"/create",
+				"创建新的模型集合",
+
+				manageHandler.CreateModelCollection,
+			)
+			router.registerRoute(
+				manageCollectionGroup,
+				GET,
+				"/:collection_id",
+				"获取指定模型的详细信息",
+
+				manageHandler.GetModelCollection,
+			)
+			router.registerRoute(
+				manageCollectionGroup,
+				GET,
+				"/list",
+				"分页获取所有模型列表",
+
+				manageHandler.GetModelCollections,
+			)
+			router.registerRoute(
+				manageCollectionGroup,
+				POST,
+				"/delete/:collection_id",
+				"删除指定的AI模型",
+
+				manageHandler.DeleteModelCollection,
 			)
 		}
 	}

@@ -95,6 +95,26 @@ func signJwtTokenIntoHeader(c *gin.Context, user *schema.User) (string, string) 
 	return authToken, refreshToken
 }
 
+// Current
+//
+//	@Summary		获取当前用户信息
+//	@Description	获取当前用户信息
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entity.CommonResponse[schema.User]	"get current user info successfully"
+//	@Router			/user/current [get]
+func (h *Handler) Current(c *gin.Context) {
+	if userId := ctx_utils.GetUserId(c); userId > 0 {
+		if user, err := h.Store.GetUser(userId); err == nil {
+			user.Password = ""
+			ctx_utils.Success(c, user)
+		} else {
+			ctx_utils.CustomError(c, 404, "user not found")
+		}
+	}
+}
+
 // Login
 //
 //	@Summary		用户登录

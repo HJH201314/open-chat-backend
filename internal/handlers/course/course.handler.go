@@ -138,15 +138,15 @@ func (h *Handler) GetCourses(c *gin.Context) {
 	}
 
 	req.WithDefaultSize(20).WithMaxSize(100)
-	courses, lastPage, err := h.Store.GetCourses(req.PagingParam, req.SortParam)
+	courses, total, err := h.Store.GetCourses(req.PagingParam, req.SortParam)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	ctx_utils.Success(
 		c, &entity.PaginatedTotalResponse[schema.Course]{
-			List:     courses,
-			LastPage: &lastPage,
+			List:  courses,
+			Total: &total,
 		},
 	)
 }

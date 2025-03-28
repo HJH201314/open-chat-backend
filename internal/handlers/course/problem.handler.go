@@ -77,15 +77,15 @@ func (h *Handler) GetProblems(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	problems, lastPage, err := gorm_utils.GetByPageTotal[schema.Problem](h.Db, req.PagingParam, req.SortParam)
+	problems, total, err := gorm_utils.GetByPageTotal[schema.Problem](h.Db, req.PagingParam, req.SortParam)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 	ctx_utils.Success(
 		c, &entity.PaginatedTotalResponse[schema.Problem]{
-			List:     problems,
-			LastPage: lastPage,
+			List:  problems,
+			Total: total,
 		},
 	)
 }

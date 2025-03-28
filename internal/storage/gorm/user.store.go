@@ -13,7 +13,7 @@ func (s *GormStore) CreateUser(user *schema.User) error {
 // GetUser 获取用户
 func (s *GormStore) GetUser(userId uint64) (*schema.User, error) {
 	var user schema.User
-	return &user, s.Db.Where("id = ?", userId).First(&user).Error
+	return &user, s.Db.Preload("Roles").Where("id = ?", userId).First(&user).Error
 }
 
 // BindRolesToUser 绑定角色到用户

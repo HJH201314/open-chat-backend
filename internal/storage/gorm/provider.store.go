@@ -54,13 +54,12 @@ func (s *GormStore) DeleteProvider(providerId uint64) error {
 }
 
 // AddAPIKey 为供应商添加密钥
-func (s *GormStore) AddAPIKey(providerId uint64, apiKey string) error {
-	return s.Db.Create(
-		&schema.APIKey{
-			ProviderID: providerId,
-			Key:        apiKey,
-		},
-	).Error
+func (s *GormStore) AddAPIKey(providerId uint64, apiKey string) (*schema.APIKey, error) {
+	api := &schema.APIKey{
+		ProviderID: providerId,
+		Key:        apiKey,
+	}
+	return api, s.Db.Create(&api).Error
 }
 
 // DeleteAPIKey 为供应商删除密钥

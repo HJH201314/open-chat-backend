@@ -80,7 +80,7 @@ func (s *GormStore) GetCourses(pageParam entity.PagingParam, sortParam entity.So
 		Preload("Exams.Exam.Problems.Problem")
 
 	// 使用 GetByPageTotal 获取分页数据
-	courses, lastPage, err := gorm_utils.GetByPageTotal[schema.Course](query, pageParam, sortParam)
+	courses, total, err := gorm_utils.GetByPageTotal[schema.Course](query, pageParam, sortParam)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -119,7 +119,7 @@ func (s *GormStore) GetCourses(pageParam entity.PagingParam, sortParam entity.So
 		)
 	}
 
-	return courses, *lastPage, nil
+	return courses, *total, nil
 }
 
 // CreateCourse 全新创建课程

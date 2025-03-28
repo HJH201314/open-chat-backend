@@ -492,6 +492,547 @@ const docTemplate = `{
                 }
             }
         },
+        "/manage/collection/create": {
+            "post": {
+                "description": "创建模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "创建模型集合",
+                "parameters": [
+                    {
+                        "description": "模型集合",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.ModelCollection"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的模型集合",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/collection/delete/{collection_id}": {
+            "post": {
+                "description": "删除模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "删除模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ModelCollection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/collection/list": {
+            "get": {
+                "description": "批量获取模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "批量获取模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型集合列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/collection/{collection_id}": {
+            "get": {
+                "description": "获取模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "获取模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ModelCollection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/key/create": {
+            "post": {
+                "description": "创建 APIKey 并绑定 到 API 提供商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "创建 APIKey",
+                "parameters": [
+                    {
+                        "description": "API Key",
+                        "name": "apikey",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.APIKey"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的 API Key",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_APIKey"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/key/list/provider/{id}": {
+            "get": {
+                "description": "列出供应商的 APIKey",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "列出APIKey",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API 提供商 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的 API Key",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/key/{id}/delete": {
+            "post": {
+                "description": "删除 APIKey",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "删除 APIKey",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API Key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/create": {
+            "post": {
+                "description": "创建模型并绑定到 API 供应商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "创建模型",
+                "parameters": [
+                    {
+                        "description": "模型",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Model"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/delete/{model_id}": {
+            "post": {
+                "description": "删除模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "删除模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Model ID",
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/list": {
+            "get": {
+                "description": "批量获取模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "批量获取模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/provider/{provider_id}": {
+            "get": {
+                "description": "获取 API 提供商的模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "获取 API 提供商的模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/update": {
+            "post": {
+                "description": "Update 更新模型，若参数不传入或为空，则不会更新",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "更新模型",
+                "parameters": [
+                    {
+                        "description": "模型",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/{model_id}": {
+            "get": {
+                "description": "获取模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "获取模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Model ID",
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Model"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/provider/all": {
+            "get": {
+                "description": "获取所有 API 提供商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider"
+                ],
+                "summary": "获取所有 API 提供商",
+                "responses": {
+                    "200": {
+                        "description": "API 提供商列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_Provider"
+                        }
+                    }
+                }
+            }
+        },
         "/manage/provider/create": {
             "post": {
                 "description": "创建 API 提供商",
@@ -526,7 +1067,59 @@ const docTemplate = `{
                 }
             }
         },
-        "/manage/provider/delete/{provider_id}": {
+        "/manage/provider/list": {
+            "get": {
+                "description": "批量获取 API 提供商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider"
+                ],
+                "summary": "批量获取 API 提供商",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "API 提供商列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/provider/{id}/delete": {
             "post": {
                 "description": "删除 API 提供商",
                 "consumes": [
@@ -543,7 +1136,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "API 提供商 ID",
-                        "name": "provider_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -558,30 +1151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/manage/provider/list": {
-            "get": {
-                "description": "批量获取 API 提供商",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Provider"
-                ],
-                "summary": "批量获取 API 提供商",
-                "responses": {
-                    "200": {
-                        "description": "API 提供商列表",
-                        "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-array_schema_Provider"
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/provider/update": {
+        "/manage/provider/{id}/update": {
             "post": {
                 "description": "更新 API 提供商",
                 "consumes": [
@@ -595,6 +1165,13 @@ const docTemplate = `{
                 ],
                 "summary": "更新 API 提供商",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API 提供商 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "API 提供商参数",
                         "name": "provider",
@@ -1276,6 +1853,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/current": {
+            "get": {
+                "description": "获取当前用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "get current user info successfully",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
+                        }
+                    }
+                }
+            }
+        },
         "/user/login": {
             "post": {
                 "description": "用户登录",
@@ -1636,6 +2236,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_APIKey"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course": {
             "type": "object",
             "properties": {
@@ -1657,6 +2278,69 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Model"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_ModelCollection"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Provider"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-exam_SubmitExamResponse": {
             "type": "object",
             "properties": {
@@ -1669,6 +2353,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/exam.SubmitExamResponse"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_APIKey": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.APIKey"
                         }
                     ]
                 },
@@ -1732,6 +2437,48 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/schema.ExamUserRecord"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ModelCollection"
                         }
                     ]
                 },
@@ -1925,17 +2672,73 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_APIKey": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.APIKey"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_Course": {
             "type": "object",
             "properties": {
-                "last_page": {
-                    "type": "integer"
-                },
                 "list": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.Course"
                     }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Model"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ModelCollection"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_Provider": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Provider"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -2274,7 +3077,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/schema.Preset"
                 },
                 "preset_id": {
-                    "description": "回复所使用的模型",
+                    "description": "回复所使用的预设",
                     "type": "integer"
                 },
                 "reasoning_content": {
@@ -2394,6 +3197,36 @@ const docTemplate = `{
                 }
             }
         },
+        "schema.ModelCollection": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "额外描述",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "展示名称",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "models": {
+                    "description": "关联的模型",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Model"
+                    }
+                },
+                "name": {
+                    "description": "唯一标识名称",
+                    "type": "string"
+                }
+            }
+        },
         "schema.ModelConfig": {
             "type": "object",
             "properties": {
@@ -2486,6 +3319,13 @@ const docTemplate = `{
                 "type": {
                     "description": "角色所属模块（chat、tue 等）",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "预设版本号，可能被用于标记是否需要强制更新",
+                    "type": "integer"
                 }
             }
         },
@@ -2605,16 +3445,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "name": {
-                    "description": "提供商名称",
-                    "type": "string"
-                },
-                "schema": {
+                "models": {
                     "description": "一对多关系，与 Model 模型关联",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.Model"
                     }
+                },
+                "name": {
+                    "description": "提供商名称",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

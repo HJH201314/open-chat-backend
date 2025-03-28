@@ -27,7 +27,7 @@ func (s *QueryHelper) GetPreset(id uint64) (*schema.Preset, error) {
 	}
 
 	// 从数据库获取
-	role, err := s.GormStore.GetPreset(id)
+	role, err := s.GormStore.QueryPreset(id)
 	if err != nil {
 		return nil, err
 	}

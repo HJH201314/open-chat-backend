@@ -1,6 +1,7 @@
 package gorm_utils
 
 import (
+	"errors"
 	"github.com/fcraft/open-chat/internal/entity"
 	"gorm.io/gorm"
 )
@@ -34,6 +35,23 @@ func Save[T any](db *gorm.DB, entity *T) error {
 func Update[T any](db *gorm.DB, entity *T) error {
 	err := db.Updates(&entity).Error
 	return err
+}
+
+// Delete 通用删除实体方法
+//
+//	Parameters:
+//		db - 数据库连接
+//		id - ID / 实体
+func Delete[T any](db *gorm.DB, entityOrId interface{}) error {
+	switch entityOrId.(type) {
+	case T:
+	case *T:
+		return db.Delete(entityOrId).Error
+	case uint64:
+		var value T
+		return db.Where("id = ?", entityOrId).Delete(&value).Error
+	}
+	return errors.New("incorrect entityOrId")
 }
 
 // GetByPageContinuous 分页获取列表
@@ -115,6 +133,5 @@ func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.So
 	}
 
 	// 分页逻辑处理
-	lastPage := (total + int64(limit) - 1) / int64(limit) // 向上取整
-	return results, &lastPage, nil
+	return results, &total, nil
 }
