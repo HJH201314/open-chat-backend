@@ -55,7 +55,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                          "$ref": "#/definitions/entity.CommonResponse-array_schema_Preset"
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_Preset"
                         }
                     }
                 }
@@ -481,547 +481,547 @@
                 }
             }
         },
-      "/manage/collection/create": {
-        "post": {
-          "description": "创建模型集合",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "ModelCollection"
-          ],
-          "summary": "创建模型集合",
-          "parameters": [
-            {
-              "description": "模型集合",
-              "name": "model",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.ModelCollection"
-              }
+        "/manage/collection/create": {
+            "post": {
+                "description": "创建模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "创建模型集合",
+                "parameters": [
+                    {
+                        "description": "模型集合",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.ModelCollection"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的模型集合",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "成功创建的模型集合",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
-              }
+        },
+        "/manage/collection/delete/{collection_id}": {
+            "post": {
+                "description": "删除模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "删除模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ModelCollection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/collection/delete/{collection_id}": {
-        "post": {
-          "description": "删除模型集合",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "删除模型集合",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "ModelCollection ID",
-              "name": "collection_id",
-              "in": "path",
-              "required": true
+        },
+        "/manage/collection/list": {
+            "get": {
+                "description": "批量获取模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "批量获取模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型集合列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "删除成功与否",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-bool"
-              }
+        },
+        "/manage/collection/{collection_id}": {
+            "get": {
+                "description": "获取模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "获取模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ModelCollection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/collection/list": {
-        "get": {
-          "description": "批量获取模型集合",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "ModelCollection"
-          ],
-          "summary": "批量获取模型集合",
-          "parameters": [
-            {
-              "type": "integer",
-              "name": "end_time",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "description": "分页参数",
-              "name": "page_num",
-              "in": "query",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "page_size",
-              "in": "query"
-            },
-            {
-              "type": "string",
-              "name": "sort_expr",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "name": "start_time",
-              "in": "query"
+        },
+        "/manage/key/create": {
+            "post": {
+                "description": "创建 APIKey 并绑定 到 API 提供商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "创建 APIKey",
+                "parameters": [
+                    {
+                        "description": "API Key",
+                        "name": "apikey",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.APIKey"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的 API Key",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_APIKey"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "模型集合列表",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection"
-              }
+        },
+        "/manage/key/list/provider/{id}": {
+            "get": {
+                "description": "列出供应商的 APIKey",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "列出APIKey",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API 提供商 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的 API Key",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/collection/{collection_id}": {
-        "get": {
-          "description": "获取模型集合",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "ModelCollection"
-          ],
-          "summary": "获取模型集合",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "ModelCollection ID",
-              "name": "collection_id",
-              "in": "path",
-              "required": true
+        },
+        "/manage/key/{id}/delete": {
+            "post": {
+                "description": "删除 APIKey",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "APIKey"
+                ],
+                "summary": "删除 APIKey",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API Key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "模型",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
-              }
+        },
+        "/manage/model/create": {
+            "post": {
+                "description": "创建模型并绑定到 API 供应商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "创建模型",
+                "parameters": [
+                    {
+                        "description": "模型",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Model"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/key/create": {
-        "post": {
-          "description": "创建 APIKey 并绑定 到 API 提供商",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "APIKey"
-          ],
-          "summary": "创建 APIKey",
-          "parameters": [
-            {
-              "description": "API Key",
-              "name": "apikey",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.APIKey"
-              }
+        },
+        "/manage/model/delete/{model_id}": {
+            "post": {
+                "description": "删除模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "删除模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Model ID",
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "成功创建的 API Key",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_APIKey"
-              }
+        },
+        "/manage/model/list": {
+            "get": {
+                "description": "批量获取模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "批量获取模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/key/list/provider/{id}": {
-        "get": {
-          "description": "列出供应商的 APIKey",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "APIKey"
-          ],
-          "summary": "列出APIKey",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "API 提供商 ID",
-              "name": "id",
-              "in": "path",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "end_time",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "description": "分页参数",
-              "name": "page_num",
-              "in": "query",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "page_size",
-              "in": "query"
-            },
-            {
-              "type": "string",
-              "name": "sort_expr",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "name": "start_time",
-              "in": "query"
+        },
+        "/manage/model/provider/{provider_id}": {
+            "get": {
+                "description": "获取 API 提供商的模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "获取 API 提供商的模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "成功创建的 API Key",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey"
-              }
+        },
+        "/manage/model/update": {
+            "post": {
+                "description": "Update 更新模型，若参数不传入或为空，则不会更新",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "更新模型",
+                "parameters": [
+                    {
+                        "description": "模型",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/key/{id}/delete": {
-        "post": {
-          "description": "删除 APIKey",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "APIKey"
-          ],
-          "summary": "删除 APIKey",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "API Key ID",
-              "name": "id",
-              "in": "path",
-              "required": true
+        },
+        "/manage/model/{model_id}": {
+            "get": {
+                "description": "获取模型",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "获取模型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Model ID",
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "模型",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Model"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "删除成功与否",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-bool"
-              }
+        },
+        "/manage/provider/all": {
+            "get": {
+                "description": "获取所有 API 提供商",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider"
+                ],
+                "summary": "获取所有 API 提供商",
+                "responses": {
+                    "200": {
+                        "description": "API 提供商列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-array_schema_Provider"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/manage/model/create": {
-        "post": {
-          "description": "创建模型并绑定到 API 供应商",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "创建模型",
-          "parameters": [
-            {
-              "description": "模型",
-              "name": "model",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.Model"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "成功创建的模型",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_Model"
-              }
-            }
-          }
-        }
-      },
-      "/manage/model/delete/{model_id}": {
-        "post": {
-          "description": "删除模型",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "删除模型",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "Model ID",
-              "name": "model_id",
-              "in": "path",
-              "required": true
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "删除成功与否",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-bool"
-              }
-            }
-          }
-        }
-      },
-      "/manage/model/list": {
-        "get": {
-          "description": "批量获取模型",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "批量获取模型",
-          "parameters": [
-            {
-              "type": "integer",
-              "name": "end_time",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "description": "分页参数",
-              "name": "page_num",
-              "in": "query",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "page_size",
-              "in": "query"
-            },
-            {
-              "type": "string",
-              "name": "sort_expr",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "name": "start_time",
-              "in": "query"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "模型列表",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
-              }
-            }
-          }
-        }
-      },
-      "/manage/model/provider/{provider_id}": {
-        "get": {
-          "description": "获取 API 提供商的模型",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "获取 API 提供商的模型",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "Provider ID",
-              "name": "provider_id",
-              "in": "path",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "end_time",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "description": "分页参数",
-              "name": "page_num",
-              "in": "query",
-              "required": true
-            },
-            {
-              "type": "integer",
-              "name": "page_size",
-              "in": "query"
-            },
-            {
-              "type": "string",
-              "name": "sort_expr",
-              "in": "query"
-            },
-            {
-              "type": "integer",
-              "name": "start_time",
-              "in": "query"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "模型列表",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
-              }
-            }
-          }
-        }
-      },
-      "/manage/model/update": {
-        "post": {
-          "description": "Update 更新模型，若参数不传入或为空，则不会更新",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "更新模型",
-          "parameters": [
-            {
-              "description": "模型",
-              "name": "model",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.Model"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "更新成功与否",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-bool"
-              }
-            }
-          }
-        }
-      },
-      "/manage/model/{model_id}": {
-        "get": {
-          "description": "获取模型",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Model"
-          ],
-          "summary": "获取模型",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "Model ID",
-              "name": "model_id",
-              "in": "path",
-              "required": true
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "模型",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_Model"
-              }
-            }
-          }
-        }
-      },
-      "/manage/provider/all": {
-        "get": {
-          "description": "获取所有 API 提供商",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Provider"
-          ],
-          "summary": "获取所有 API 提供商",
-          "responses": {
-            "200": {
-              "description": "API 提供商列表",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-array_schema_Provider"
-              }
-            }
-          }
-        }
-      },
+        },
         "/manage/provider/create": {
             "post": {
                 "description": "创建 API 提供商",
@@ -1056,9 +1056,9 @@
                 }
             }
         },
-      "/manage/provider/list": {
-        "get": {
-          "description": "批量获取 API 提供商",
+        "/manage/provider/list": {
+            "get": {
+                "description": "批量获取 API 提供商",
                 "consumes": [
                     "application/json"
                 ],
@@ -1068,49 +1068,49 @@
                 "tags": [
                     "Provider"
                 ],
-          "summary": "批量获取 API 提供商",
+                "summary": "批量获取 API 提供商",
                 "parameters": [
                     {
                         "type": "integer",
-                      "name": "end_time",
-                      "in": "query"
+                        "name": "end_time",
+                        "in": "query"
                     },
-                  {
-                    "type": "integer",
-                    "description": "分页参数",
-                    "name": "page_num",
-                    "in": "query",
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
                         "required": true
-                  },
-                  {
-                    "type": "integer",
-                    "name": "page_size",
-                    "in": "query"
-                  },
-                  {
-                    "type": "string",
-                    "name": "sort_expr",
-                    "in": "query"
-                  },
-                  {
-                    "type": "integer",
-                    "name": "start_time",
-                    "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                      "description": "API 提供商列表",
+                        "description": "API 提供商列表",
                         "schema": {
-                          "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider"
                         }
                     }
                 }
             }
         },
-      "/manage/provider/{id}/delete": {
-        "post": {
-          "description": "删除 API 提供商",
+        "/manage/provider/{id}/delete": {
+            "post": {
+                "description": "删除 API 提供商",
                 "consumes": [
                     "application/json"
                 ],
@@ -1120,27 +1120,27 @@
                 "tags": [
                     "Provider"
                 ],
-          "summary": "删除 API 提供商",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "API 提供商 ID",
-              "name": "id",
-              "in": "path",
-              "required": true
-            }
-          ],
+                "summary": "删除 API 提供商",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "API 提供商 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                      "description": "删除成功与否",
+                        "description": "删除成功与否",
                         "schema": {
-                          "$ref": "#/definitions/entity.CommonResponse-bool"
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
             }
         },
-      "/manage/provider/{id}/update": {
+        "/manage/provider/{id}/update": {
             "post": {
                 "description": "更新 API 提供商",
                 "consumes": [
@@ -1155,13 +1155,13 @@
                 "summary": "更新 API 提供商",
                 "parameters": [
                     {
-                      "type": "integer",
-                      "description": "API 提供商 ID",
-                      "name": "id",
-                      "in": "path",
-                      "required": true
+                        "type": "integer",
+                        "description": "API 提供商 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     },
-                  {
+                    {
                         "description": "API 提供商参数",
                         "name": "provider",
                         "in": "body",
@@ -1213,171 +1213,553 @@
                 }
             }
         },
-      "/preset/create": {
-        "post": {
-          "description": "创建一个新的预设，包含名称、描述和引用的会话ID",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Preset"
-          ],
-          "summary": "创建预设",
-          "parameters": [
-            {
-              "description": "预设信息",
-              "name": "role",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.Preset"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "成功创建的预设",
-              "schema": {
-                "$ref": "#/definitions/schema.Preset"
-              }
-            }
-          }
-        }
-      },
-      "/preset/list": {
-        "get": {
-          "description": "获取所有预设的列表",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Preset"
-          ],
-          "summary": "获取预设列表",
-          "responses": {
-            "200": {
-              "description": "预设列表",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/schema.Preset"
+        "/manage/role/create": {
+            "post": {
+                "description": "创建角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "创建角色",
+                "parameters": [
+                    {
+                        "description": "角色参数",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Role"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的角色",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Provider"
+                        }
+                    }
                 }
-              }
             }
-          }
-        }
-      },
-      "/preset/{id}": {
-        "get": {
-          "description": "根据ID获取指定的预设信息",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Preset"
-          ],
-          "summary": "获取预设",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "预设ID",
-              "name": "id",
-              "in": "path",
-              "required": true
+        },
+        "/manage/role/list": {
+            "get": {
+                "description": "批量分页获取角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "批量分页获取角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "角色列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Role"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "预设信息",
-              "schema": {
-                "$ref": "#/definitions/schema.Preset"
-              }
+        },
+        "/manage/role/{id}": {
+            "get": {
+                "description": "获取角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "获取角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "角色",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Role"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/preset/{id}/delete": {
-        "post": {
-          "description": "删除指定ID的预设",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Preset"
-          ],
-          "summary": "删除预设",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "预设ID",
-              "name": "id",
-              "in": "path",
-              "required": true
+        },
+        "/manage/role/{id}/delete": {
+            "post": {
+                "description": "删除角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "删除角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "删除成功",
-              "schema": {
-                "type": "boolean"
-              }
+        },
+        "/manage/role/{id}/update": {
+            "post": {
+                "description": "更新角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "更新角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色参数",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Role"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
-      "/preset/{id}/update": {
-        "post": {
-          "description": "更新指定ID的预设信息",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Preset"
-          ],
-          "summary": "更新预设",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "预设ID",
-              "name": "id",
-              "in": "path",
-              "required": true
-            },
-            {
-              "description": "更新的预设信息",
-              "name": "role",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/schema.Preset"
-              }
+        },
+        "/manage/user/create": {
+            "post": {
+                "description": "创建用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "创建用户",
+                "parameters": [
+                    {
+                        "description": "用户参数",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的用户",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Provider"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "更新后的预设信息",
-              "schema": {
-                "$ref": "#/definitions/schema.Preset"
-              }
+        },
+        "/manage/user/list": {
+            "get": {
+                "description": "批量分页获取用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "批量分页获取用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "用户列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_User"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
+        },
+        "/manage/user/{id}": {
+            "get": {
+                "description": "获取用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "用户",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/user/{id}/delete": {
+            "post": {
+                "description": "删除用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "删除用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/user/{id}/update": {
+            "post": {
+                "description": "更新用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "更新用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "用户参数",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/preset/create": {
+            "post": {
+                "description": "创建一个新的预设，包含名称、描述和引用的会话ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Preset"
+                ],
+                "summary": "创建预设",
+                "parameters": [
+                    {
+                        "description": "预设信息",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Preset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的预设",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Preset"
+                        }
+                    }
+                }
+            }
+        },
+        "/preset/list": {
+            "get": {
+                "description": "获取所有预设的列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Preset"
+                ],
+                "summary": "获取预设列表",
+                "responses": {
+                    "200": {
+                        "description": "预设列表",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/schema.Preset"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/preset/{id}": {
+            "get": {
+                "description": "根据ID获取指定的预设信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Preset"
+                ],
+                "summary": "获取预设",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "预设ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "预设信息",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Preset"
+                        }
+                    }
+                }
+            }
+        },
+        "/preset/{id}/delete": {
+            "post": {
+                "description": "删除指定ID的预设",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Preset"
+                ],
+                "summary": "删除预设",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "预设ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/preset/{id}/update": {
+            "post": {
+                "description": "更新指定ID的预设信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Preset"
+                ],
+                "summary": "更新预设",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "预设ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新的预设信息",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Preset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的预设信息",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Preset"
+                        }
+                    }
+                }
+            }
+        },
         "/tue/course/create": {
             "post": {
                 "description": "创建课程基础参数，绑定或创建题目、资源",
@@ -1561,7 +1943,7 @@
             }
         },
         "/tue/exam/create": {
-          "post": {
+            "post": {
                 "description": "保存单个测验",
                 "consumes": [
                     "application/json"
@@ -1626,104 +2008,104 @@
                 }
             }
         },
-      "/tue/exam/{id}/records": {
-        "get": {
-          "description": "获取用户的考试评分结果",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "考试"
-          ],
-          "summary": "获取考试结果",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "考试记录ID",
-              "name": "id",
-              "in": "path",
-              "required": true
+        "/tue/exam/{id}/records": {
+            "get": {
+                "description": "获取用户的考试评分结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "获取考试结果",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "OK",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
-              }
+        },
+        "/tue/exam/{id}/rescore": {
+            "post": {
+                "description": "管理员重新评分考试",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "重新评分考试",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
-          }
-        }
-      },
-      "/tue/exam/{id}/rescore": {
-        "post": {
-          "description": "管理员重新评分考试",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "考试"
-          ],
-          "summary": "重新评分考试",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "考试记录ID",
-              "name": "id",
-              "in": "path",
-              "required": true
+        },
+        "/tue/exam/{id}/submit": {
+            "post": {
+                "description": "提交用户的考试答案并进行评分",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "提交考试答案",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "提交信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/exam.SubmitExamRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-exam_SubmitExamResponse"
+                        }
+                    }
+                }
             }
-          ],
-          "responses": {}
-        }
-      },
-      "/tue/exam/{id}/submit": {
-        "post": {
-          "description": "提交用户的考试答案并进行评分",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "考试"
-          ],
-          "summary": "提交考试答案",
-          "parameters": [
-            {
-              "type": "integer",
-              "description": "考试ID",
-              "name": "id",
-              "in": "path",
-              "required": true
-            },
-            {
-              "description": "提交信息",
-              "name": "request",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/exam.SubmitExamRequest"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "OK",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-exam_SubmitExamResponse"
-              }
-            }
-          }
-        }
-      },
+        },
         "/tue/problem/create": {
             "post": {
                 "description": "创建单个题目",
@@ -1842,29 +2224,29 @@
                 }
             }
         },
-      "/user/current": {
-        "get": {
-          "description": "获取当前用户信息",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "User"
-          ],
-          "summary": "获取当前用户信息",
-          "responses": {
-            "200": {
-              "description": "get current user info successfully",
-              "schema": {
-                "$ref": "#/definitions/entity.CommonResponse-schema_User"
-              }
+        "/user/current": {
+            "get": {
+                "description": "获取当前用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "get current user info successfully",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
+                        }
+                    }
+                }
             }
-          }
-        }
-      },
+        },
         "/user/login": {
             "post": {
                 "description": "用户登录",
@@ -2064,7 +2446,7 @@
                 }
             }
         },
-      "entity.CommonResponse-array_schema_ModelCache": {
+        "entity.CommonResponse-array_schema_ModelCache": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2075,7 +2457,7 @@
                     "description": "数据",
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/schema.ModelCache"
+                        "$ref": "#/definitions/schema.ModelCache"
                     }
                 },
                 "msg": {
@@ -2084,7 +2466,7 @@
                 }
             }
         },
-      "entity.CommonResponse-array_schema_Preset": {
+        "entity.CommonResponse-array_schema_Preset": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2095,7 +2477,7 @@
                     "description": "数据",
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/schema.Preset"
+                        "$ref": "#/definitions/schema.Preset"
                     }
                 },
                 "msg": {
@@ -2219,27 +2601,27 @@
                         }
                     ]
                 },
-              "msg": {
-                "description": "消息",
-                "type": "string"
-              }
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
             }
         },
-      "entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_APIKey"
-              }
-            ]
-          },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_APIKey"
+                        }
+                    ]
+                },
                 "msg": {
                     "description": "消息",
                     "type": "string"
@@ -2267,111 +2649,153 @@
                 }
             }
         },
-      "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Model"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
-      "entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_ModelCollection"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
-      "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Provider"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
-      "entity.CommonResponse-exam_SubmitExamResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/exam.SubmitExamResponse"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
-      "entity.CommonResponse-schema_APIKey": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.APIKey"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Model"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_ModelCollection"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Provider"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Role"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_User": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_User"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-exam_SubmitExamResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/exam.SubmitExamResponse"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_APIKey": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.APIKey"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-schema_Course": {
             "type": "object",
             "properties": {
@@ -2408,75 +2832,75 @@
                         }
                     ]
                 },
-              "msg": {
-                "description": "消息",
-                "type": "string"
-              }
-            }
-        },
-      "entity.CommonResponse-schema_ExamUserRecord": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.ExamUserRecord"
-              }
-            ]
-          },
                 "msg": {
                     "description": "消息",
                     "type": "string"
                 }
             }
         },
-      "entity.CommonResponse-schema_Model": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.Model"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
-      "entity.CommonResponse-schema_ModelCollection": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "description": "代码",
-            "type": "integer"
-          },
-          "data": {
-            "description": "数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.ModelCollection"
-              }
-            ]
-          },
-          "msg": {
-            "description": "消息",
-            "type": "string"
-          }
-        }
-      },
+        "entity.CommonResponse-schema_ExamUserRecord": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ExamUserRecord"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Model"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ModelCollection"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-schema_Problem": {
             "type": "object",
             "properties": {
@@ -2510,6 +2934,27 @@
                     "allOf": [
                         {
                             "$ref": "#/definitions/schema.Provider"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Role"
                         }
                     ]
                 },
@@ -2661,110 +3106,138 @@
                 }
             }
         },
-      "entity.PaginatedTotalResponse-schema_APIKey": {
+        "entity.PaginatedTotalResponse-schema_APIKey": {
             "type": "object",
             "properties": {
-              "list": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/schema.APIKey"
-                }
-              },
-              "total": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.APIKey"
+                    }
+                },
+                "total": {
                     "type": "integer"
-              }
+                }
             }
-      },
-      "entity.PaginatedTotalResponse-schema_Course": {
-        "type": "object",
-        "properties": {
+        },
+        "entity.PaginatedTotalResponse-schema_Course": {
+            "type": "object",
+            "properties": {
                 "list": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.Course"
                     }
                 },
-          "total": {
-            "type": "integer"
-          }
-        }
-      },
-      "entity.PaginatedTotalResponse-schema_Model": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/schema.Model"
-            }
-          },
-          "total": {
-            "type": "integer"
-          }
-        }
-      },
-      "entity.PaginatedTotalResponse-schema_ModelCollection": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/schema.ModelCollection"
-            }
-          },
-          "total": {
-            "type": "integer"
-          }
-        }
-      },
-      "entity.PaginatedTotalResponse-schema_Provider": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/schema.Provider"
-            }
-          },
-          "total": {
-            "type": "integer"
+                "total": {
+                    "type": "integer"
                 }
             }
         },
-      "exam.SubmitExamRequest": {
-        "type": "object",
-        "properties": {
-          "answers": {
-            "description": "答案列表",
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/exam.SubmitExamRequestAnswer"
+        "entity.PaginatedTotalResponse-schema_Model": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Model"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
             }
-          },
-          "time_spent": {
-            "description": "答题用时（秒）",
-            "type": "integer"
-          }
-        }
-      },
-      "exam.SubmitExamRequestAnswer": {
-        "type": "object",
-        "properties": {
-          "answer": {},
-          "problem_id": {
-            "type": "integer"
-          }
-        }
-      },
-      "exam.SubmitExamResponse": {
-        "type": "object",
-        "properties": {
-          "record_id": {
-            "description": "记录ID",
-            "type": "integer"
-          }
-        }
-      },
+        },
+        "entity.PaginatedTotalResponse-schema_ModelCollection": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ModelCollection"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_Provider": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Provider"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_Role": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Role"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_User": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.User"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "exam.SubmitExamRequest": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "description": "答案列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/exam.SubmitExamRequestAnswer"
+                    }
+                },
+                "time_spent": {
+                    "description": "答题用时（秒）",
+                    "type": "integer"
+                }
+            }
+        },
+        "exam.SubmitExamRequestAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {},
+                "problem_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "exam.SubmitExamResponse": {
+            "type": "object",
+            "properties": {
+                "record_id": {
+                    "description": "记录ID",
+                    "type": "integer"
+                }
+            }
+        },
         "schema.APIKey": {
             "type": "object",
             "properties": {
@@ -2951,95 +3424,95 @@
                 }
             }
         },
-      "schema.ExamUserRecord": {
+        "schema.ExamUserRecord": {
             "type": "object",
             "properties": {
-              "answers": {
-                "description": "用户答案（关联表储存）",
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/schema.ExamUserRecordAnswer"
-                }
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "exam": {
-                "description": "组装字段",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/schema.Exam"
-                  }
-                ]
-              },
-              "exam_id": {
-                "description": "考试ID",
-                "type": "integer"
+                "answers": {
+                    "description": "用户答案（关联表储存）",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ExamUserRecordAnswer"
+                    }
                 },
-              "id": {
-                "description": "普通字段",
-                "type": "integer"
-              },
-              "status": {
-                "description": "总评分状态",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/schema.ScoreStatus"
-                  }
-                ]
-              },
-              "time_spent": {
-                "description": "答题用时（单位：秒）",
-                "type": "integer"
-              },
-              "total_score": {
-                "description": "总得分（单位：0.01分）",
-                "type": "integer"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "user_id": {
-                "description": "用户ID",
-                "type": "integer"
-              }
-            }
-      },
-      "schema.ExamUserRecordAnswer": {
-        "type": "object",
-        "properties": {
-          "answer": {
-            "description": "用户答案"
-          },
-          "comments": {
-            "description": "评语/反馈",
-            "type": "string"
-          },
-          "exam_id": {
-            "description": "测验 ID",
-            "type": "integer"
-          },
-          "problem_id": {
-            "description": "题目 ID",
-            "type": "integer"
-          },
-          "score": {
-            "description": "得分（单位：0.01分）",
+                "created_at": {
+                    "type": "string"
+                },
+                "exam": {
+                    "description": "组装字段",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Exam"
+                        }
+                    ]
+                },
+                "exam_id": {
+                    "description": "考试ID",
                     "type": "integer"
                 },
-          "status": {
-            "description": "评分状态",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.ScoreStatus"
-              }
-            ]
-          }
-        }
-      },
-      "schema.Message": {
-        "type": "object",
-        "properties": {
+                "id": {
+                    "description": "普通字段",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "总评分状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ScoreStatus"
+                        }
+                    ]
+                },
+                "time_spent": {
+                    "description": "答题用时（单位：秒）",
+                    "type": "integer"
+                },
+                "total_score": {
+                    "description": "总得分（单位：0.01分）",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "schema.ExamUserRecordAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "description": "用户答案"
+                },
+                "comments": {
+                    "description": "评语/反馈",
+                    "type": "string"
+                },
+                "exam_id": {
+                    "description": "测验 ID",
+                    "type": "integer"
+                },
+                "problem_id": {
+                    "description": "题目 ID",
+                    "type": "integer"
+                },
+                "score": {
+                    "description": "得分（单位：0.01分）",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "评分状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ScoreStatus"
+                        }
+                    ]
+                }
+            }
+        },
+        "schema.Message": {
+            "type": "object",
+            "properties": {
                 "content": {
                     "type": "string"
                 },
@@ -3062,12 +3535,12 @@
                     "description": "回复所使用的模型",
                     "type": "integer"
                 },
-          "preset": {
-            "$ref": "#/definitions/schema.Preset"
-          },
-          "preset_id": {
-            "description": "回复所使用的预设",
-            "type": "integer"
+                "preset": {
+                    "$ref": "#/definitions/schema.Preset"
+                },
+                "preset_id": {
+                    "description": "回复所使用的预设",
+                    "type": "integer"
                 },
                 "reasoning_content": {
                     "type": "string"
@@ -3107,21 +3580,21 @@
                     "type": "string"
                 },
                 "id": {
-                  "description": "原始数据",
+                    "description": "原始数据",
                     "type": "integer"
                 },
                 "name": {
                     "description": "模型名称",
                     "type": "string"
                 },
-              "provider": {
-                "description": "组装数据",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/schema.Provider"
-                  }
-                ]
-              },
+                "provider": {
+                    "description": "组装数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Provider"
+                        }
+                    ]
+                },
                 "provider_id": {
                     "description": "关联的 Provider ID",
                     "type": "integer"
@@ -3154,21 +3627,21 @@
                     "type": "string"
                 },
                 "id": {
-                  "description": "原始数据",
+                    "description": "原始数据",
                     "type": "integer"
                 },
                 "name": {
                     "description": "模型名称",
                     "type": "string"
                 },
-              "provider": {
-                "description": "组装数据",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/schema.Provider"
-                  }
-                ]
-              },
+                "provider": {
+                    "description": "组装数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Provider"
+                        }
+                    ]
+                },
                 "provider_display_name": {
                     "description": "关联的 Provider DisplayName",
                     "type": "string"
@@ -3186,33 +3659,33 @@
                 }
             }
         },
-      "schema.ModelCollection": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "description": {
-            "description": "额外描述",
-            "type": "string"
-          },
-          "display_name": {
-            "description": "展示名称",
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "models": {
-            "description": "关联的模型",
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/schema.Model"
-            }
-          },
-          "name": {
-            "description": "唯一标识名称",
-            "type": "string"
+        "schema.ModelCollection": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "额外描述",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "展示名称",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "models": {
+                    "description": "关联的模型",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Model"
+                    }
+                },
+                "name": {
+                    "description": "唯一标识名称",
+                    "type": "string"
                 }
             }
         },
@@ -3275,46 +3748,46 @@
                 }
             }
         },
-      "schema.Preset": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "description": {
-            "description": "角色描述",
-            "type": "string"
-          },
-          "id": {
-            "description": "原始数据",
-            "type": "integer"
-          },
-          "name": {
-            "description": "角色名称",
-            "type": "string"
-          },
-          "prompt_session": {
-            "description": "组装数据",
-            "allOf": [
-              {
-                "$ref": "#/definitions/schema.Session"
-              }
-            ]
-          },
-          "prompt_session_id": {
-            "description": "引用一个 session 中的对话作为 prompt",
-            "type": "string"
-          },
-          "type": {
-            "description": "角色所属模块（chat、tue 等）",
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "description": "预设版本号，可能被用于标记是否需要强制更新",
-            "type": "integer"
+        "schema.Preset": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "角色描述",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "原始数据",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "角色名称",
+                    "type": "string"
+                },
+                "prompt_session": {
+                    "description": "组装数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Session"
+                        }
+                    ]
+                },
+                "prompt_session_id": {
+                    "description": "引用一个 session 中的对话作为 prompt",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "角色所属模块（chat、tue 等）",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "预设版本号，可能被用于标记是否需要强制更新",
+                    "type": "integer"
                 }
             }
         },
@@ -3434,17 +3907,17 @@
                 "id": {
                     "type": "integer"
                 },
-              "models": {
+                "models": {
                     "description": "一对多关系，与 Model 模型关联",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.Model"
                     }
                 },
-              "name": {
-                "description": "提供商名称",
-                "type": "string"
-              },
+                "name": {
+                    "description": "提供商名称",
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -3509,27 +3982,27 @@
                 }
             }
         },
-      "schema.ScoreStatus": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "scoring",
-          "completed",
-          "failed"
-        ],
-        "x-enum-comments": {
-          "StatusCompleted": "评分完成",
-          "StatusFailed": "评分失败",
-          "StatusPending": "待评分",
-          "StatusScoring": "评分中"
+        "schema.ScoreStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "scoring",
+                "completed",
+                "failed"
+            ],
+            "x-enum-comments": {
+                "StatusCompleted": "评分完成",
+                "StatusFailed": "评分失败",
+                "StatusPending": "待评分",
+                "StatusScoring": "评分中"
+            },
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusScoring",
+                "StatusCompleted",
+                "StatusFailed"
+            ]
         },
-        "x-enum-varnames": [
-          "StatusPending",
-          "StatusScoring",
-          "StatusCompleted",
-          "StatusFailed"
-        ]
-      },
         "schema.Session": {
             "type": "object",
             "properties": {
@@ -3608,6 +4081,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "password": {
+                    "type": "string"
                 },
                 "roles": {
                     "description": "用户与角色之间的多对多关系",

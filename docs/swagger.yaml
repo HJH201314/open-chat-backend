@@ -100,7 +100,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_Message'
+        - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_Message'
         description: 数据
       msg:
         description: 消息
@@ -113,7 +113,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_Problem'
+        - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_Problem'
         description: 数据
       msg:
         description: 消息
@@ -126,7 +126,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_UserSession'
+        - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_UserSession'
         description: 数据
       msg:
         description: 消息
@@ -139,7 +139,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedSyncListResponse-schema_UserSession'
+        - $ref: '#/definitions/entity.PaginatedSyncListResponse-schema_UserSession'
         description: 数据
       msg:
         description: 消息
@@ -152,7 +152,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_APIKey'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_APIKey'
         description: 数据
       msg:
         description: 消息
@@ -165,7 +165,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Course'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Course'
         description: 数据
       msg:
         description: 消息
@@ -178,7 +178,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Model'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Model'
         description: 数据
       msg:
         description: 消息
@@ -191,7 +191,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_ModelCollection'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_ModelCollection'
         description: 数据
       msg:
         description: 消息
@@ -204,7 +204,33 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Provider'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Provider'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_Role:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Role'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_User:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_User'
         description: 数据
       msg:
         description: 消息
@@ -217,7 +243,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/exam.SubmitExamResponse'
+        - $ref: '#/definitions/exam.SubmitExamResponse'
         description: 数据
       msg:
         description: 消息
@@ -230,7 +256,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.APIKey'
+        - $ref: '#/definitions/schema.APIKey'
         description: 数据
       msg:
         description: 消息
@@ -243,7 +269,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Course'
+        - $ref: '#/definitions/schema.Course'
         description: 数据
       msg:
         description: 消息
@@ -256,7 +282,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Exam'
+        - $ref: '#/definitions/schema.Exam'
         description: 数据
       msg:
         description: 消息
@@ -269,7 +295,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.ExamUserRecord'
+        - $ref: '#/definitions/schema.ExamUserRecord'
         description: 数据
       msg:
         description: 消息
@@ -282,7 +308,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Model'
+        - $ref: '#/definitions/schema.Model'
         description: 数据
       msg:
         description: 消息
@@ -295,7 +321,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.ModelCollection'
+        - $ref: '#/definitions/schema.ModelCollection'
         description: 数据
       msg:
         description: 消息
@@ -308,7 +334,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Problem'
+        - $ref: '#/definitions/schema.Problem'
         description: 数据
       msg:
         description: 消息
@@ -321,7 +347,20 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Provider'
+        - $ref: '#/definitions/schema.Provider'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-schema_Role:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/schema.Role'
         description: 数据
       msg:
         description: 消息
@@ -334,7 +373,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Session'
+        - $ref: '#/definitions/schema.Session'
         description: 数据
       msg:
         description: 消息
@@ -347,7 +386,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.User'
+        - $ref: '#/definitions/schema.User'
         description: 数据
       msg:
         description: 消息
@@ -360,7 +399,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.UserSession'
+        - $ref: '#/definitions/schema.UserSession'
         description: 数据
       msg:
         description: 消息
@@ -463,6 +502,24 @@ definitions:
       total:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_Role:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Role'
+        type: array
+      total:
+        type: integer
+    type: object
+  entity.PaginatedTotalResponse-schema_User:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.User'
+        type: array
+      total:
+        type: integer
+    type: object
   exam.SubmitExamRequest:
     properties:
       answers:
@@ -476,7 +533,7 @@ definitions:
     type: object
   exam.SubmitExamRequestAnswer:
     properties:
-      answer: { }
+      answer: {}
       problem_id:
         type: integer
     type: object
@@ -524,7 +581,7 @@ definitions:
         type: array
       sorted_data:
         description: 排好序的数据
-        items: { }
+        items: {}
         type: array
       updated_at:
         type: string
@@ -536,7 +593,7 @@ definitions:
         type: integer
       exam:
         allOf:
-          - $ref: '#/definitions/schema.Exam'
+        - $ref: '#/definitions/schema.Exam'
         description: 考试详细信息
       exam_id:
         description: 关联考试ID
@@ -556,7 +613,7 @@ definitions:
         type: integer
       resource:
         allOf:
-          - $ref: '#/definitions/schema.Resource'
+        - $ref: '#/definitions/schema.Resource'
         description: 资源详细信息
       resource_id:
         description: 关联资源ID
@@ -600,7 +657,7 @@ definitions:
         type: integer
       problem:
         allOf:
-          - $ref: '#/definitions/schema.Problem'
+        - $ref: '#/definitions/schema.Problem'
         description: 题目详细信息
       problem_id:
         description: 关联题目ID
@@ -623,7 +680,7 @@ definitions:
         type: string
       exam:
         allOf:
-          - $ref: '#/definitions/schema.Exam'
+        - $ref: '#/definitions/schema.Exam'
         description: 组装字段
       exam_id:
         description: 考试ID
@@ -633,7 +690,7 @@ definitions:
         type: integer
       status:
         allOf:
-          - $ref: '#/definitions/schema.ScoreStatus'
+        - $ref: '#/definitions/schema.ScoreStatus'
         description: 总评分状态
       time_spent:
         description: 答题用时（单位：秒）
@@ -665,7 +722,7 @@ definitions:
         type: integer
       status:
         allOf:
-          - $ref: '#/definitions/schema.ScoreStatus'
+        - $ref: '#/definitions/schema.ScoreStatus'
         description: 评分状态
     type: object
   schema.Message:
@@ -679,7 +736,7 @@ definitions:
         type: integer
       model:
         allOf:
-          - $ref: '#/definitions/schema.Model'
+        - $ref: '#/definitions/schema.Model'
         description: 组装结构
       model_id:
         description: 回复所使用的模型
@@ -703,7 +760,7 @@ definitions:
     properties:
       config:
         allOf:
-          - $ref: '#/definitions/schema.ModelConfig'
+        - $ref: '#/definitions/schema.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -721,7 +778,7 @@ definitions:
         type: string
       provider:
         allOf:
-          - $ref: '#/definitions/schema.Provider'
+        - $ref: '#/definitions/schema.Provider'
         description: 组装数据
       provider_id:
         description: 关联的 Provider ID
@@ -733,7 +790,7 @@ definitions:
     properties:
       config:
         allOf:
-          - $ref: '#/definitions/schema.ModelConfig'
+        - $ref: '#/definitions/schema.ModelConfig'
         description: 使用 JSON 储存配置
       created_at:
         type: string
@@ -751,7 +808,7 @@ definitions:
         type: string
       provider:
         allOf:
-          - $ref: '#/definitions/schema.Provider'
+        - $ref: '#/definitions/schema.Provider'
         description: 组装数据
       provider_display_name:
         description: 关联的 Provider DisplayName
@@ -842,7 +899,7 @@ definitions:
         type: string
       prompt_session:
         allOf:
-          - $ref: '#/definitions/schema.Session'
+        - $ref: '#/definitions/schema.Session'
         description: 组装数据
       prompt_session_id:
         description: 引用一个 session 中的对话作为 prompt
@@ -860,7 +917,7 @@ definitions:
     properties:
       answer:
         allOf:
-          - $ref: '#/definitions/schema.ProblemAnswer'
+        - $ref: '#/definitions/schema.ProblemAnswer'
         description: 答案（JSON存储ProblemAnswer）
       created_at:
         type: string
@@ -909,18 +966,18 @@ definitions:
     type: object
   schema.ProblemType:
     enum:
-      - single_choice
-      - multiple_choice
-      - fill_blank
-      - short_answer
-      - true_false
+    - single_choice
+    - multiple_choice
+    - fill_blank
+    - short_answer
+    - true_false
     type: string
     x-enum-varnames:
-      - SingleChoice
-      - MultipleChoice
-      - FillBlank
-      - ShortAnswer
-      - TrueFalse
+    - SingleChoice
+    - MultipleChoice
+    - FillBlank
+    - ShortAnswer
+    - TrueFalse
   schema.Provider:
     properties:
       api_keys:
@@ -995,10 +1052,10 @@ definitions:
     type: object
   schema.ScoreStatus:
     enum:
-      - pending
-      - scoring
-      - completed
-      - failed
+    - pending
+    - scoring
+    - completed
+    - failed
     type: string
     x-enum-comments:
       StatusCompleted: 评分完成
@@ -1006,10 +1063,10 @@ definitions:
       StatusPending: 待评分
       StatusScoring: 评分中
     x-enum-varnames:
-      - StatusPending
-      - StatusScoring
-      - StatusCompleted
-      - StatusFailed
+    - StatusPending
+    - StatusScoring
+    - StatusCompleted
+    - StatusFailed
   schema.Session:
     properties:
       context_size:
@@ -1065,6 +1122,8 @@ definitions:
         type: string
       id:
         type: integer
+      password:
+        type: string
       roles:
         description: 用户与角色之间的多对多关系
         items:
@@ -1083,13 +1142,13 @@ definitions:
         $ref: '#/definitions/schema.SessionFlagInfo'
       session:
         allOf:
-          - $ref: '#/definitions/schema.Session'
+        - $ref: '#/definitions/schema.Session'
         description: 组装数据
       session_id:
         type: string
       share_info:
         allOf:
-          - $ref: '#/definitions/schema.SessionShareInfo'
+        - $ref: '#/definitions/schema.SessionShareInfo'
         description: 分享字段
       type:
         $ref: '#/definitions/schema.UserSessionType'
@@ -1101,12 +1160,12 @@ definitions:
     type: object
   schema.UserSessionType:
     enum:
-      - 1
-      - 2
+    - 1
+    - 2
     type: integer
     x-enum-varnames:
-      - OWNER
-      - INVITEE
+    - OWNER
+    - INVITEE
   user.Login.loginRequest:
     properties:
       password:
@@ -1156,10 +1215,10 @@ paths:
   /chat/config/bots:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取 bot 角色配置
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -1167,7 +1226,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-array_schema_Preset'
       summary: 获取 bot 角色配置
       tags:
-        - config
+      - config
   /chat/config/models:
     get:
       consumes:
@@ -1224,16 +1283,16 @@ paths:
   /chat/session/{session_id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取会话
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -1241,7 +1300,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Session'
       summary: 获取会话
       tags:
-        - Session
+      - Session
   /chat/session/del/{session_id}:
     post:
       consumes:
@@ -1262,26 +1321,26 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除会话
       tags:
-        - Session
+      - Session
   /chat/session/flag/{session_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新用户会话标记
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
-        - description: 会话信息
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.SessionFlagInfo'
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: 会话信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.SessionFlagInfo'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -1293,28 +1352,28 @@ paths:
   /chat/session/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取会话列表
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -1322,7 +1381,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession'
       summary: 获取会话列表
       tags:
-        - Session
+      - Session
   /chat/session/new:
     post:
       consumes:
@@ -1337,26 +1396,26 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-string'
       summary: 创建会话
       tags:
-        - Session
+      - Session
   /chat/session/share/{session_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 分享会话
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
-        - description: 分享信息
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/chat.ShareSession.ShareRequest'
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: 分享信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/chat.ShareSession.ShareRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -1364,28 +1423,28 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 分享会话
       tags:
-        - Session
+      - Session
   /chat/session/sync:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 同步会话列表
       parameters:
-        - description: 客户端上次同步时间戳
-          in: query
-          name: last_sync_time
-          required: true
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
+      - description: 客户端上次同步时间戳
+        in: query
+        name: last_sync_time
+        required: true
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -1393,26 +1452,26 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedSyncListResponse-schema_UserSession'
       summary: 同步会话列表
       tags:
-        - Session
+      - Session
   /chat/session/update/{session_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新会话
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
-        - description: 会话信息
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Session'
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: 会话信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Session'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -1424,16 +1483,16 @@ paths:
   /chat/session/user/{session_id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取用户会话
       parameters:
-        - description: 会话 ID
-          in: path
-          name: session_id
-          required: true
-          type: string
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -1441,20 +1500,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_UserSession'
       summary: 获取用户会话
       tags:
-        - Session
+      - Session
   /manage/collection/{collection_id}:
     get:
       consumes:
       - application/json
       description: 获取模型集合
       parameters:
-        - description: ModelCollection ID
-          in: path
-          name: collection_id
-          required: true
-          type: integer
+      - description: ModelCollection ID
+        in: path
+        name: collection_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型
@@ -1462,21 +1521,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_ModelCollection'
       summary: 获取模型集合
       tags:
-        - ModelCollection
+      - ModelCollection
   /manage/collection/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建模型集合
       parameters:
-        - description: 模型集合
-          in: body
-          name: model
-          required: true
-          schema:
-            $ref: '#/definitions/schema.ModelCollection'
+      - description: 模型集合
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/schema.ModelCollection'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的模型集合
@@ -1484,20 +1543,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_ModelCollection'
       summary: 创建模型集合
       tags:
-        - ModelCollection
+      - ModelCollection
   /manage/collection/delete/{collection_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除模型集合
       parameters:
-        - description: ModelCollection ID
-          in: path
-          name: collection_id
-          required: true
-          type: integer
+      - description: ModelCollection ID
+        in: path
+        name: collection_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功与否
@@ -1505,32 +1564,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除模型集合
       tags:
-        - Model
+      - Model
   /manage/collection/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取模型集合
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型集合列表
@@ -1538,20 +1597,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ModelCollection'
       summary: 批量获取模型集合
       tags:
-        - ModelCollection
+      - ModelCollection
   /manage/key/{id}/delete:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除 APIKey
       parameters:
-        - description: API Key ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: API Key ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功与否
@@ -1559,21 +1618,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除 APIKey
       tags:
-        - APIKey
+      - APIKey
   /manage/key/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建 APIKey 并绑定 到 API 提供商
       parameters:
-        - description: API Key
-          in: body
-          name: apikey
-          required: true
-          schema:
-            $ref: '#/definitions/schema.APIKey'
+      - description: API Key
+        in: body
+        name: apikey
+        required: true
+        schema:
+          $ref: '#/definitions/schema.APIKey'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的 API Key
@@ -1581,11 +1640,11 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_APIKey'
       summary: 创建 APIKey
       tags:
-        - APIKey
+      - APIKey
   /manage/key/list/provider/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 列出供应商的 APIKey
       parameters:
       - description: API 提供商 ID
@@ -1611,7 +1670,7 @@ paths:
         name: start_time
         type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的 API Key
@@ -1619,20 +1678,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_APIKey'
       summary: 列出APIKey
       tags:
-        - APIKey
+      - APIKey
   /manage/model/{model_id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取模型
       parameters:
-        - description: Model ID
-          in: path
-          name: model_id
-          required: true
-          type: integer
+      - description: Model ID
+        in: path
+        name: model_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型
@@ -1640,21 +1699,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Model'
       summary: 获取模型
       tags:
-        - Model
+      - Model
   /manage/model/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建模型并绑定到 API 供应商
       parameters:
-        - description: 模型
-          in: body
-          name: model
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Model'
+      - description: 模型
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Model'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的模型
@@ -1662,20 +1721,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Model'
       summary: 创建模型
       tags:
-        - Model
+      - Model
   /manage/model/delete/{model_id}:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除模型
       parameters:
-        - description: Model ID
-          in: path
-          name: model_id
-          required: true
-          type: integer
+      - description: Model ID
+        in: path
+        name: model_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功与否
@@ -1683,32 +1742,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除模型
       tags:
-        - Model
+      - Model
   /manage/model/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取模型
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型列表
@@ -1716,37 +1775,37 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model'
       summary: 批量获取模型
       tags:
-        - Model
+      - Model
   /manage/model/provider/{provider_id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取 API 提供商的模型
       parameters:
-        - description: Provider ID
-          in: path
+      - description: Provider ID
+        in: path
         name: provider_id
-          required: true
-          type: integer
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+        required: true
+        type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型列表
@@ -1754,21 +1813,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model'
       summary: 获取 API 提供商的模型
       tags:
-        - Model
+      - Model
   /manage/model/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Update 更新模型，若参数不传入或为空，则不会更新
       parameters:
-        - description: 模型
-          in: body
-          name: model
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Model'
+      - description: 模型
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Model'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新成功与否
@@ -1776,16 +1835,16 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新模型
       tags:
-        - Model
+      - Model
   /manage/provider/{id}/delete:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除 API 提供商
       parameters:
-        - description: API 提供商 ID
-          in: path
-          name: id
+      - description: API 提供商 ID
+        in: path
+        name: id
         required: true
         type: integer
       produces:
@@ -1804,11 +1863,11 @@ paths:
       - application/json
       description: 更新 API 提供商
       parameters:
-        - description: API 提供商 ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: API 提供商 ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: API 提供商参数
         in: body
         name: provider
@@ -1882,32 +1941,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Provider'
       summary: 创建 API 提供商
       tags:
-        - Provider
+      - Provider
   /manage/provider/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取 API 提供商
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: API 提供商列表
@@ -1916,19 +1975,267 @@ paths:
       summary: 批量获取 API 提供商
       tags:
       - Provider
+  /manage/role/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取角色
+      parameters:
+      - description: 角色 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 角色
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Role'
+      summary: 获取角色
+      tags:
+      - Role
+  /manage/role/{id}/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除角色
+      parameters:
+      - description: 角色 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 删除角色
+      tags:
+      - Role
+  /manage/role/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新角色
+      parameters:
+      - description: 角色 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 角色参数
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新角色
+      tags:
+      - Role
+  /manage/role/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建角色
+      parameters:
+      - description: 角色参数
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功创建的角色
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Provider'
+      summary: 创建角色
+      tags:
+      - Role
+  /manage/role/list:
+    get:
+      consumes:
+      - application/json
+      description: 批量分页获取角色
+      parameters:
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 角色列表
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Role'
+      summary: 批量分页获取角色
+      tags:
+      - Role
+  /manage/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_User'
+      summary: 获取用户
+      tags:
+      - User
+  /manage/user/{id}/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除用户
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 删除用户
+      tags:
+      - User
+  /manage/user/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新用户
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 用户参数
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schema.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新用户
+      tags:
+      - User
+  /manage/user/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建用户
+      parameters:
+      - description: 用户参数
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schema.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功创建的用户
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Provider'
+      summary: 创建用户
+      tags:
+      - User
+  /manage/user/list:
+    get:
+      consumes:
+      - application/json
+      description: 批量分页获取用户
+      parameters:
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户列表
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_User'
+      summary: 批量分页获取用户
+      tags:
+      - User
   /preset/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 根据ID获取指定的预设信息
       parameters:
-        - description: 预设ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 预设ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 预设信息
@@ -1936,20 +2243,20 @@ paths:
             $ref: '#/definitions/schema.Preset'
       summary: 获取预设
       tags:
-        - Preset
+      - Preset
   /preset/{id}/delete:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除指定ID的预设
       parameters:
-        - description: 预设ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 预设ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功
@@ -1957,26 +2264,26 @@ paths:
             type: boolean
       summary: 删除预设
       tags:
-        - Preset
+      - Preset
   /preset/{id}/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新指定ID的预设信息
       parameters:
-        - description: 预设ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 更新的预设信息
-          in: body
-          name: role
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Preset'
+      - description: 预设ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新的预设信息
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Preset'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新后的预设信息
@@ -1984,21 +2291,21 @@ paths:
             $ref: '#/definitions/schema.Preset'
       summary: 更新预设
       tags:
-        - Preset
+      - Preset
   /preset/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建一个新的预设，包含名称、描述和引用的会话ID
       parameters:
-        - description: 预设信息
-          in: body
-          name: role
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Preset'
+      - description: 预设信息
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Preset'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的预设
@@ -2006,14 +2313,14 @@ paths:
             $ref: '#/definitions/schema.Preset'
       summary: 创建预设
       tags:
-        - Preset
+      - Preset
   /preset/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取所有预设的列表
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 预设列表
@@ -2023,20 +2330,20 @@ paths:
             type: array
       summary: 获取预设列表
       tags:
-        - Preset
+      - Preset
   /tue/course/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取单个课程
       parameters:
-        - description: 课程 ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: 课程 ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2044,19 +2351,19 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Course'
       summary: 获取单个课程
       tags:
-        - Course
+      - Course
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除课程
       parameters:
-        - description: 课程 ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: 课程 ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2064,21 +2371,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-any'
       summary: 删除课程
       tags:
-        - Course
+      - Course
   /tue/course/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建课程基础参数，绑定或创建题目、资源
       parameters:
-        - description: 课程内容
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Course'
+      - description: 课程内容
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Course'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2086,32 +2393,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Course'
       summary: 创建课程
       tags:
-        - Course
+      - Course
   /tue/course/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取课程列表
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2119,21 +2426,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Course'
       summary: 获取课程列表
       tags:
-        - Course
+      - Course
   /tue/course/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新课程基础参数，增量更新 题目、资源
       parameters:
-        - description: 课程内容
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Course'
+      - description: 课程内容
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Course'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2141,20 +2448,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Course'
       summary: 更新课程
       tags:
-        - Course
+      - Course
   /tue/exam/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取单个测验
       parameters:
-        - description: 测验 ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: 测验 ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2162,20 +2469,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Exam'
       summary: 获取单个测验
       tags:
-        - Exam
+      - Exam
   /tue/exam/{id}/records:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取用户的考试评分结果
       parameters:
-        - description: 考试记录ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -2183,43 +2490,43 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
       summary: 获取考试结果
       tags:
-        - 考试
+      - 考试
   /tue/exam/{id}/rescore:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 管理员重新评分考试
       parameters:
-        - description: 考试记录ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
-      responses: { }
+      - application/json
+      responses: {}
       summary: 重新评分考试
       tags:
-        - 考试
+      - 考试
   /tue/exam/{id}/submit:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 提交用户的考试答案并进行评分
       parameters:
-        - description: 考试ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 提交信息
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/exam.SubmitExamRequest'
+      - description: 考试ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 提交信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exam.SubmitExamRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -2227,21 +2534,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-exam_SubmitExamResponse'
       summary: 提交考试答案
       tags:
-        - 考试
+      - 考试
   /tue/exam/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 保存单个测验
       parameters:
-        - description: 测验内容
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Exam'
+      - description: 测验内容
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Exam'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2249,20 +2556,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Exam'
       summary: 保存单个测验
       tags:
-        - Exam
+      - Exam
   /tue/problem/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取单个题目
       parameters:
-        - description: 题目 ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: 题目 ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2270,21 +2577,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Problem'
       summary: 获取单个题目
       tags:
-        - Problem
+      - Problem
   /tue/problem/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建单个题目
       parameters:
-        - description: 题目结构
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Problem'
+      - description: 题目结构
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Problem'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2292,32 +2599,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Problem'
       summary: 创建单个题目
       tags:
-        - Problem
+      - Problem
   /tue/problem/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 分页获取题目列表
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 返回数据
@@ -2325,14 +2632,14 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem'
       summary: 分页获取题目列表
       tags:
-        - Problem
+      - Problem
   /user/current:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取当前用户信息
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: get current user info successfully
@@ -2340,7 +2647,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_User'
       summary: 获取当前用户信息
       tags:
-        - User
+      - User
   /user/login:
     post:
       consumes:
@@ -2362,15 +2669,15 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_User'
       summary: 用户登录
       tags:
-        - User
+      - User
   /user/logout:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 用户登出
       produces:
-        - application/json
-      responses: { }
+      - application/json
+      responses: {}
       summary: 用户登出
       tags:
       - User

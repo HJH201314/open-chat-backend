@@ -498,6 +498,92 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				manageHandler.DeleteModelCollection,
 			)
 		}
+		manageUserGroup := manageGroup.Group("/user")
+		{
+			router.registerRoute(
+				manageUserGroup,
+				POST,
+				"/create",
+				"创建新的用户",
+
+				manageHandler.CreateUser,
+			)
+			router.registerRoute(
+				manageUserGroup,
+				GET,
+				"/:id",
+				"获取指定用户的详细信息",
+
+				manageHandler.GetUser,
+			)
+			router.registerRoute(
+				manageUserGroup,
+				GET,
+				"/list",
+				"分页获取所有用户列表",
+
+				manageHandler.GetUsers,
+			)
+			router.registerRoute(
+				manageUserGroup,
+				POST,
+				"/:id/delete",
+				"删除指定的用户",
+
+				manageHandler.DeleteUser,
+			)
+			router.registerRoute(
+				manageUserGroup,
+				POST,
+				"/:id/update",
+				"更新用户信息",
+
+				manageHandler.UpdateUser,
+			)
+		}
+		manageRoleGroup := manageGroup.Group("/role")
+		{
+			router.registerRoute(
+				manageRoleGroup,
+				POST,
+				"/create",
+				"创建新的角色",
+
+				manageHandler.CreateRole,
+			)
+			router.registerRoute(
+				manageRoleGroup,
+				GET,
+				"/:id",
+				"获取指定角色的详细信息",
+
+				manageHandler.GetRole,
+			)
+			router.registerRoute(
+				manageRoleGroup,
+				GET,
+				"/list",
+				"分页获取所有角色列表",
+
+				manageHandler.GetRoles,
+			)
+			router.registerRoute(
+				manageRoleGroup,
+				POST,
+				"/:id/delete",
+				"删除指定的角色",
+
+				manageHandler.DeleteRole,
+			)
+			router.registerRoute(
+				manageRoleGroup,
+				POST,
+				"/:id/update",
+				"更新角色信息",
+
+				manageHandler.UpdateRole,
+			)
+		}
 	}
 
 	// routes for tue
