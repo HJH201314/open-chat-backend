@@ -8,7 +8,6 @@ import (
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"net/http"
 )
@@ -109,9 +108,9 @@ func (h *Handler) GetRole(c *gin.Context) {
 //	@Tags			Role
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		uint64						true	"角色 ID"
-//	@Param			role	body		schema.Role					true	"角色参数"
-//	@Success		200		{object}	entity.CommonResponse[bool]	"更新成功与否"
+//	@Param			id		path		uint64								true	"角色 ID"
+//	@Param			role	body		entity.ReqUpdateBody[schema.Role]	true	"角色参数"
+//	@Success		200		{object}	entity.CommonResponse[bool]			"更新成功与否"
 //	@Router			/manage/role/{id}/update [post]
 func (h *Handler) UpdateRole(c *gin.Context) {
 	var uri entity.PathParamId
@@ -119,13 +118,21 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	var role schema.Role
+	var role entity.ReqUpdateBody[schema.Role]
 	if err := c.ShouldBindJSON(&role); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	role.ID = uri.ID
-	if err := gorm_utils.Update(h.Db.Session(&gorm.Session{FullSaveAssociations: true}), &role); err != nil {
+	role.Data.ID = uri.ID
+	// 更新权限列表
+	if role.Data.Permissions != nil {
+		if err := h.Db.Model(&role.Data).Association("Permissions").Replace(role.Data.Permissions); err != nil {
+			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update role permission")
+			return
+		}
+	}
+	// 更新其它信息
+	if err := h.Db.Select(role.Updates).Omit("Permissions").Updates(&role.Data).Error; err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update role")
 		return
 	}

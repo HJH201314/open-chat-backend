@@ -540,6 +540,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 
 				manageHandler.UpdateUser,
 			)
+			router.registerRoute(
+				manageUserGroup,
+				POST,
+				"/:id/logout",
+				"登出用户",
+
+				manageHandler.LogoutUser,
+			)
 		}
 		manageRoleGroup := manageGroup.Group("/role")
 		{
@@ -582,6 +590,33 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"更新角色信息",
 
 				manageHandler.UpdateRole,
+			)
+		}
+		managePermissionGroup := manageGroup.Group("/permission")
+		{
+			router.registerRoute(
+				managePermissionGroup,
+				GET,
+				"/:id",
+				"获取指定权限的详细信息",
+
+				manageHandler.GetPermission,
+			)
+			router.registerRoute(
+				managePermissionGroup,
+				GET,
+				"/list",
+				"分页获取所有权限列表",
+
+				manageHandler.GetPermissions,
+			)
+			router.registerRoute(
+				managePermissionGroup,
+				POST,
+				"/:id/update",
+				"更新权限信息",
+
+				manageHandler.UpdatePermission,
 			)
 		}
 	}

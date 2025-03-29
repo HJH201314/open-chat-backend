@@ -197,6 +197,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_Permission:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Permission'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider:
     properties:
       code:
@@ -245,6 +258,18 @@ definitions:
         allOf:
         - $ref: '#/definitions/exam.SubmitExamResponse'
         description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-int:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        type: integer
       msg:
         description: 消息
         type: string
@@ -322,6 +347,19 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/schema.ModelCollection'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-schema_Permission:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/schema.Permission'
         description: 数据
       msg:
         description: 消息
@@ -493,6 +531,15 @@ definitions:
       total:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_Permission:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Permission'
+        type: array
+      total:
+        type: integer
+    type: object
   entity.PaginatedTotalResponse-schema_Provider:
     properties:
       list:
@@ -519,6 +566,15 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  entity.ReqUpdateBody-schema_Role:
+    properties:
+      data:
+        $ref: '#/definitions/schema.Role'
+      updates:
+        items:
+          type: string
+        type: array
     type: object
   exam.SubmitExamRequest:
     properties:
@@ -865,6 +921,9 @@ definitions:
     type: object
   schema.Permission:
     properties:
+      active:
+        description: 是否启用（唯一可设置的字段）
+        type: boolean
       created_at:
         type: string
       description:
@@ -1032,10 +1091,16 @@ definitions:
     type: object
   schema.Role:
     properties:
+      active:
+        description: 是否启用
+        type: boolean
       created_at:
         type: string
       description:
         description: 角色描述
+        type: string
+      display_name:
+        description: 角色名称
         type: string
       id:
         type: integer
@@ -1836,6 +1901,87 @@ paths:
       summary: 更新模型
       tags:
       - Model
+  /manage/permission/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取权限
+      parameters:
+      - description: 权限 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 权限
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Permission'
+      summary: 获取权限
+      tags:
+      - Permission
+  /manage/permission/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新权限
+      parameters:
+      - description: 权限 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 权限参数
+        in: body
+        name: permission
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Permission'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新权限
+      tags:
+      - Permission
+  /manage/permission/list:
+    get:
+      consumes:
+      - application/json
+      description: 批量分页获取权限
+      parameters:
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 权限列表
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Permission'
+      summary: 批量分页获取权限
+      tags:
+      - Permission
   /manage/provider/{id}/delete:
     post:
       consumes:
@@ -2033,7 +2179,7 @@ paths:
         name: role
         required: true
         schema:
-          $ref: '#/definitions/schema.Role'
+          $ref: '#/definitions/entity.ReqUpdateBody-schema_Role'
       produces:
       - application/json
       responses:
@@ -2139,6 +2285,27 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除用户
+      tags:
+      - User
+  /manage/user/{id}/logout:
+    post:
+      consumes:
+      - application/json
+      description: 强制登出用户
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功登出的设备数量
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-int'
+      summary: 强制登出用户
       tags:
       - User
   /manage/user/{id}/update:

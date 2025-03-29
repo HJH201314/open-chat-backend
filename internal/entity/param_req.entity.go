@@ -15,3 +15,9 @@ type ParamSearchPagingSort[T any] struct {
 	SearchParam[T]
 	ParamPagingSort
 }
+
+// ReqUpdateBody 更新数据的请求体，用于支持更新部分字段
+type ReqUpdateBody[T any] struct {
+	Data    T        `json:"data" binding:"required"`
+	Updates []string `json:"updates" binding:"required" validate:"min=1"`
+}

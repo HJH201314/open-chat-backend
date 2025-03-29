@@ -29,15 +29,19 @@ func (r *RedisStore) InvalidUserToken(userId uint64, token string) error {
 }
 
 // InvalidUserAllToken 取消缓存用户所有 token
-func (r *RedisStore) InvalidUserAllToken(userId uint64) error {
+//
+//	Returns:
+//		int   用户 token 数量
+func (r *RedisStore) InvalidUserAllToken(userId uint64) (int, error) {
 	ctx := context.Background()
 	tokens, err := r.Client.SMembers(ctx, fmt.Sprintf("user-tokens:%d", userId)).Result()
 	pipe := r.Client.Pipeline()
 	if len(tokens) > 0 {
 		pipe.Del(ctx, slice.Map(tokens, func(_ int, token string) string { return "token-user:" + token })...)
+		pipe.Del(ctx, fmt.Sprintf("user-tokens:%d", userId))
 	}
 	_, err = pipe.Exec(ctx)
-	return err
+	return len(tokens), err
 }
 
 // FindUserIdByToken 根据 token 获取用户 ID

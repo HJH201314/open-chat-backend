@@ -1010,6 +1010,131 @@ const docTemplate = `{
                 }
             }
         },
+        "/manage/permission/list": {
+            "get": {
+                "description": "批量分页获取权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "批量分页获取权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "权限列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Permission"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/permission/{id}": {
+            "get": {
+                "description": "获取权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "获取权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "权限",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Permission"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/permission/{id}/update": {
+            "post": {
+                "description": "更新权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "更新权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限参数",
+                        "name": "permission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Permission"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
         "/manage/provider/all": {
             "get": {
                 "description": "获取所有 API 提供商",
@@ -1401,7 +1526,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schema.Role"
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_Role"
                         }
                     }
                 ],
@@ -1560,6 +1685,38 @@ const docTemplate = `{
                         "description": "删除成功与否",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/user/{id}/logout": {
+            "post": {
+                "description": "强制登出用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "强制登出用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功登出的设备数量",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-int"
                         }
                     }
                 }
@@ -2702,6 +2859,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Permission": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Permission"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider": {
             "type": "object",
             "properties": {
@@ -2779,6 +2957,23 @@ const docTemplate = `{
                             "$ref": "#/definitions/exam.SubmitExamResponse"
                         }
                     ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-int": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "type": "integer"
                 },
                 "msg": {
                     "description": "消息",
@@ -2903,6 +3098,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/schema.ModelCollection"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Permission": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Permission"
                         }
                     ]
                 },
@@ -3173,6 +3389,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_Permission": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Permission"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_Provider": {
             "type": "object",
             "properties": {
@@ -3212,6 +3442,20 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "entity.ReqUpdateBody-schema_Role": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.Role"
+                },
+                "updates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -3732,6 +3976,10 @@ const docTemplate = `{
         "schema.Permission": {
             "type": "object",
             "properties": {
+                "active": {
+                    "description": "是否启用（唯一可设置的字段）",
+                    "type": "boolean"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -3967,11 +4215,19 @@ const docTemplate = `{
         "schema.Role": {
             "type": "object",
             "properties": {
+                "active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "description": {
                     "description": "角色描述",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "角色名称",
                     "type": "string"
                 },
                 "id": {

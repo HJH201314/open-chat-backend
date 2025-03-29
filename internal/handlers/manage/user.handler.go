@@ -126,14 +126,21 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 	user.ID = uri.ID
-	// 更新关联的 role
-	if err := h.Db.Model(&user).Association("Roles").Replace(user.Roles); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update user role")
-		return
+	if user.Roles != nil {
+		// 更新关联的 role
+		if err := h.Db.Model(&user).Association("Roles").Replace(user.Roles); err != nil {
+			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update user role")
+			return
+		}
+		// 删除用户角色缓存
+		if err := h.Redis.DeleteUserRolesCache(uri.ID); err != nil {
+			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete user role cache: "+err.Error())
+			return
+		}
 	}
 	// 更新用户信息
-	if err := h.Db.Model(&user).Omit("Roles").Updates(&user); err != nil {
-		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update user")
+	if err := h.Db.Model(&user).Omit("Username", "Roles").Updates(&user).Error; err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update user: "+err.Error())
 		return
 	}
 	ctx_utils.Success(c, true)
@@ -159,5 +166,32 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete user")
 		return
 	}
+	if _, err := h.Redis.InvalidUserAllToken(uri.ID); err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to logout user")
+		return
+	}
 	ctx_utils.Success(c, true)
+}
+
+// LogoutUser
+//
+//	@Summary		强制登出用户
+//	@Description	强制登出用户
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uint64						true	"用户 ID"
+//	@Success		200	{object}	entity.CommonResponse[int]	"成功登出的设备数量"
+//	@Router			/manage/user/{id}/logout [post]
+func (h *Handler) LogoutUser(c *gin.Context) {
+	var uri entity.PathParamId
+	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	count, err := h.Redis.InvalidUserAllToken(uri.ID)
+	if err != nil {
+		return
+	}
+	ctx_utils.Success(c, count)
 }
