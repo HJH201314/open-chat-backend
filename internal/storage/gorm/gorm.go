@@ -61,10 +61,11 @@ func NewGormStore() *GormStore {
 		&schema.Provider{},
 		&schema.APIKey{},
 		&schema.Model{}, &schema.ModelCollection{},
-		&schema.Preset{},
+		&schema.Preset{}, &schema.PresetCompletionRecord{},
 		&schema.UserSession{},
 		&schema.UserUsage{},
-		&schema.Problem{}, &schema.Resource{},
+		&schema.Problem{}, &schema.ProblemMakeRecord{},
+		&schema.Resource{},
 		&schema.Exam{}, &schema.ExamProblem{}, &schema.ExamUserRecord{}, &schema.ExamUserRecordAnswer{},
 		&schema.Course{}, &schema.CourseResource{}, &schema.CourseExam{},
 	); err != nil {

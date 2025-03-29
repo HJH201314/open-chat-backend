@@ -285,11 +285,11 @@ func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Probl
 	}
 
 	// 调用AI接口进行评分
-	aiResponse, err := BuiltinPresetCompletion(
+	aiResponse, _, err := BuiltinPresetCompletion(
 		ExamScoreShortAnswerPresetName, map[string]string{
-			"question":        problem.Description,
-			"standard_answer": standardAnswer,
-			"user_answer":     userAnswer,
+			"QUESTION":        problem.Description,
+			"STANDARD_ANSWER": standardAnswer,
+			"USER_ANSWER":     userAnswer,
 		},
 	)
 
@@ -340,11 +340,11 @@ func NewExamScoreService(db *gorm.DB) *ExamScoreService {
 			chat_utils.UserMessage(
 				`你是一个专业的教育评分助手。请评估以下答案的质量和准确性。
 
-问题: {question}
+问题: {QUESTION}
 
-标准答案: {standard_answer}
+标准答案: {STANDARD_ANSWER}
 
-学生答案: {user_answer}
+学生答案: {USER_ANSWER}
 
 请根据以下标准进行评分:
 1. 内容准确性: 答案是否准确，与标准答案相符

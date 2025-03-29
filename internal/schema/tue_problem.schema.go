@@ -44,3 +44,12 @@ type Problem struct {
 func (p *Problem) TableName() string {
 	return "tue_problems"
 }
+
+// ProblemMakeRecord 出题记录
+type ProblemMakeRecord struct {
+	ID                       uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
+	PresetCompletionRecordID uint64 `gorm:"index;not null" json:"preset_completion_record_id"`
+	ProblemID                uint64 `gorm:"index;not null" json:"problem_id"`
+
+	AutoCreateUpdateAt
+}

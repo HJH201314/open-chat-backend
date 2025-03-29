@@ -2360,6 +2360,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/tue/problem/make": {
+            "post": {
+                "description": "创建题目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "创建题目",
+                "parameters": [
+                    {
+                        "description": "题目要求",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/course.MakeQuestionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "生成记录 ID",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-uint64"
+                        }
+                    }
+                }
+            }
+        },
         "/tue/problem/{id}": {
             "get": {
                 "description": "获取单个题目",
@@ -2595,6 +2629,21 @@ const docTemplate = `{
                 },
                 "share_info": {
                     "$ref": "#/definitions/schema.SessionShareInfo"
+                }
+            }
+        },
+        "course.MakeQuestionRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/schema.ProblemType"
                 }
             }
         },
@@ -3271,6 +3320,23 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-uint64": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "type": "integer"
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.PaginatedContinuationResponse-schema_Message": {
             "type": "object",
             "properties": {
@@ -3447,12 +3513,17 @@ const docTemplate = `{
         },
         "entity.ReqUpdateBody-schema_Role": {
             "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/schema.Role"
                 },
                 "updates": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "string"
                     }

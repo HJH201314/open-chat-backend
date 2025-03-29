@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"github.com/duke-git/lancet/v2/maputil"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/schema"
 	gormStore "github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"sync"
@@ -21,29 +23,29 @@ type PresetService struct {
 }
 
 var (
-	instance *PresetService
-	once     sync.Once
+	presetServiceInstance *PresetService
+	presetServiceOnce     sync.Once
 )
 
 // InitPresetService 初始化预设缓存服务
 func InitPresetService(base *BaseService) *PresetService {
-	once.Do(
+	presetServiceOnce.Do(
 		func() {
-			instance = &PresetService{
+			presetServiceInstance = &PresetService{
 				BuiltinPresets: make(map[string]*schema.Preset),
 				BaseService:    *base,
 			}
 		},
 	)
-	return instance
+	return presetServiceInstance
 }
 
 // GetPresetService 获取预设缓存服务
 func GetPresetService() *PresetService {
-	if instance == nil {
+	if presetServiceInstance == nil {
 		panic("PresetService not initialized")
 	}
-	return instance
+	return presetServiceInstance
 }
 
 // RegisterBuiltinPresets 注册内置预设
@@ -150,10 +152,10 @@ func (s *PresetService) RegisterBuiltinPresetsSimple(name string, desc string, v
 }
 
 // BuiltinPresetCompletion 内置预设补全
-func BuiltinPresetCompletion(presetName string, params map[string]string) (string, error) {
+func BuiltinPresetCompletion(presetName string, params map[string]string) (string, uint64, error) {
 	presetService := GetPresetService()
 	if presetService == nil {
-		return "", errors.New("preset service not found")
+		return "", 0, errors.New("preset service not found")
 	}
 	preset := presetService.GetBuiltinPreset(presetName)
 
@@ -161,9 +163,19 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 	var model schema.Model
 	if err := presetService.Gorm.Model(&model).Preload("Provider").Preload("Provider.APIKeys").Where(
 		"id = ?",
-		4,
+		19,
 	).First(&model).Error; err != nil {
-		return "", fmt.Errorf("failed to get default AI provider: %w", err)
+		return "", 0, fmt.Errorf("failed to get default AI provider: %w", err)
+	}
+
+	// 记录调用
+	presetRecord := &schema.PresetCompletionRecord{
+		PresetID: preset.ID,
+		Status:   constants.StatusHandling,
+		Params:   datatypes.NewJSONType[map[string]string](params),
+	}
+	if err := presetService.Gorm.Create(presetRecord).Error; err != nil {
+		return "", 0, fmt.Errorf("failed to create preset record: %w", err)
 	}
 
 	// 调用AI接口进行补全
@@ -179,11 +191,31 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 			},
 		),
 	)
+
+	// 更新记录
+	defer func() {
+		var status constants.CommonStatus
+		if err != nil || resp.Content == "" {
+			// 失败
+			status = constants.StatusFailed
+		} else {
+			// 成功
+			status = constants.StatusCompleted
+		}
+		if err := presetService.Gorm.Model(&presetRecord).Updates(
+			schema.PresetCompletionRecord{
+				Status: status,
+			},
+		).Error; err != nil {
+			// do nothing
+		}
+	}()
+
 	if err != nil {
-		return "", fmt.Errorf("failed to complete: %w", err)
+		return "", presetRecord.ID, fmt.Errorf("failed to complete: %w", err)
 	}
 	if resp.Content == "" {
-		return "", errors.New("no content")
+		return "", presetRecord.ID, errors.New("no content")
 	}
-	return resp.Content, nil
+	return resp.Content, presetRecord.ID, nil
 }

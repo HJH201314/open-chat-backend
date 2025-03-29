@@ -627,13 +627,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 	{
 		tueProblemGroup := tueGroup.Group("/problem")
 		{
+			problemHandler := course.NewProblemHandler(baseHandler)
 			router.registerRoute(
 				tueProblemGroup,
 				GET,
 				"/:id",
 				"获取指定题目的详细信息",
 
-				tueHandler.GetProblem,
+				problemHandler.GetProblem,
 			)
 			router.registerRoute(
 				tueProblemGroup,
@@ -641,7 +642,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"/create",
 				"创建新的题目",
 
-				tueHandler.CreateProblem,
+				problemHandler.CreateProblem,
 			)
 			router.registerRoute(
 				tueProblemGroup,
@@ -649,7 +650,15 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"/list",
 				"获取所有题目列表",
 
-				tueHandler.GetProblems,
+				problemHandler.GetProblems,
+			)
+			router.registerRoute(
+				tueProblemGroup,
+				POST,
+				"/make",
+				"AI 生成题目",
+
+				problemHandler.MakeQuestion,
 			)
 		}
 		tueExamGroup := tueGroup.Group("/exam")

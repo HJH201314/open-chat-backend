@@ -36,6 +36,7 @@ func main() {
 	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
 	go intervalCacheService.Start(cacheCtx, 10*time.Minute)
 	services.InitPresetService(baseService) // 初始化预设缓存服务
+	services.InitMakeQuestionService(baseService)
 
 	r := gin.Default()
 	// 初始化中间件

@@ -1,5 +1,10 @@
 package schema
 
+import (
+	"github.com/fcraft/open-chat/internal/constants"
+	"gorm.io/datatypes"
+)
+
 type Preset struct {
 	// 原始数据
 	ID              uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
@@ -12,4 +17,17 @@ type Preset struct {
 
 	// 组装数据
 	PromptSession *Session `gorm:"foreignKey:PromptSessionId;references:ID" json:"prompt_session"`
+}
+
+// PresetCompletionRecord 记录预设的补全记录
+type PresetCompletionRecord struct {
+	// 原始数据
+	ID       uint64                                `gorm:"primaryKey;autoIncrement" json:"id"`
+	PresetID uint64                                `gorm:"index;not null" json:"preset_id"`
+	Params   datatypes.JSONType[map[string]string] `gorm:"type:json" json:"params"`
+	Content  string                                `json:"content"`
+	Status   constants.CommonStatus                `gorm:"type:varchar(20);not null;default:'pending'" json:"status"`
+	AutoCreateUpdateAt
+
+	Preset *Preset `gorm:"foreignKey:ID;references:PresetID" json:"preset"`
 }

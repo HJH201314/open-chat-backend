@@ -28,6 +28,16 @@ definitions:
       share_info:
         $ref: '#/definitions/schema.SessionShareInfo'
     type: object
+  course.MakeQuestionRequest:
+    properties:
+      description:
+        type: string
+      type:
+        $ref: '#/definitions/schema.ProblemType'
+    required:
+      - description
+      - type
+    type: object
   entity.CommonResponse-any:
     properties:
       code:
@@ -455,6 +465,18 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-uint64:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        description: 数据
+        type: integer
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.PaginatedContinuationResponse-schema_Message:
     properties:
       list:
@@ -574,7 +596,11 @@ definitions:
       updates:
         items:
           type: string
+        minItems: 1
         type: array
+    required:
+      - data
+      - updates
     type: object
   exam.SubmitExamRequest:
     properties:
@@ -2798,6 +2824,28 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem'
       summary: 分页获取题目列表
+      tags:
+        - Problem
+  /tue/problem/make:
+    post:
+      consumes:
+        - application/json
+      description: 创建题目
+      parameters:
+        - description: 题目要求
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/course.MakeQuestionRequest'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 生成记录 ID
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-uint64'
+      summary: 创建题目
       tags:
       - Problem
   /user/current:

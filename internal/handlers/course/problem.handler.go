@@ -4,11 +4,27 @@ import (
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
 	_ "github.com/fcraft/open-chat/internal/entity"
+	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"github.com/gin-gonic/gin"
 )
+
+// ProblemHandler 考试处理器
+type ProblemHandler struct {
+	handlers.BaseHandler
+	makeQuestionService *services.MakeQuestionService
+}
+
+// NewProblemHandler 创建考试处理器
+func NewProblemHandler(handler *handlers.BaseHandler) *ProblemHandler {
+	return &ProblemHandler{
+		BaseHandler:         *handler,
+		makeQuestionService: services.GetMakeQuestionService(),
+	}
+}
 
 // CreateProblem 创建单个题目
 //
@@ -20,7 +36,7 @@ import (
 //	@Param			req	body		schema.Problem							true	"题目结构"
 //	@Success		200	{object}	entity.CommonResponse[schema.Problem]	"返回数据"
 //	@Router			/tue/problem/create [post]
-func (h *Handler) CreateProblem(c *gin.Context) {
+func (h *ProblemHandler) CreateProblem(c *gin.Context) {
 	// 从 path 中获取题目 ID
 	var req schema.Problem
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -45,9 +61,9 @@ func (h *Handler) CreateProblem(c *gin.Context) {
 //	@Param			id	path		string									true	"题目 ID"
 //	@Success		200	{object}	entity.CommonResponse[schema.Problem]	"返回数据"
 //	@Router			/tue/problem/{id} [get]
-func (h *Handler) GetProblem(c *gin.Context) {
+func (h *ProblemHandler) GetProblem(c *gin.Context) {
 	// 从 path 中获取题目 ID
-	var uri PathParamId
+	var uri entity.PathParamId
 	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
@@ -71,7 +87,7 @@ func (h *Handler) GetProblem(c *gin.Context) {
 //	@Param			req	query		entity.ParamPagingSort														true	"分页参数"
 //	@Success		200	{object}	entity.CommonResponse[entity.PaginatedContinuationResponse[schema.Problem]]	"返回数据"
 //	@Router			/tue/problem/list [get]
-func (h *Handler) GetProblems(c *gin.Context) {
+func (h *ProblemHandler) GetProblems(c *gin.Context) {
 	var req entity.ParamPagingSort
 	if err := c.BindQuery(&req); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
@@ -88,4 +104,33 @@ func (h *Handler) GetProblems(c *gin.Context) {
 			Total: total,
 		},
 	)
+}
+
+// MakeQuestion 创建题目
+//
+//	@Summary		创建题目
+//	@Description	创建题目
+//	@Tags			Problem
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	body		MakeQuestionRequest				true	"题目要求"
+//	@Success		200	{object}	entity.CommonResponse[uint64]	"生成记录 ID"
+//	@Router			/tue/problem/make [post]
+func (h *ProblemHandler) MakeQuestion(c *gin.Context) {
+	var req MakeQuestionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	recordId, err := services.GetMakeQuestionService().MakeQuestion(req.Type, req.Description)
+	if err != nil {
+		ctx_utils.CustomError(c, 500, "make question failed")
+		return
+	}
+	ctx_utils.Success(c, recordId)
+}
+
+type MakeQuestionRequest struct {
+	Type        schema.ProblemType `json:"type" binding:"required"`
+	Description string             `json:"description" binding:"required"`
 }
