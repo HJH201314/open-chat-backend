@@ -72,3 +72,11 @@ func ConvertSchemaToMessages(schemaMessages []schema.Message, args ...interface{
 	}
 	return chatMessages
 }
+
+func ConvertToolsToMap(tools []CompletionTool) map[string]CompletionTool {
+	toolMap := make(map[string]CompletionTool)
+	for _, tool := range tools {
+		toolMap[tool.Param.Function.Name] = tool
+	}
+	return toolMap
+}

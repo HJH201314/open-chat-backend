@@ -16,9 +16,9 @@ func (r *RedisStore) CacheProviders(providers []schema.Provider) error {
 	ctx := context.Background()
 	pipe := r.Client.Pipeline()
 
-	// 1. 扫描并删除所有 provider:* 和 schema:* 键
+	// 1. 扫描并删除所有 provider:* 和 model:* 键
 	providerKeys, _ := r.Client.Keys(ctx, "provider:*").Result()
-	modelKeys, _ := r.Client.Keys(ctx, "schema:*").Result()
+	modelKeys, _ := r.Client.Keys(ctx, "model:*").Result()
 	if len(providerKeys) > 0 {
 		pipe.Del(ctx, providerKeys...)
 	}
@@ -40,7 +40,7 @@ func (r *RedisStore) CacheProviders(providers []schema.Provider) error {
 
 		// 缓存关联的 Models
 		for _, model := range provider.Models {
-			modelKey := fmt.Sprintf("schema:%s:%s", provider.Name, model.Name)
+			modelKey := fmt.Sprintf("model:%s:%s", provider.Name, model.Name)
 			cacheModel := schema.ModelCache{
 				Model:               model,
 				ProviderName:        provider.Name,
@@ -103,7 +103,7 @@ func (r *RedisStore) GetCachedModels() ([]schema.ModelCache, error) {
 	ctx := context.Background()
 
 	// 1. 获取所有 Model 键
-	modelKeys, err := r.Client.Keys(ctx, "schema:*").Result()
+	modelKeys, err := r.Client.Keys(ctx, "model:*").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (r *RedisStore) FindCachedModelByName(providerName string, modelName string
 	ctx := context.Background()
 
 	// 构造符合哈希表存储规则的 key
-	key := fmt.Sprintf("schema:%s:%s", providerName, modelName)
+	key := fmt.Sprintf("model:%s:%s", providerName, modelName)
 
 	// 直接通过 HGet 获取数据
 	data, err := r.Client.HGet(ctx, key, "data").Result()

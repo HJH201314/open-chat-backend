@@ -2,6 +2,7 @@ package chat_utils
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -26,44 +27,72 @@ func Completion(ctx context.Context, opts CompletionOptions) (*CompletionRespons
 	// 构建请求参数
 	reqMessages := slice.Map(
 		messages, func(_ int, m Message) openai.ChatCompletionMessageParamUnion {
-			return openai.ChatCompletionMessage{
-				Role:    openai.ChatCompletionMessageRole(m.Role),
-				Content: m.Content,
+			if m.Role == "user" {
+				return openai.UserMessage(m.Content)
+			} else {
+				return openai.AssistantMessage(m.Content)
 			}
 		},
 	)
 
-	// 发送请求
-	resp, err := client.Chat.Completions.New(
-		ctx,
-		openai.ChatCompletionNewParams{
-			Messages:    openai.F(reqMessages),
-			Model:       openai.F(opts.Model),
-			Temperature: openai.F(opts.Temperature),
-			MaxTokens:   openai.F(opts.MaxTokens),
+	availableTools := slice.Map(
+		opts.Tools, func(_ int, tool CompletionTool) openai.ChatCompletionToolParam {
+			return tool.Param
 		},
 	)
+	params := openai.ChatCompletionNewParams{
+		Messages:    reqMessages,
+		Model:       opts.Model,
+		Temperature: openai.Opt(opts.Temperature),
+		MaxTokens:   openai.Opt(opts.MaxTokens),
+		Tools:       availableTools,
+	}
+
+	// 发送请求
+	completion, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create completion: %w", err)
 	}
 
+	toolCalls := completion.Choices[0].Message.ToolCalls
+
+	if len(toolCalls) != 0 {
+		// If there is a was a function call, continue the conversation
+		params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
+		for _, toolCall := range toolCalls {
+			if toolCall.Function.Name == "gen_single_choice_problem" {
+				// Extract the location from the function call arguments
+				var args map[string]interface{}
+				err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+				if err != nil {
+					panic(err)
+				}
+				location := args["topic"].(string)
+
+				questionData, err := opts.Tools[0].Handler(location)
+
+				fmt.Printf("gened question in %s\n", questionData)
+			}
+		}
+	}
+
 	// 构建响应
-	if len(resp.Choices) == 0 {
+	if len(completion.Choices) == 0 {
 		return nil, errors.New("no choices in response")
 	}
 
 	// 提取 reasoning_content
 	reasoningContent := ""
-	if _, exists := resp.Choices[0].Message.JSON.ExtraFields["reasoning_content"]; exists {
-		reasoningContent = resp.Choices[0].Message.JSON.ExtraFields["reasoning_content"].Raw()
+	if _, exists := completion.Choices[0].Message.JSON.ExtraFields["reasoning_content"]; exists {
+		reasoningContent = completion.Choices[0].Message.JSON.ExtraFields["reasoning_content"].Raw()
 	}
 
 	return &CompletionResponse{
-		Content:          resp.Choices[0].Message.Content,
+		Content:          completion.Choices[0].Message.Content,
 		ReasoningContent: reasoningContent,
 		Usage: CompletionUsage{
-			PromptTokens:     resp.Usage.PromptTokens,
-			CompletionTokens: resp.Usage.CompletionTokens,
+			PromptTokens:     completion.Usage.PromptTokens,
+			CompletionTokens: completion.Usage.CompletionTokens,
 		},
 	}, nil
 }

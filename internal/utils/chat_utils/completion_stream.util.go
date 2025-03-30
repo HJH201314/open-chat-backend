@@ -29,7 +29,7 @@ func CompletionStream(ctx context.Context, opts CompletionOptions) (chan StreamE
 	eventChan := make(chan StreamEvent, 5)
 
 	// 启动协程处理流式请求
-	go processStreaming(ctx, client, messages, opts, eventChan)
+	go processStreaming(ctx, &client, messages, opts, eventChan)
 
 	return eventChan, nil
 }
@@ -72,24 +72,34 @@ func processStreaming(ctx context.Context, client *openai.Client, messages []Mes
 	// 将消息转换为 OpenAI 的请求格式，ChatCompletionMessage 是 ChatCompletionMessageParamUnion 的特例
 	reqMessages := slice.Map(
 		messages, func(_ int, m Message) openai.ChatCompletionMessageParamUnion {
-			return openai.ChatCompletionMessage{
-				Role:    openai.ChatCompletionMessageRole(m.Role),
-				Content: m.Content,
+			if m.Role == "user" {
+				return openai.UserMessage(m.Content)
+			} else {
+				return openai.AssistantMessage(m.Content)
 			}
 		},
 	)
+
+	availableTools := slice.Map(
+		opts.Tools, func(_ int, tool CompletionTool) openai.ChatCompletionToolParam {
+			return tool.Param
+		},
+	)
+	toolsMap := ConvertToolsToMap(opts.Tools)
 	// 获取提供商的流式响应
 	stream := client.Chat.Completions.NewStreaming(
 		ctx, openai.ChatCompletionNewParams{
-			Messages:    openai.F(reqMessages),
-			Model:       openai.F(opts.Model),
-			Temperature: openai.F(opts.Temperature),
-			MaxTokens:   openai.F(opts.MaxTokens),
-			StreamOptions: openai.F(
-				openai.ChatCompletionStreamOptionsParam{
-					IncludeUsage: openai.F(true),
-				},
-			),
+			Messages:    reqMessages,
+			Model:       opts.Model,
+			Temperature: openai.Opt(opts.Temperature),
+			MaxTokens:   openai.Opt(opts.MaxTokens),
+			StreamOptions: openai.ChatCompletionStreamOptionsParam{
+				IncludeUsage: openai.Opt(true),
+			},
+			Tools: availableTools,
+			ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
+				OfAuto: openai.Opt("auto"),
+			},
 		},
 	)
 	if stream.Err() != nil {
@@ -105,6 +115,9 @@ func processStreaming(ctx context.Context, client *openai.Client, messages []Mes
 
 	acc := openai.ChatCompletionAccumulator{}
 	accReasoningContent := ""
+
+	replaceMsg := "" // 用于在输出结果为空时作为结果，通常在 tool_calls 时使用
+	extra := map[string]any{}
 
 	// 处理流式响应
 streamingLoop:
@@ -124,6 +137,41 @@ streamingLoop:
 			}
 			chunk := stream.Current()
 			acc.AddChunk(chunk)
+
+			// 检测到一个完整的 tool call
+			if len(chunk.Choices) > 0 && chunk.Choices[0].FinishReason == "tool_calls" && len(acc.ChatCompletion.Choices[0].Message.ToolCalls) > 0 {
+				toolcall := acc.Choices[0].Message.ToolCalls[0]
+				tool, toolOk := toolsMap[toolcall.Function.Name]
+				if toolOk {
+					if tool.UserTip != "" {
+						eventChan <- StreamEvent{
+							Type:     CommandEventType,
+							Content:  "tooltip",
+							Metadata: tool.UserTip,
+						}
+					}
+					res, err := tool.Handler(toolcall.Function.Arguments)
+					if err != nil || res == nil {
+						return
+					}
+					replaceMsg = res.ReplaceMessage
+					// 把函数处理结果存入 extra，可能被用于存入数据库
+					extra[res.Type] = res.Data
+					// 发送 cmd
+					eventChan <- StreamEvent{
+						Type:     CommandEventType,
+						Content:  "tool:" + res.Type,
+						Metadata: res.Data,
+					}
+				}
+				println(
+					"Tool call stream finished:",
+					toolcall.ID,
+					toolcall.Type,
+					toolcall.Function.Name,
+					toolcall.Function.Arguments,
+				)
+			}
 
 			// 额外解析含有 reasoning_content 的结构
 			if len(chunk.Choices) == 0 {
@@ -148,11 +196,18 @@ streamingLoop:
 		}
 	}
 
+	var finalContent string
+	if len(acc.Choices) > 0 && acc.Choices[0].Message.Content != "" {
+		finalContent = acc.Choices[0].Message.Content
+	} else {
+		finalContent = replaceMsg
+	}
 	// 发送完成事件
 	eventChan <- StreamEvent{
 		Type: DoneEventType, Metadata: DoneResponse{
-			Content:          acc.Choices[0].Message.Content,
+			Content:          finalContent,
 			ReasoningContent: accReasoningContent,
+			Extra:            extra,
 			Usage: DoneResponseUsage{
 				PromptTokens:     acc.Usage.PromptTokens,
 				CompletionTokens: acc.Usage.CompletionTokens,
@@ -207,6 +262,7 @@ var (
 	ContentEventType          StreamEventType = "content"
 	ErrorEventType            StreamEventType = "error"
 	DoneEventType             StreamEventType = "done"
+	CommandEventType          StreamEventType = "command"
 )
 
 // StreamEvent 表示流式事件的数据结构
@@ -224,6 +280,20 @@ type CompletionOptions struct {
 	Messages     []Message // 消息列表
 	SystemPrompt string    // 系统提示词
 	CompletionModelConfig
+
+	Tools []CompletionTool // 工具列表
+}
+
+type CompletionToolHandlerReturn struct {
+	Data           interface{}
+	ReplaceMessage string // 调用工具可能模型没有回复，此时使用替代回复
+	Type           string // TODO: 支持区分回发 command / 继续请求对话 等等
+}
+
+type CompletionTool struct {
+	Param   openai.ChatCompletionToolParam
+	UserTip string // 调用工具时给用户输出的提示
+	Handler func(args ...interface{}) (*CompletionToolHandlerReturn, error)
 }
 
 type CompletionModelConfig struct {
@@ -235,15 +305,10 @@ type CompletionModelConfig struct {
 type DoneResponse struct {
 	Content          string            `json:"content"`
 	ReasoningContent string            `json:"reasoning_content"`
+	Extra            map[string]any    `json:"extra"`
 	Usage            DoneResponseUsage `json:"usage"`
 }
 type DoneResponseUsage struct {
 	PromptTokens     int64 `json:"prompt_tokens"`
 	CompletionTokens int64 `json:"completion_tokens"`
-}
-
-// ChoiceDelta 拓展流式输出 Delta
-type ChoiceDelta struct {
-	openai.ChatCompletionChunkChoicesDelta
-	ReasoningContent string `json:"reasoning_content"`
 }

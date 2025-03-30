@@ -51,6 +51,7 @@ func NewGormStore() *GormStore {
 	InitSerializer()
 	// 自动迁移表结构
 	if err := db.AutoMigrate(
+		&schema.Bucket{}, &schema.File{},
 		&schema.Session{},
 		&schema.Message{},
 		&schema.User{},
@@ -64,7 +65,7 @@ func NewGormStore() *GormStore {
 		&schema.Preset{}, &schema.PresetCompletionRecord{},
 		&schema.UserSession{},
 		&schema.UserUsage{},
-		&schema.Problem{}, &schema.ProblemMakeRecord{},
+		&schema.Problem{}, &schema.ProblemUserRecord{}, &schema.ProblemMakeRecord{},
 		&schema.Resource{},
 		&schema.Exam{}, &schema.ExamProblem{}, &schema.ExamUserRecord{}, &schema.ExamUserRecordAnswer{},
 		&schema.Course{}, &schema.CourseResource{}, &schema.CourseExam{},

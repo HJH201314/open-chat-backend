@@ -2,13 +2,16 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
+	"github.com/openai/openai-go"
+	"strings"
 	"sync"
 )
 
-func (s *MakeQuestionService) MakeQuestion(problemType schema.ProblemType, problemDescription string) (uint64, error) {
+func (s *MakeQuestionService) MakeQuestion(problemType schema.ProblemType, problemDescription string) (*schema.Problem, error) {
 	presetName := "tue_make_question_" + string(problemType)
 	paramMap := map[string]string{
 		"TOPIC": problemDescription,
@@ -16,29 +19,168 @@ func (s *MakeQuestionService) MakeQuestion(problemType schema.ProblemType, probl
 	// 开始执行生成题目
 	preset := GetPresetService().GetBuiltinPreset(presetName)
 	if preset == nil {
-		return 0, fmt.Errorf("preset %s not found", presetName)
+		return nil, fmt.Errorf("preset %s not found", presetName)
 	}
-	go func() {
-		completion, recordId, err := BuiltinPresetCompletion(presetName, paramMap)
-		if err != nil {
-			// 生成失败
-			return
-		}
-		// 解析题目
-		s.Logger.Info("make question completion: %s", completion)
-		s.Gorm.Create(
-			&schema.ProblemMakeRecord{
-				PresetCompletionRecordID: recordId,
-				ProblemID:                0,
-			},
-		)
-	}()
-	return 0, nil
+	completion, recordId, err := BuiltinPresetCompletion(presetName, paramMap)
+	if err != nil {
+		// 生成失败
+		return nil, err
+	}
+	// 解析题目
+	problem, err := ParseProblemFromCompletion(completion)
+	if err != nil {
+		// 解析失败
+		return nil, err
+	}
+	if err := s.Gorm.Create(&problem).Error; err != nil {
+		return nil, err
+	}
+	s.Gorm.Create(
+		&schema.ProblemMakeRecord{
+			PresetCompletionRecordID: recordId,
+			ProblemID:                problem.ID,
+		},
+	)
+	return problem, nil
 }
 
 func ParseProblemFromCompletion(completion string) (*schema.Problem, error) {
-	// 解析题目
-	return nil, nil
+	// 解析题目、答案、解释
+	question := chat_utils.ExtractTagContent(completion, "question")
+	if question == "" {
+		return nil, fmt.Errorf("failed to extract question")
+	}
+
+	answersStr := chat_utils.ExtractTagContent(completion, "answers")
+	if answersStr == "" {
+		return nil, fmt.Errorf("failed to extract answers")
+	}
+
+	explanation := chat_utils.ExtractTagContent(completion, "explanation")
+	if explanation == "" {
+		return nil, fmt.Errorf("failed to extract explanation")
+	}
+
+	// 根据类型进行 parse
+	var problemType schema.ProblemType
+	var answer schema.ProblemAnswer
+	var options []schema.ProblemOption
+
+	//  判断是否为选择题
+	var choiceOptions []schema.ProblemOption
+	if err := json.Unmarshal([]byte(answersStr), &choiceOptions); err == nil {
+		// 是选择题！
+		if len(choiceOptions) > 0 {
+			var correctAnswers []uint64
+			// Convert to ProblemOption format
+			for index, opt := range choiceOptions {
+				options = append(
+					options, schema.ProblemOption{
+						ID:      uint(index + 1),
+						Content: opt.Content,
+						Correct: opt.Correct,
+					},
+				)
+				if opt.Correct {
+					correctAnswers = append(correctAnswers, uint64(opt.ID))
+				}
+			}
+			// Set answer
+			answer = schema.ProblemAnswer{
+				Answer: correctAnswers,
+			}
+			if len(correctAnswers) > 1 {
+				problemType = schema.MultipleChoice
+			} else {
+				problemType = schema.SingleChoice
+			}
+		}
+	} else {
+		// Try to parse as true/false
+		if strings.EqualFold(strings.TrimSpace(answersStr), "true") || strings.EqualFold(
+			strings.TrimSpace(answersStr),
+			"false",
+		) {
+			problemType = schema.TrueFalse
+			answer = schema.ProblemAnswer{
+				Answer: strings.EqualFold(answersStr, "true"),
+			}
+		} else {
+			// Try to parse as fill blank (array of strings)
+			var fillBlankAnswers []string
+			if err := json.Unmarshal([]byte(answersStr), &fillBlankAnswers); err == nil {
+				problemType = schema.FillBlank
+				answer = schema.ProblemAnswer{
+					Answer: fillBlankAnswers,
+				}
+			} else {
+				// Default to short answer
+				problemType = schema.ShortAnswer
+				answer = schema.ProblemAnswer{
+					Answer: answersStr,
+				}
+			}
+		}
+	}
+
+	// Create the problem
+	problem := &schema.Problem{
+		Type:        problemType,
+		Description: question,
+		Options:     options,
+		Answer:      answer,
+		Explanation: explanation,
+		Difficulty:  3, // Default difficulty
+	}
+
+	return problem, nil
+}
+
+// MakeQuestionTool 生成题目 Tool Call 工具
+func MakeQuestionTool(problemType schema.ProblemType) chat_utils.CompletionTool {
+	return chat_utils.CompletionTool{
+		Param: openai.ChatCompletionToolParam{
+			Function: openai.FunctionDefinitionParam{
+				Name: fmt.Sprintf("gen_%s_question", problemType),
+				Description: openai.String(
+					fmt.Sprintf(
+						"When the user required to generate a %s question, this tool can generate it.",
+						strings.Replace(string(problemType), "_", " ", 1),
+					),
+				),
+				Parameters: openai.FunctionParameters{
+					"type":        "object",
+					"description": "",
+					"properties": map[string]interface{}{
+						"topic": map[string]string{
+							"type":        "string",
+							"description": "the topic or the description of the question",
+						},
+					},
+					"required": []string{"topic"},
+				},
+			},
+		},
+		UserTip: "生成题目中...",
+		Handler: func(args ...interface{}) (*chat_utils.CompletionToolHandlerReturn, error) {
+			if len(args) == 0 {
+				return nil, nil
+			}
+			topic, ok := args[0].(string)
+			if !ok {
+				return nil, nil
+			}
+			question, err := GetMakeQuestionService().MakeQuestion(problemType, topic)
+			if err != nil {
+				return nil, err
+			}
+			return &chat_utils.CompletionToolHandlerReturn{
+				Data:           question,
+				ReplaceMessage: "好的，我已经调用工具并将生成好的题目发送给了用户。",
+				Type:           "question",
+			}, nil
+		},
+	}
 }
 
 const (
@@ -69,14 +211,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionSingleChoicePresetName,
 				"TUE 单选题生成",
-				1,
+				4,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
 
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：单选
+题目数量：1
 题目主题：
 {TOPIC}
 在出题时，请遵循以下指南：
@@ -84,7 +227,7 @@ func InitMakeQuestionService(base *BaseService) {
 2. 题目应与给定的主题相关。
 3. 选项需使用结构化格式，格式：[{"id":1,"content":"北京","correct":true},{"id":2,"content":"上海","correct":false},{"id":3,"content":"广州","correct":false}]。
 4. 解析应清晰地说明每个选项正确或错误的原因。
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},
@@ -92,7 +235,7 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionMultipleChoicePresetName,
 				"TUE 多选题生成",
-				1,
+				4,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
@@ -100,6 +243,7 @@ func InitMakeQuestionService(base *BaseService) {
 
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：多选
+题目数量：1
 题目主题：
 {TOPIC}
 在出题时，请遵循以下指南：
@@ -107,7 +251,7 @@ func InitMakeQuestionService(base *BaseService) {
 2. 题目应与给定的主题相关。
 3. 选项需使用结构化格式，格式：[{"id":1,"content":"北京","correct":true},{"id":2,"content":"上海","correct":true},{"id":3,"content":"广州","correct":false}]。
 4. 解析应清晰地说明每个选项正确或错误的原因。
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},
@@ -115,14 +259,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionTrueFalsePresetName,
 				"TUE 判断题生成",
-				1,
+				4,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
 
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：判断题
+题目数量：1
 题目主题：
 {TOPIC}
 在出题时，请遵循以下指南：
@@ -130,7 +275,7 @@ func InitMakeQuestionService(base *BaseService) {
 2. 题目应与给定的主题相关。
 3. 答案为 true 或 false。
 4. 解析应清晰地说明正确或错误的原因。
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},
@@ -138,7 +283,7 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionFillBlankPresetName,
 				"TUE 填空题生成",
-				1,
+				4,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
@@ -146,6 +291,7 @@ func InitMakeQuestionService(base *BaseService) {
 
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：填空题
+题目数量：1
 题目主题：
 {TOPIC}
 在出题时，请遵循以下指南：
@@ -153,7 +299,7 @@ func InitMakeQuestionService(base *BaseService) {
 2. 题目应与给定的主题相关。
 3. 无论有多少个空，答案需使用数组格式，格式：["北京","上海","广州"]
 4. 解析应清晰地进行分析。
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},
@@ -161,7 +307,7 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionShortAnswerPresetName,
 				"TUE 简答题生成",
-				1,
+				4,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
@@ -169,6 +315,7 @@ func InitMakeQuestionService(base *BaseService) {
 
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：简答题
+题目数量：1
 题目主题：
 {TOPIC}
 在出题时，请遵循以下指南：
@@ -176,7 +323,7 @@ func InitMakeQuestionService(base *BaseService) {
 2. 题目应与给定的主题相关。
 3. 答案为参考答案，列出答案的要点即可。
 4. 解析应清晰地进行分析。
-请在<question></question>标签内写下问题，在<answers></answer>标签内写下答案，在<explanation></explanation>标签内写下解析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},

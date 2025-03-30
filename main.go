@@ -35,6 +35,7 @@ func main() {
 	baseService := services.NewBaseService(store, rd, hp)         // 基础服务
 	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
 	go intervalCacheService.Start(cacheCtx, 10*time.Minute)
+	services.InitEncryptService()
 	services.InitPresetService(baseService) // 初始化预设缓存服务
 	services.InitMakeQuestionService(baseService)
 

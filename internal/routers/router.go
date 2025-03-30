@@ -157,6 +157,18 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 
 	baseHandler := handlers.NewBaseHandler(store, redis, helper, cache)
 
+	baseGroup := r.Group("/base")
+	{
+		router.registerRoute(
+			baseGroup,
+			GET,
+			"/public-key",
+			"获取 RSA 加密公钥",
+
+			baseHandler.GetPublicKey,
+		)
+	}
+
 	// routes for chat completion
 	chatHandler := chat.NewChatHandler(baseHandler)
 	chatGroup := r.Group("/chat")
@@ -462,6 +474,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 
 				manageHandler.DeleteModel,
 			)
+			router.registerRoute(
+				manageModelGroup,
+				POST,
+				"/refresh",
+				"manageModelGroup",
+
+				manageHandler.RefreshAllModelCache,
+			)
 		}
 		manageCollectionGroup := manageGroup.Group("/collection")
 		{
@@ -475,8 +495,16 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			)
 			router.registerRoute(
 				manageCollectionGroup,
+				POST,
+				"/:id/update",
+				"创建新的模型集合",
+
+				manageHandler.UpdateModelCollection,
+			)
+			router.registerRoute(
+				manageCollectionGroup,
 				GET,
-				"/:collection_id",
+				"/:id",
 				"获取指定模型的详细信息",
 
 				manageHandler.GetModelCollection,
@@ -492,7 +520,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				manageCollectionGroup,
 				POST,
-				"/delete/:collection_id",
+				"/:id/delete",
 				"删除指定的AI模型",
 
 				manageHandler.DeleteModelCollection,
@@ -619,6 +647,49 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				manageHandler.UpdatePermission,
 			)
 		}
+		manageBucketGroup := manageGroup.Group("/bucket")
+		{
+			router.registerRoute(
+				manageBucketGroup,
+				POST,
+				"/create",
+				"创建新的 Bucket",
+
+				manageHandler.CreateBucket,
+			)
+			router.registerRoute(
+				manageBucketGroup,
+				GET,
+				"/:id",
+				"获取指定 Bucket 的详细信息",
+
+				manageHandler.GetBucket,
+			)
+			router.registerRoute(
+				manageBucketGroup,
+				GET,
+				"/list",
+				"分页获取 Buckets 的详细信息",
+
+				manageHandler.GetBuckets,
+			)
+			router.registerRoute(
+				manageBucketGroup,
+				POST,
+				"/:id/update",
+				"更新 Bucket 信息",
+
+				manageHandler.UpdateBucket,
+			)
+			router.registerRoute(
+				manageBucketGroup,
+				POST,
+				"/:id/delete",
+				"创建新的 Bucket",
+
+				manageHandler.DeleteBucket,
+			)
+		}
 	}
 
 	// routes for tue
@@ -643,6 +714,22 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"创建新的题目",
 
 				problemHandler.CreateProblem,
+			)
+			router.registerRoute(
+				tueProblemGroup,
+				POST,
+				"/:id/delete",
+				"删除题目",
+
+				problemHandler.DeleteProblem,
+			)
+			router.registerRoute(
+				tueProblemGroup,
+				POST,
+				"/:id/update",
+				"更新题目信息",
+
+				problemHandler.UpdateProblem,
 			)
 			router.registerRoute(
 				tueProblemGroup,
@@ -688,6 +775,13 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"重新评分考试",
 				examHandler.RescoreExam,
 			)
+			router.registerRoute(
+				tueExamGroup,
+				POST,
+				"/single-problem/submit",
+				"提交单个问题答案",
+				examHandler.SubmitProblem,
+			)
 		}
 		tueCourseGroup := tueGroup.Group("/course")
 		{
@@ -704,7 +798,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				tueCourseGroup,
 				POST,
-				"/delete/:id",
+				"/:id/delete",
 				"删除指定的课程",
 
 				tueHandler.DeleteCourse,

@@ -15,6 +15,26 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/base/public-key": {
+            "get": {
+                "description": "获取公钥",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "获取公钥",
+                "responses": {
+                    "200": {
+                        "description": "RSA 公钥",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-string"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/completion/stream/{session_id}": {
             "post": {
                 "description": "流式输出聊天",
@@ -492,6 +512,197 @@ const docTemplate = `{
                 }
             }
         },
+        "/manage/bucket/create": {
+            "post": {
+                "description": "创建 储存桶",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bucket"
+                ],
+                "summary": "创建 储存桶",
+                "parameters": [
+                    {
+                        "description": "储存桶参数",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功创建的 储存桶",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Bucket"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/bucket/list": {
+            "get": {
+                "description": "批量获取 储存桶",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bucket"
+                ],
+                "summary": "批量获取 储存桶",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "储存桶列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Bucket"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/bucket/{id}": {
+            "get": {
+                "description": "获取 储存桶",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bucket"
+                ],
+                "summary": "获取 储存桶",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "储存桶 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "储存桶",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Bucket"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/bucket/{id}/delete": {
+            "post": {
+                "description": "删除 储存桶",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bucket"
+                ],
+                "summary": "删除 储存桶",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "储存桶 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/bucket/{id}/update": {
+            "post": {
+                "description": "更新 储存桶",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bucket"
+                ],
+                "summary": "更新 储存桶",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "储存桶 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "储存桶参数",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
         "/manage/collection/create": {
             "post": {
                 "description": "创建模型集合",
@@ -521,38 +732,6 @@ const docTemplate = `{
                         "description": "成功创建的模型集合",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/collection/delete/{collection_id}": {
-            "post": {
-                "description": "删除模型集合",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Model"
-                ],
-                "summary": "删除模型集合",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ModelCollection ID",
-                        "name": "collection_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "删除成功与否",
-                        "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -610,7 +789,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/manage/collection/{collection_id}": {
+        "/manage/collection/{id}": {
             "get": {
                 "description": "获取模型集合",
                 "consumes": [
@@ -637,6 +816,79 @@ const docTemplate = `{
                         "description": "模型",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-schema_ModelCollection"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/collection/{id}/delete": {
+            "post": {
+                "description": "删除模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "删除模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ModelCollection ID",
+                        "name": "collection_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/collection/{id}/update": {
+            "post": {
+                "description": "更新模型集合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ModelCollection"
+                ],
+                "summary": "更新模型集合",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "模型集合 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "模型集合更新参数",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_ModelCollection"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功更新与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -939,6 +1191,29 @@ const docTemplate = `{
                         "description": "模型列表",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/model/refresh": {
+            "post": {
+                "description": "更新所有模型缓存，生产环境高危操作",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Model"
+                ],
+                "summary": "manageModelGroup",
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -2078,7 +2353,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/tue/course/{id}/delete": {
             "post": {
                 "description": "删除课程",
                 "consumes": [
@@ -2139,6 +2416,40 @@ const docTemplate = `{
                         "description": "返回数据",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-schema_Exam"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/exam/single-problem/submit": {
+            "post": {
+                "description": "提交单个问题并验证答案",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exam"
+                ],
+                "summary": "提交单个问题并验证答案",
+                "parameters": [
+                    {
+                        "description": "提交信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/exam.SubmitExamRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-exam_SubmitProblemResponse"
                         }
                     }
                 }
@@ -2354,7 +2665,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Problem"
                         }
                     }
                 }
@@ -2386,9 +2697,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "生成记录 ID",
+                        "description": "生成的题目",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-uint64"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Problem"
                         }
                     }
                 }
@@ -2421,6 +2732,79 @@ const docTemplate = `{
                         "description": "返回数据",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-schema_Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/problem/{id}/delete": {
+            "post": {
+                "description": "删除题目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "删除题目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "题目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/problem/{id}/update": {
+            "post": {
+                "description": "更新题目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Problem"
+                ],
+                "summary": "更新题目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "题目 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "题目参数",
+                        "name": "problem",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_Problem"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
                         }
                     }
                 }
@@ -2761,27 +3145,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Problem": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "代码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entity.PaginatedContinuationResponse-schema_Problem"
-                        }
-                    ]
-                },
-                "msg": {
-                    "description": "消息",
-                    "type": "string"
-                }
-            }
-        },
         "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession": {
             "type": "object",
             "properties": {
@@ -2836,6 +3199,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_APIKey"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Bucket": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Bucket"
                         }
                     ]
                 },
@@ -2929,6 +3313,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Problem": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Problem"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Provider": {
             "type": "object",
             "properties": {
@@ -3013,6 +3418,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-exam_SubmitProblemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/exam.SubmitProblemResponse"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-int": {
             "type": "object",
             "properties": {
@@ -3042,6 +3468,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/schema.APIKey"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Bucket": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Bucket"
                         }
                     ]
                 },
@@ -3320,23 +3767,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-uint64": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "代码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "数据",
-                    "type": "integer"
-                },
-                "msg": {
-                    "description": "消息",
-                    "type": "string"
-                }
-            }
-        },
         "entity.PaginatedContinuationResponse-schema_Message": {
             "type": "object",
             "properties": {
@@ -3344,20 +3774,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.Message"
-                    }
-                },
-                "next_page": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.PaginatedContinuationResponse-schema_Problem": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/schema.Problem"
                     }
                 },
                 "next_page": {
@@ -3406,6 +3822,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.APIKey"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.PaginatedTotalResponse-schema_Bucket": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Bucket"
                     }
                 },
                 "total": {
@@ -3469,6 +3899,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_Problem": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Problem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_Provider": {
             "type": "object",
             "properties": {
@@ -3511,6 +3955,63 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.ReqUpdateBody-schema_Bucket": {
+            "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.Bucket"
+                },
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.ReqUpdateBody-schema_ModelCollection": {
+            "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.ModelCollection"
+                },
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.ReqUpdateBody-schema_Problem": {
+            "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.Problem"
+                },
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "entity.ReqUpdateBody-schema_Role": {
             "type": "object",
             "required": [
@@ -3536,6 +4037,7 @@ const docTemplate = `{
                 "answers": {
                     "description": "答案列表",
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/exam.SubmitExamRequestAnswer"
                     }
@@ -3564,6 +4066,17 @@ const docTemplate = `{
                 }
             }
         },
+        "exam.SubmitProblemResponse": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
         "schema.APIKey": {
             "type": "object",
             "properties": {
@@ -3580,6 +4093,38 @@ const docTemplate = `{
                 "provider_id": {
                     "description": "外键，指向 Provider",
                     "type": "integer"
+                }
+            }
+        },
+        "schema.Bucket": {
+            "type": "object",
+            "properties": {
+                "access_key_id": {
+                    "type": "string"
+                },
+                "bucket_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "endpoint_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "secret_access_key": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -3844,6 +4389,9 @@ const docTemplate = `{
                 },
                 "created_at": {
                     "type": "string"
+                },
+                "extra": {
+                    "type": "object"
                 },
                 "id": {
                     "description": "默认结构",
@@ -4141,7 +4689,9 @@ const docTemplate = `{
                 },
                 "difficulty": {
                     "description": "难度等级 1-5",
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
                 },
                 "explanation": {
                     "description": "答案解析",

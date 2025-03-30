@@ -184,7 +184,7 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 			&model, &chat_utils.CompletionOptions{
 				CompletionModelConfig: chat_utils.CompletionModelConfig{
 					MaxTokens:   1000, // 输出长度限制 TODO：跟随更新可配置后可自定义
-					Temperature: 0.3,  // 较低的温度，提高一致性 TODO：跟随更新可配置后可自定义
+					Temperature: 1.3,  // 较高的温度，提高灵活性 TODO：跟随更新可配置后可自定义
 				},
 				SystemPrompt: preset.PromptSession.SystemPrompt,
 				Messages:     chat_utils.ConvertSchemaToMessages(preset.PromptSession.Messages, params),
@@ -204,7 +204,8 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 		}
 		if err := presetService.Gorm.Model(&presetRecord).Updates(
 			schema.PresetCompletionRecord{
-				Status: status,
+				Content: resp.Content,
+				Status:  status,
 			},
 		).Error; err != nil {
 			// do nothing

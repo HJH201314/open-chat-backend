@@ -5,6 +5,7 @@ import (
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
@@ -136,16 +137,27 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 	var userRes schema.User
+	pwd, err := services.GetEncryptService().Decrypt(req.Password)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
 	if err := h.Db.Where(
 		"username = ? AND password = ?",
 		req.Username,
-		req.Password,
+		pwd,
 	).First(&userRes).Error; err != nil {
 		ctx_utils.CustomError(c, 401, "username or password is incorrect")
 		return
 	}
 	// 赠送用量
 	if _, err := h.Store.CreateUserUsage(userRes.ID, 100000); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
+	// 刷新角色
+	if err := h.Redis.DeleteUserRolesCache(userRes.ID); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
@@ -197,9 +209,14 @@ func (h *Handler) Register(c *gin.Context) {
 		ctx_utils.Success(c, false)
 		return
 	}
+	pwd, err := services.GetEncryptService().Decrypt(req.Password)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
 	user := schema.User{
 		Username: req.Username,
-		Password: req.Password,
+		Password: pwd,
 	}
 	if err := h.Store.CreateUser(&user); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)

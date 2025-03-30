@@ -128,6 +128,42 @@ func (h *ExamHandler) SubmitExam(c *gin.Context) {
 	ctx_utils.Success(c, SubmitExamResponse{RecordID: record.ID})
 }
 
+// SubmitProblem 提交单个问题并验证答案
+//
+//	@Summary		提交单个问题并验证答案
+//	@Description	提交单个问题并验证答案
+//	@Tags			Exam
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		SubmitExamRequest	true	"提交信息"
+//	@Success		200		{object}	entity.CommonResponse[SubmitProblemResponse]
+//	@Router			/tue/exam/single-problem/submit [post]
+func (h *ExamHandler) SubmitProblem(c *gin.Context) {
+	var req SubmitExamRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	score, comment, err := h.examScoreService.ScoreProblemSync(
+		c.Request.Context(),
+		req.Answers[0].ProblemID,
+		ctx_utils.GetUserId(c),
+		req.Answers[0].Answer,
+	)
+	if err != nil {
+		ctx_utils.CustomError(c, 500, err.Error())
+		return
+	}
+
+	ctx_utils.Success(
+		c, &SubmitProblemResponse{
+			Score:   score,
+			Comment: comment,
+		},
+	)
+}
+
 // GetExamResult 获取考试结果
 //
 //	@Summary		获取考试结果
@@ -206,11 +242,17 @@ type SubmitExamRequestAnswer struct {
 
 // SubmitExamRequest 提交考试请求
 type SubmitExamRequest struct {
-	Answers   []SubmitExamRequestAnswer `json:"answers"`    // 答案列表
-	TimeSpent int                       `json:"time_spent"` // 答题用时（秒）
+	Answers   []SubmitExamRequestAnswer `json:"answers" validate:"min=1"` // 答案列表
+	TimeSpent int                       `json:"time_spent"`               // 答题用时（秒）
 }
 
 // SubmitExamResponse 提交考试响应
 type SubmitExamResponse struct {
 	RecordID uint64 `json:"record_id"` // 记录ID
+}
+
+// SubmitProblemResponse 提交题目响应
+type SubmitProblemResponse struct {
+	Score   uint64 `json:"score"`
+	Comment string `json:"comment"`
 }

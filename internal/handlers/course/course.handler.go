@@ -104,7 +104,7 @@ func (h *Handler) UpdateCourse(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path		string						true	"课程 ID"
 //	@Success		200	{object}	entity.CommonResponse[any]	"返回数据"
-//	@Router			/tue/course/{id} [post]
+//	@Router			/tue/course/{id}/delete [post]
 func (h *Handler) DeleteCourse(c *gin.Context) {
 	var param PathParamId
 	if err := c.BindUri(&param); err != nil {

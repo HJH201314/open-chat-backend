@@ -7,9 +7,11 @@ import (
 	"github.com/fcraft/open-chat/internal/entity"
 	_ "github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 	"io"
 	"net/http"
 )
@@ -53,7 +55,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	// 读取模型信息
 	modelInfo := h.Redis.FindCachedModelByName(req.Provider, req.ModelName)
 	if modelInfo == nil {
-		ctx_utils.CustomError(c, 404, "module not found")
+		ctx_utils.CustomError(c, 404, "model not found")
 		return
 	}
 	modelConfig := modelInfo.Config
@@ -168,13 +170,14 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	// 执行结束后，根据是否有回答进行操作
 	var doneResp *chat_utils.DoneResponse
 	defer func() {
-		if doneResp != nil && doneResp.Content != "" {
+		if doneResp != nil && (len(doneResp.Extra) > 0 || doneResp.Content != "") {
 			// 完成响应，记录消息
 			messages[0].Content = req.Question
 			messages[0].TokenUsage = doneResp.Usage.PromptTokens
 			messages[1].Content = doneResp.Content
 			messages[1].ReasoningContent = doneResp.ReasoningContent
 			messages[1].TokenUsage = doneResp.Usage.CompletionTokens
+			messages[1].Extra = datatypes.NewJSONType[map[string]any](doneResp.Extra)
 			if bot != nil {
 				messages[1].PresetID = bot.ID
 			}
@@ -201,8 +204,13 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			},
 			Model:                 req.ModelName,
 			Messages:              chatMessages,
-			SystemPrompt:          systemPrompt,
+			SystemPrompt:          systemPrompt + "如果用户没有明确需要工具提供的某项能力，则正常交流，不调用工具。",
 			CompletionModelConfig: getCompletionModelConfig(modelConfig),
+			Tools: []chat_utils.CompletionTool{
+				services.MakeQuestionTool(schema.SingleChoice), services.MakeQuestionTool(schema.MultipleChoice),
+				services.MakeQuestionTool(schema.TrueFalse), services.MakeQuestionTool(schema.ShortAnswer),
+				services.MakeQuestionTool(schema.FillBlank),
+			},
 		},
 	)
 	if err != nil {
@@ -230,6 +238,9 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			}
 
 			switch event.Type {
+			case chat_utils.CommandEventType:
+				sendStreamCommandEvent(c, event.Content, event.Metadata)
+				return true
 			case chat_utils.ContentEventType:
 				// 消息内容
 				sendStreamMessageEvent(c, event.Content, false)

@@ -181,6 +181,23 @@ func (h *Handler) DeleteModel(c *gin.Context) {
 	ctx_utils.Success(c, true)
 }
 
+// RefreshAllModelCache
+//
+//	@Summary		manageModelGroup
+//	@Description	更新所有模型缓存，生产环境高危操作
+//	@Tags			Model
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entity.CommonResponse[bool]	"更新成功与否"
+//	@Router			/manage/model/refresh [post]
+func (h *Handler) RefreshAllModelCache(c *gin.Context) {
+	if err := h.Cache.SyncCacheProviders(); err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to refresh")
+		return
+	}
+	ctx_utils.Success(c, true)
+}
+
 ///////////////////////
 
 // CreateModelCollection
@@ -206,6 +223,44 @@ func (h *Handler) CreateModelCollection(c *gin.Context) {
 	ctx_utils.Success(c, collection)
 }
 
+// UpdateModelCollection
+//
+//	@Summary		更新模型集合
+//	@Description	更新模型集合
+//	@Tags			ModelCollection
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		uint64											true	"模型集合 ID"
+//	@Param			model	body		entity.ReqUpdateBody[schema.ModelCollection]	true	"模型集合更新参数"
+//	@Success		200		{object}	entity.CommonResponse[bool]						"成功更新与否"
+//	@Router			/manage/collection/{id}/update [post]
+func (h *Handler) UpdateModelCollection(c *gin.Context) {
+	var uri entity.PathParamId
+	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	var role entity.ReqUpdateBody[schema.ModelCollection]
+	if err := c.ShouldBindJSON(&role); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	role.Data.ID = uri.ID
+	// 更新权限列表
+	if role.Data.Models != nil {
+		if err := h.Db.Model(&role.Data).Association("Models").Replace(role.Data.Models); err != nil {
+			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update collection models")
+			return
+		}
+	}
+	// 更新其它信息
+	if err := h.Db.Select(role.Updates).Omit("Models").Updates(&role.Data).Error; err != nil {
+		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update collection")
+		return
+	}
+	ctx_utils.Success(c, true)
+}
+
 // GetModelCollection
 //
 //	@Summary		获取模型集合
@@ -215,16 +270,14 @@ func (h *Handler) CreateModelCollection(c *gin.Context) {
 //	@Produce		json
 //	@Param			collection_id	path		uint64											true	"ModelCollection ID"
 //	@Success		200				{object}	entity.CommonResponse[schema.ModelCollection]	"模型"
-//	@Router			/manage/collection/{collection_id} [get]
+//	@Router			/manage/collection/{id} [get]
 func (h *Handler) GetModelCollection(c *gin.Context) {
-	var uri struct {
-		CollectionID uint64 `uri:"collection_id" binding:"required"`
-	}
-	if err := c.BindUri(&uri); err != nil || uri.CollectionID == 0 {
+	var uri entity.PathParamId
+	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	model, err := gorm_utils.GetByID[schema.ModelCollection](h.Db.Preload("Models"), uri.CollectionID)
+	model, err := gorm_utils.GetByID[schema.ModelCollection](h.Db.Preload("Models"), uri.ID)
 	if err != nil {
 		ctx_utils.CustomError(c, 404, "model collection not found")
 		return
@@ -274,16 +327,14 @@ func (h *Handler) GetModelCollections(c *gin.Context) {
 //	@Produce		json
 //	@Param			collection_id	path		uint64						true	"ModelCollection ID"
 //	@Success		200				{object}	entity.CommonResponse[bool]	"删除成功与否"
-//	@Router			/manage/collection/delete/{collection_id} [post]
+//	@Router			/manage/collection/{id}/delete [post]
 func (h *Handler) DeleteModelCollection(c *gin.Context) {
-	var uri struct {
-		CollectionID uint64 `uri:"collection_id" binding:"required"`
-	}
-	if err := c.BindUri(&uri); err != nil || uri.CollectionID == 0 {
+	var uri entity.PathParamId
+	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	if err := gorm_utils.Delete[schema.ModelCollection](h.Db, uri.CollectionID); err != nil {
+	if err := gorm_utils.Delete[schema.ModelCollection](h.Db, uri.ID); err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to delete model collection")
 		return
 	}

@@ -48,36 +48,30 @@ func (s *ExamScoreService) ScoreExam(ctx context.Context, recordID uint64) error
 			continue
 		}
 
-		// 根据题目类型评分
-		var score uint64
-		var comments string
-		var status schema.ScoreStatus
-		var err error
-
-		switch problem.Type {
-		case schema.SingleChoice, schema.MultipleChoice, schema.TrueFalse, schema.FillBlank:
-			// 精确匹配评分
-			score, comments, err = s.scoreExactMatch(problem, answer)
-			status = schema.StatusCompleted
-		case schema.ShortAnswer:
-			// 使用大模型评分
-			score, comments, err = s.scoreWithAI(ctx, problem, answer)
-			status = schema.StatusCompleted
-		default:
-			comments = "不支持的题目类型"
-			err = errors.New(comments)
-			status = schema.StatusFailed
-		}
+		// 这里返回的 score 是 0-100 分
+		score, comments, err := s.ScoreProblemSync(ctx, problem.ID, record.UserID, answer.Answer)
 
 		if err != nil {
 			record.Answers[i].Status = schema.StatusFailed
 			record.Answers[i].Comments = fmt.Sprintf("评分失败: %s", err.Error())
 			errorOccurred = true
 		} else {
-			record.Answers[i].Score = score
+			// 获取在 exam 中的分数
+			q, ok := slice.FindBy(
+				record.Exam.Problems, func(index int, item schema.ExamProblem) bool {
+					return item.ProblemID == problem.ID
+				},
+			)
+			if !ok {
+				err = fmt.Errorf("题目信息获取失败")
+			}
+			// 按比例计算最终分数
+			finalScore := uint64(float64(q.Score) * float64(score) / 100)
+
+			record.Answers[i].Score = finalScore
 			record.Answers[i].Comments = comments
-			record.Answers[i].Status = status
-			totalScore += score
+			record.Answers[i].Status = schema.StatusCompleted
+			totalScore += finalScore
 		}
 	}
 
@@ -100,6 +94,113 @@ func (s *ExamScoreService) ScoreExam(ctx context.Context, recordID uint64) error
 	return nil
 }
 
+// ScoreProblemSync 评分单个问题
+//
+//	Returns:
+//		int		分数（0-100，答案完全正确则为 100）
+//		string	评价
+//		error	错误
+func (s *ExamScoreService) ScoreProblemSync(ctx context.Context, problemID uint64, userID uint64, answer any) (uint64, string, error) {
+	// 查找题目信息
+	var problem schema.Problem
+	if err := s.db.First(&problem, problemID).Error; err != nil {
+		return 0, "", errors.New("题目信息获取失败")
+	}
+
+	// 预插入数据
+	record := schema.ProblemUserRecord{
+		UserID:    userID,
+		ProblemID: problemID,
+		Answer:    schema.ProblemAnswer{Answer: answer},
+		Score:     0,
+		Comment:   "",
+	}
+	if err := s.db.Create(&record).Error; err != nil {
+		return 0, "", errors.New("failed to create problem user record")
+	}
+
+	// 根据题目类型评分
+	var score uint64
+	var comments string
+	var err error
+
+	switch problem.Type {
+	case schema.SingleChoice, schema.MultipleChoice, schema.TrueFalse, schema.FillBlank:
+		// 精确匹配评分
+		score, comments, err = s.scoreExactMatch(problem, answer)
+	case schema.ShortAnswer:
+		// 使用大模型评分
+		score, comments, err = s.scoreWithAI(ctx, problem, answer)
+	default:
+		return 0, "", errors.New("不支持的题目类型")
+	}
+
+	if err := s.db.Updates(
+		&schema.ProblemUserRecord{
+			ID:      record.ID,
+			Score:   score,
+			Comment: comments,
+		},
+	).Error; err != nil {
+		return 0, "", errors.New("failed to update problem user record")
+	}
+
+	return score, comments, err
+}
+
+// ScoreProblemAsync 评分单个问题
+//
+//	Returns:
+//		recordId	分数（0-100，答案完全正确则为 100）
+//		error		错误
+func (s *ExamScoreService) ScoreProblemAsync(ctx context.Context, problemID uint64, userID uint64, answer any) (uint64, error) {
+	// 查找题目信息
+	var problem schema.Problem
+	if err := s.db.First(&problem, problemID).Error; err != nil {
+		return 0, errors.New("题目信息获取失败")
+	}
+
+	// 预插入数据
+	record := schema.ProblemUserRecord{
+		UserID:    userID,
+		ProblemID: problemID,
+		Answer:    schema.ProblemAnswer{Answer: answer},
+		Score:     0,
+		Comment:   "",
+	}
+	if err := s.db.Create(&record).Error; err != nil {
+		return 0, errors.New("failed to create problem user record")
+	}
+
+	go func() {
+		// 根据题目类型评分
+		var score uint64
+		var comments string
+
+		switch problem.Type {
+		case schema.SingleChoice, schema.MultipleChoice, schema.TrueFalse, schema.FillBlank:
+			// 精确匹配评分
+			score, comments, _ = s.scoreExactMatch(problem, answer)
+		case schema.ShortAnswer:
+			// 使用大模型评分
+			score, comments, _ = s.scoreWithAI(ctx, problem, answer)
+		default:
+			return
+		}
+
+		if err := s.db.Updates(
+			&schema.ProblemUserRecord{
+				ID:      record.ID,
+				Score:   score,
+				Comment: comments,
+			},
+		).Error; err != nil {
+			return
+		}
+	}()
+	return record.ID, nil
+}
+
 func InvalidCorrectAnswerFormat() (uint64, string, error) {
 	return 0, "标准答案格式错误", errors.New("invalid correct answer format")
 }
@@ -109,16 +210,7 @@ func InvalidUserAnswerFormat(msg string) (uint64, string, error) {
 }
 
 // scoreExactMatch 精确匹配评分（适用于选择题、判断题、填空题）
-func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema.ExamUserRecordAnswer) (uint64, string, error) {
-	// 获取问题的满分（从关联表获取）
-	var examProblem schema.ExamProblem
-	if err := s.db.Where("problem_id = ?", problem.ID).First(&examProblem).Error; err != nil {
-		return 0, "", fmt.Errorf("failed to get problem score: %w", err)
-	}
-
-	fullScore := examProblem.Score
-	userAnswer := answer.Answer
-
+func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer any) (uint64, string, error) {
 	switch problem.Type {
 	case schema.SingleChoice:
 		// 单选题，比较选项ID是否匹配
@@ -131,7 +223,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 			return InvalidCorrectAnswerFormat()
 		}
 
-		userOptionIDs, ok := userAnswer.([]any)
+		userOptionIDs, ok := answer.([]any)
 		if !ok || len(userOptionIDs) != 1 {
 			return InvalidUserAnswerFormat("非数组或选择了多个选项")
 		}
@@ -141,7 +233,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 		}
 
 		if userOptionIntID == int64(correctOptionID) {
-			return fullScore, "正确", nil
+			return 100, "正确", nil
 		}
 		return 0, "错误", nil
 
@@ -166,7 +258,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 			}
 		}
 
-		userOptionIDs, ok := userAnswer.([]any)
+		userOptionIDs, ok := answer.([]any)
 		if !ok || len(userOptionIDs) == 0 {
 			return InvalidUserAnswerFormat("非数组或未选择")
 		}
@@ -196,7 +288,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 			}
 		}
 
-		return fullScore, "正确", nil
+		return 100, "正确", nil
 
 	case schema.TrueFalse:
 		// 判断题，比较布尔值
@@ -205,13 +297,13 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 			return InvalidCorrectAnswerFormat()
 		}
 
-		userBool, ok := userAnswer.(bool)
+		userBool, ok := answer.(bool)
 		if !ok {
 			return InvalidUserAnswerFormat("非布尔值")
 		}
 
 		if userBool == correctAnswer {
-			return fullScore, "正确", nil
+			return 100, "正确", nil
 		}
 		return 0, "错误", nil
 
@@ -242,7 +334,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 			return InvalidCorrectAnswerFormat()
 		}
 
-		userText, ok := userAnswer.(string)
+		userText, ok := answer.(string)
 		if !ok {
 			return InvalidUserAnswerFormat("非文本")
 		}
@@ -257,7 +349,7 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 		}
 
 		if allMatched {
-			return fullScore, "正确", nil
+			return 100, "正确", nil
 		}
 		return 0, "未包含所有关键词", nil
 	}
@@ -266,15 +358,8 @@ func (s *ExamScoreService) scoreExactMatch(problem schema.Problem, answer schema
 }
 
 // scoreWithAI 使用AI进行评分（适用于简答题）
-func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Problem, answer schema.ExamUserRecordAnswer) (uint64, string, error) {
-	// 获取问题的满分
-	var examProblem schema.ExamProblem
-	if err := s.db.Where("problem_id = ?", problem.ID).First(&examProblem).Error; err != nil {
-		return 0, "", fmt.Errorf("failed to get problem score: %w", err)
-	}
-
-	fullScore := examProblem.Score
-	userAnswer, ok := answer.Answer.(string)
+func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Problem, answer any) (uint64, string, error) {
+	userAnswer, ok := answer.(string)
 	if !ok {
 		return 0, "答案格式错误，请输入文本", errors.New("invalid user answer format")
 	}
@@ -313,7 +398,7 @@ func (s *ExamScoreService) scoreWithAI(ctx context.Context, problem schema.Probl
 	}
 
 	// 按比例计算最终分数
-	finalScore := uint64(float64(fullScore) * aiScore / 100)
+	finalScore := uint64(aiScore)
 
 	return finalScore, comments, nil
 }
@@ -334,7 +419,7 @@ func NewExamScoreService(db *gorm.DB) *ExamScoreService {
 	presetService.RegisterBuiltinPresetsSimple(
 		ExamScoreShortAnswerPresetName,
 		"TUE 简答题评分",
-		1,
+		2,
 		"你是一个专业的教育评分助手，请客观公正地评价学生答案，并提供有建设性的反馈。",
 		[]chat_utils.Message{
 			chat_utils.UserMessage(
