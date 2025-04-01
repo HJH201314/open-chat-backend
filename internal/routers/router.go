@@ -316,6 +316,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 
 				chatHandler.GetMessages,
 			)
+			router.registerRoute(
+				chatMessageGroup,
+				POST,
+				"/:id/update",
+				"更新消息（仅 Extra）",
+
+				chatHandler.UpdateMessage,
+			)
 		}
 		chatCompletionGroup := chatGroup.Group("/completion")
 		{
@@ -752,6 +760,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 		{
 			router.registerRoute(tueExamGroup, GET, "/:id", "获取指定考试的详细信息", tueHandler.GetExam)
 			router.registerRoute(tueExamGroup, POST, "/create", "创建新的考试", tueHandler.CreateExam)
+			router.registerRoute(tueExamGroup, POST, "/random", "随机测验", tueHandler.RandomExam)
 			// 考试提交
 			examHandler := exam.NewExamHandler(baseHandler)
 			router.registerRoute(

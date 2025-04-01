@@ -28,6 +28,23 @@ func (r *RedisStore) InvalidUserToken(userId uint64, token string) error {
 	return err
 }
 
+// RenewUserToken 续期用户的指定 token
+func (r *RedisStore) RenewUserToken(userId uint64, token string, duration time.Duration) error {
+	ctx := context.Background()
+	// 检查 token 是否属于该用户
+	exists, err := r.Client.SIsMember(ctx, fmt.Sprintf("user-tokens:%d", userId), token).Result()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("token does not belong to the user")
+	}
+
+	// 续期 token
+	_, err = r.Client.Expire(ctx, fmt.Sprintf("token-user:%s", token), duration).Result()
+	return err
+}
+
 // InvalidUserAllToken 取消缓存用户所有 token
 //
 //	Returns:

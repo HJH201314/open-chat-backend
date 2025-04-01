@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/fcraft/open-chat/internal/storage/helper"
+	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"log"
 	"log/slog"
 	"os"
@@ -19,6 +20,7 @@ import (
 )
 
 func main() {
+	chat_utils.TestExtractTagContent()
 	slog.SetDefault(slog.New(slogcolor.NewHandler(os.Stdout, slogcolor.DefaultOptions)))
 
 	// 加载环境变量
@@ -38,6 +40,7 @@ func main() {
 	services.InitEncryptService()
 	services.InitPresetService(baseService) // 初始化预设缓存服务
 	services.InitMakeQuestionService(baseService)
+	//go services.GetMakeQuestionService().StartGenerate(context.Background(), 10*time.Second)
 
 	r := gin.Default()
 	// 初始化中间件

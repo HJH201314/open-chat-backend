@@ -52,7 +52,7 @@ func AuthMiddleware(redisStore *redisstore.RedisStore) gin.HandlerFunc {
 		}
 
 		// 4. 续期 token
-		if err := redisStore.CacheUserToken(userId, token.Raw, constants.RefreshTokenExpire); err != nil {
+		if err := redisStore.RenewUserToken(userId, token.Raw, constants.RefreshTokenExpire); err != nil {
 			ctx_utils.HttpError(c, constants.ErrInternal)
 			return
 		}

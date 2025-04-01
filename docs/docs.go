@@ -174,6 +174,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/message/{id}/update": {
+            "post": {
+                "description": "更新消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Message"
+                ],
+                "summary": "更新消息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "消息 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新的消息数据",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.Message"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Message"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/session/del/{session_id}": {
             "post": {
                 "description": "删除会话",
@@ -2421,6 +2462,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/tue/exam/random": {
+            "post": {
+                "description": "随机测验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exam"
+                ],
+                "summary": "随机测验",
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Exam"
+                        }
+                    }
+                }
+            }
+        },
         "/tue/exam/single-problem/submit": {
             "post": {
                 "description": "提交单个问题并验证答案",
@@ -3552,6 +3616,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/schema.ExamUserRecord"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-schema_Message": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Message"
                         }
                     ]
                 },

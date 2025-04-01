@@ -145,9 +145,11 @@ streamingLoop:
 				if toolOk {
 					if tool.UserTip != "" {
 						eventChan <- StreamEvent{
-							Type:     CommandEventType,
-							Content:  "tooltip",
-							Metadata: tool.UserTip,
+							Type:    CommandEventType,
+							Content: "tooltip",
+							Metadata: map[string]string{
+								"tooltip": tool.UserTip,
+							},
 						}
 					}
 					res, err := tool.Handler(toolcall.Function.Arguments)
@@ -155,6 +157,13 @@ streamingLoop:
 						return
 					}
 					replaceMsg = res.ReplaceMessage
+					if acc.Choices[0].Message.Content == "" {
+						// 发送 msg
+						eventChan <- StreamEvent{
+							Type:    ContentEventType,
+							Content: replaceMsg,
+						}
+					}
 					// 把函数处理结果存入 extra，可能被用于存入数据库
 					extra[res.Type] = res.Data
 					// 发送 cmd

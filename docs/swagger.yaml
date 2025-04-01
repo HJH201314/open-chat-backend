@@ -35,8 +35,8 @@ definitions:
       type:
         $ref: '#/definitions/schema.ProblemType'
     required:
-      - description
-      - type
+    - description
+    - type
     type: object
   entity.CommonResponse-any:
     properties:
@@ -123,7 +123,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_UserSession'
+        - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_UserSession'
         description: 数据
       msg:
         description: 消息
@@ -136,7 +136,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedSyncListResponse-schema_UserSession'
+        - $ref: '#/definitions/entity.PaginatedSyncListResponse-schema_UserSession'
         description: 数据
       msg:
         description: 消息
@@ -149,7 +149,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_APIKey'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_APIKey'
         description: 数据
       msg:
         description: 消息
@@ -162,7 +162,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Bucket'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Bucket'
         description: 数据
       msg:
         description: 消息
@@ -227,7 +227,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Problem'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Problem'
         description: 数据
       msg:
         description: 消息
@@ -292,7 +292,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/exam.SubmitProblemResponse'
+        - $ref: '#/definitions/exam.SubmitProblemResponse'
         description: 数据
       msg:
         description: 消息
@@ -330,7 +330,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Bucket'
+        - $ref: '#/definitions/schema.Bucket'
         description: 数据
       msg:
         description: 消息
@@ -370,6 +370,19 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/schema.ExamUserRecord'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-schema_Message:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/schema.Message'
         description: 数据
       msg:
         description: 消息
@@ -635,8 +648,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - data
-      - updates
+    - data
+    - updates
     type: object
   entity.ReqUpdateBody-schema_ModelCollection:
     properties:
@@ -648,8 +661,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - data
-      - updates
+    - data
+    - updates
     type: object
   entity.ReqUpdateBody-schema_Problem:
     properties:
@@ -661,8 +674,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - data
-      - updates
+    - data
+    - updates
     type: object
   entity.ReqUpdateBody-schema_Role:
     properties:
@@ -674,8 +687,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - data
-      - updates
+    - data
+    - updates
     type: object
   exam.SubmitExamRequest:
     properties:
@@ -1392,7 +1405,7 @@ paths:
     get:
       description: 获取公钥
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: RSA 公钥
@@ -1400,7 +1413,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-string'
       summary: 获取公钥
       tags:
-        - Base
+      - Base
   /chat/completion/stream/{session_id}:
     post:
       consumes:
@@ -1454,6 +1467,33 @@ paths:
       summary: 获取模型配置
       tags:
       - config
+  /chat/message/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新消息
+      parameters:
+      - description: 消息 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新的消息数据
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Message'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Message'
+      summary: 更新消息
+      tags:
+      - Message
   /chat/message/list/{session_id}:
     get:
       consumes:
@@ -1719,13 +1759,13 @@ paths:
       - application/json
       description: 获取 储存桶
       parameters:
-        - description: 储存桶 ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 储存桶 ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 储存桶
@@ -1733,16 +1773,16 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Bucket'
       summary: 获取 储存桶
       tags:
-        - Bucket
+      - Bucket
   /manage/bucket/{id}/delete:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除 储存桶
       parameters:
-        - description: 储存桶 ID
+      - description: 储存桶 ID
         in: path
-          name: id
+        name: id
         required: true
         type: integer
       produces:
@@ -1754,21 +1794,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除 储存桶
       tags:
-        - Bucket
+      - Bucket
   /manage/bucket/{id}/update:
     post:
       consumes:
       - application/json
       description: 更新 储存桶
       parameters:
-        - description: 储存桶 ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 储存桶参数
+      - description: 储存桶 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 储存桶参数
         in: body
-          name: bucket
+        name: bucket
         required: true
         schema:
           $ref: '#/definitions/entity.ReqUpdateBody-schema_Bucket'
@@ -1781,21 +1821,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新 储存桶
       tags:
-        - Bucket
+      - Bucket
   /manage/bucket/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建 储存桶
       parameters:
-        - description: 储存桶参数
-          in: body
-          name: bucket
-          required: true
-          schema:
-            $ref: '#/definitions/schema.Bucket'
+      - description: 储存桶参数
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/schema.Bucket'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的 储存桶
@@ -1803,32 +1843,32 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Bucket'
       summary: 创建 储存桶
       tags:
-        - Bucket
+      - Bucket
   /manage/bucket/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取 储存桶
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          required: true
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 储存桶列表
@@ -1836,20 +1876,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Bucket'
       summary: 批量获取 储存桶
       tags:
-        - Bucket
+      - Bucket
   /manage/collection/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取模型集合
       parameters:
-        - description: ModelCollection ID
-          in: path
-          name: collection_id
-          required: true
-          type: integer
+      - description: ModelCollection ID
+        in: path
+        name: collection_id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 模型
@@ -1882,22 +1922,22 @@ paths:
   /manage/collection/{id}/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新模型集合
       parameters:
-        - description: 模型集合 ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 模型集合更新参数
-          in: body
-          name: model
-          required: true
-          schema:
-            $ref: '#/definitions/entity.ReqUpdateBody-schema_ModelCollection'
+      - description: 模型集合 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 模型集合更新参数
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/entity.ReqUpdateBody-schema_ModelCollection'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功更新与否
@@ -1905,21 +1945,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新模型集合
       tags:
-        - ModelCollection
+      - ModelCollection
   /manage/collection/create:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建模型集合
       parameters:
-        - description: 模型集合
-          in: body
-          name: model
-          required: true
-          schema:
-            $ref: '#/definitions/schema.ModelCollection'
+      - description: 模型集合
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/schema.ModelCollection'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功创建的模型集合
@@ -1927,7 +1967,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_ModelCollection'
       summary: 创建模型集合
       tags:
-        - ModelCollection
+      - ModelCollection
   /manage/collection/list:
     get:
       consumes:
@@ -2176,14 +2216,14 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Model'
       summary: 获取 API 提供商的模型
       tags:
-        - Model
+      - Model
   /manage/model/refresh:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新所有模型缓存，生产环境高危操作
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新成功与否
@@ -3038,20 +3078,35 @@ paths:
       summary: 保存单个测验
       tags:
       - Exam
+  /tue/exam/random:
+    post:
+      consumes:
+      - application/json
+      description: 随机测验
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Exam'
+      summary: 随机测验
+      tags:
+      - Exam
   /tue/exam/single-problem/submit:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 提交单个问题并验证答案
       parameters:
-        - description: 提交信息
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/exam.SubmitExamRequest'
+      - description: 提交信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/exam.SubmitExamRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3059,7 +3114,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-exam_SubmitProblemResponse'
       summary: 提交单个问题并验证答案
       tags:
-        - Exam
+      - Exam
   /tue/problem/{id}:
     get:
       consumes:
@@ -3084,16 +3139,16 @@ paths:
   /tue/problem/{id}/delete:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 删除题目
       parameters:
-        - description: 题目 ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: 题目 ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 删除成功与否
@@ -3101,26 +3156,26 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 删除题目
       tags:
-        - Problem
+      - Problem
   /tue/problem/{id}/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新题目
       parameters:
-        - description: 题目 ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: 题目参数
-          in: body
-          name: problem
-          required: true
-          schema:
-            $ref: '#/definitions/entity.ReqUpdateBody-schema_Problem'
+      - description: 题目 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 题目参数
+        in: body
+        name: problem
+        required: true
+        schema:
+          $ref: '#/definitions/entity.ReqUpdateBody-schema_Problem'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新成功与否
@@ -3128,7 +3183,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新题目
       tags:
-        - Problem
+      - Problem
   /tue/problem/create:
     post:
       consumes:
@@ -3183,21 +3238,21 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Problem'
       summary: 分页获取题目列表
       tags:
-        - Problem
+      - Problem
   /tue/problem/make:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 创建题目
       parameters:
-        - description: 题目要求
-          in: body
-          name: req
-          required: true
-          schema:
-            $ref: '#/definitions/course.MakeQuestionRequest'
+      - description: 题目要求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/course.MakeQuestionRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 生成的题目

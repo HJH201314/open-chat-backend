@@ -2,13 +2,16 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/openai/openai-go"
+	"math/rand"
 	"strings"
 	"sync"
+	"time"
 )
 
 func (s *MakeQuestionService) MakeQuestion(problemType schema.ProblemType, problemDescription string) (*schema.Problem, error) {
@@ -166,20 +169,169 @@ func MakeQuestionTool(problemType schema.ProblemType) chat_utils.CompletionTool 
 			if len(args) == 0 {
 				return nil, nil
 			}
-			topic, ok := args[0].(string)
-			if !ok {
-				return nil, nil
+			params := struct {
+				Topic string `json:"topic"`
+			}{}
+			err := json.Unmarshal([]byte(args[0].(string)), &params)
+			if err != nil {
+				return nil, err
 			}
-			question, err := GetMakeQuestionService().MakeQuestion(problemType, topic)
+			question, err := GetMakeQuestionService().MakeQuestion(problemType, params.Topic)
 			if err != nil {
 				return nil, err
 			}
 			return &chat_utils.CompletionToolHandlerReturn{
 				Data:           question,
-				ReplaceMessage: "好的，我已经调用工具并将生成好的题目发送给了用户。",
+				ReplaceMessage: "好的，下面是你要的题目～",
 				Type:           "question",
 			}, nil
 		},
+	}
+}
+
+// EveryDayQuestionTool 获取每日题目 tool call 工具
+func EveryDayQuestionTool() chat_utils.CompletionTool {
+	return chat_utils.CompletionTool{
+		Param: openai.ChatCompletionToolParam{
+			Function: openai.FunctionDefinitionParam{
+				Name:        "get_every_day_problem",
+				Description: openai.String("When the user want to do an every day problem, this tool will send it"),
+				Parameters: openai.FunctionParameters{
+					"type":        "object",
+					"description": "",
+					"properties":  map[string]interface{}{},
+					"required":    []string{},
+				},
+			},
+		},
+		UserTip: "获取题目中...",
+		Handler: func(args ...interface{}) (*chat_utils.CompletionToolHandlerReturn, error) {
+			var problem schema.Problem
+
+			if err := GetMakeQuestionService().Gorm.Order("RANDOM()").Limit(1).First(&problem).Error; err != nil {
+				return nil, err
+			}
+			return &chat_utils.CompletionToolHandlerReturn{
+				Data:           problem,
+				ReplaceMessage: "好的，下面是你要的题目～",
+				Type:           "question",
+			}, nil
+		},
+	}
+}
+
+// MakeExamTool 生成 Exam Tool Call 工具
+func MakeExamTool() chat_utils.CompletionTool {
+	return chat_utils.CompletionTool{
+		Param: openai.ChatCompletionToolParam{
+			Function: openai.FunctionDefinitionParam{
+				Name:        "generate_an_exam",
+				Description: openai.String("When the user required to generate a exam, this tool can generate a exam."),
+				Parameters: openai.FunctionParameters{
+					"type":        "object",
+					"description": "",
+					"properties": map[string]interface{}{
+						"topic": map[string]string{
+							"type":        "string",
+							"description": "the topic or the description of the exam",
+						},
+						"count": map[string]string{
+							"type":        "int",
+							"description": "the count of problems in the exam paper, between 3 ~ 5",
+						},
+					},
+					"required": []string{"topic", "count"},
+				},
+			},
+		},
+		UserTip: "生成测验中...",
+		Handler: func(args ...interface{}) (*chat_utils.CompletionToolHandlerReturn, error) {
+			if len(args) == 0 {
+				return nil, nil
+			}
+			params := struct {
+				Topic string `json:"topic"`
+				Count int    `json:"count"`
+			}{}
+			err := json.Unmarshal([]byte(args[0].(string)), &params)
+			if err != nil {
+				return nil, err
+			}
+			// 定义常量集合
+			problemTypes := []schema.ProblemType{
+				schema.SingleChoice,
+				schema.MultipleChoice,
+				schema.FillBlank,
+				schema.ShortAnswer,
+				schema.TrueFalse,
+			}
+			// 随机选择一个类型
+			randomIndex := rand.Intn(len(problemTypes))
+			randomProblemType := problemTypes[randomIndex]
+
+			var questions []schema.Problem
+			for i := 0; i < params.Count; i++ {
+				question, err := GetMakeQuestionService().MakeQuestion(randomProblemType, params.Topic)
+				if err != nil {
+					return nil, err
+				}
+				questions = append(questions, *question)
+			}
+			examProblems := make([]schema.ExamProblem, len(questions))
+			for i, question := range questions {
+				examProblems[i] = schema.ExamProblem{
+					ProblemID: question.ID,
+					Score:     1000,
+					SortOrder: i,
+				}
+			}
+			// Create the exam
+			exam := &schema.Exam{
+				Name:        params.Topic,
+				Description: params.Topic,
+				Subjects:    params.Topic,
+				Problems:    examProblems,
+				TotalScore:  uint64(len(examProblems) * 1000),
+				LimitTime:   600,
+			}
+			if err := GetMakeQuestionService().Gorm.Create(&exam).Error; err != nil {
+				return nil, err
+			}
+			return &chat_utils.CompletionToolHandlerReturn{
+				Data:           exam,
+				ReplaceMessage: "好的，下面是你要的测验～",
+				Type:           "exam",
+			}, nil
+		},
+	}
+}
+
+func (s *MakeQuestionService) StartGenerate(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// 定义常量集合
+			problemTypes := []schema.ProblemType{
+				schema.SingleChoice,
+				schema.MultipleChoice,
+				schema.FillBlank,
+				schema.ShortAnswer,
+				schema.TrueFalse,
+			}
+			// 随机选择一个类型
+			randomIndex := rand.Intn(len(problemTypes))
+			randomProblemType := problemTypes[randomIndex]
+			_, err := s.MakeQuestion(randomProblemType, "从科学、历史、社会、计算机、哲学、课本知识等类别中任意出题")
+			if err != nil {
+				// do nothing
+			}
+		case <-ctx.Done():
+			s.Logger.Info("Auto make question stopped")
+			return
+		}
 	}
 }
 
@@ -211,17 +363,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionSingleChoicePresetName,
 				"TUE 单选题生成",
-				4,
+				5,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
-						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
-
+						`
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：单选
 题目数量：1
-题目主题：
-{TOPIC}
+题目主题：{TOPIC}
 在出题时，请遵循以下指南：
 1. 根据题目类型出题。
 2. 题目应与给定的主题相关。
@@ -235,17 +385,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionMultipleChoicePresetName,
 				"TUE 多选题生成",
-				4,
+				5,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
-						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
-
+						`
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：多选
 题目数量：1
-题目主题：
-{TOPIC}
+题目主题：{TOPIC}
 在出题时，请遵循以下指南：
 1. 根据题目类型出题。
 2. 题目应与给定的主题相关。
@@ -259,17 +407,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionTrueFalsePresetName,
 				"TUE 判断题生成",
-				4,
+				5,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
-						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
-
+						`
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：判断题
 题目数量：1
-题目主题：
-{TOPIC}
+题目主题：{TOPIC}
 在出题时，请遵循以下指南：
 1. 根据题目类型出题。
 2. 题目应与给定的主题相关。
@@ -283,17 +429,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionFillBlankPresetName,
 				"TUE 填空题生成",
-				4,
+				5,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
-						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
-
+						`
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：填空题
 题目数量：1
-题目主题：
-{TOPIC}
+题目主题：{TOPIC}
 在出题时，请遵循以下指南：
 1. 根据题目类型出题。
 2. 题目应与给定的主题相关。
@@ -307,17 +451,15 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionShortAnswerPresetName,
 				"TUE 简答题生成",
-				4,
+				5,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
-						`你是一个出题专家，请根据要求和客观事实输出高质量题目。
-
+						`
 你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
 题目类型：简答题
 题目数量：1
-题目主题：
-{TOPIC}
+题目主题：{TOPIC}
 在出题时，请遵循以下指南：
 1. 根据题目类型出题。
 2. 题目应与给定的主题相关。

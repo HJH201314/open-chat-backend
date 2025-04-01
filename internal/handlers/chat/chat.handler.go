@@ -204,12 +204,12 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			},
 			Model:                 req.ModelName,
 			Messages:              chatMessages,
-			SystemPrompt:          systemPrompt + "如果用户没有明确需要工具提供的某项能力，则正常交流，不调用工具。",
+			SystemPrompt:          systemPrompt,
 			CompletionModelConfig: getCompletionModelConfig(modelConfig),
 			Tools: []chat_utils.CompletionTool{
 				services.MakeQuestionTool(schema.SingleChoice), services.MakeQuestionTool(schema.MultipleChoice),
 				services.MakeQuestionTool(schema.TrueFalse), services.MakeQuestionTool(schema.ShortAnswer),
-				services.MakeQuestionTool(schema.FillBlank),
+				services.MakeQuestionTool(schema.FillBlank), services.EveryDayQuestionTool(), services.MakeExamTool(),
 			},
 		},
 	)
