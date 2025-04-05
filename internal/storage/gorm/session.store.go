@@ -209,5 +209,9 @@ func (s *GormStore) GetLatestMessages(sessionID string, limit int) ([]schema.Mes
 
 // GetMessagesByPage 分页获取消息
 func (s *GormStore) GetMessagesByPage(sessionID string, page entity.PagingParam, sort entity.SortParam) ([]schema.Message, *int64, error) {
-	return gorm_utils.GetByPageContinuous[schema.Message](s.Db.Where("session_id = ?", sessionID), page, sort)
+	return gorm_utils.GetByPageContinuous[schema.Message](
+		s.Db.Preload("Model").Where("session_id = ?", sessionID),
+		page,
+		sort,
+	)
 }

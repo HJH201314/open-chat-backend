@@ -17,9 +17,9 @@ import (
 //	@Tags			Message
 //	@Accept			json
 //	@Produce		json
-//	@Param			session_id	path		string																		true	"会话 ID"
-//	@Param			req			query		entity.ParamPagingSort														true	"分页参数"
-//	@Success		200			{object}	entity.CommonResponse[entity.PaginatedContinuationResponse[schema.Message]]	"返回数据"
+//	@Param			session_id	path		string											true	"会话 ID"
+//	@Param			req			query		entity.ParamPagingSort							true	"分页参数"
+//	@Success		200			{object}	entity.CommonResponse[ChatMessageListResponse]	"返回数据"
 //	@Router			/chat/message/list/{session_id} [get]
 func (h *Handler) GetMessages(c *gin.Context) {
 	var uri PathParamSessionId
@@ -44,12 +44,25 @@ func (h *Handler) GetMessages(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
+	modelMap := make(map[uint64]string)
+	for _, m := range messages {
+		if m.Model == nil {
+			continue
+		}
+		modelMap[m.ModelID] = m.Model.Name
+		m.Model = nil // 不直接返回模型信息
+	}
 	ctx_utils.Success(
-		c, &entity.PaginatedContinuationResponse[schema.Message]{
-			List:     messages,
-			NextPage: nextPage,
+		c, &ChatMessageListResponse{
+			PaginatedContinuationResponse: entity.NewPaginatedContinuationResponse(messages, nextPage),
+			ModelMap:                      modelMap,
 		},
 	)
+}
+
+type ChatMessageListResponse struct {
+	*entity.PaginatedContinuationResponse[schema.Message]
+	ModelMap map[uint64]string `json:"model_map"` // 模型 ID -> 模型名称
 }
 
 // UpdateMessage

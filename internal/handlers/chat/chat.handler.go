@@ -31,8 +31,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	var uri PathParamSessionId
 	type userInput struct {
 		Question      string  `json:"question" binding:"required"`
-		Provider      string  `json:"provider_name" binding:"required"` // Provider.Name 准确的供应商名称
-		ModelName     string  `json:"model_name" binding:"required"`    // Model.Name 准确的模型名称
+		ModelName     string  `json:"model_name" binding:"required"` // 模型集合名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
 		BotID         *uint64 `json:"bot_id" binding:"-"`
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
@@ -53,14 +52,14 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 
 	// 读取模型信息
-	modelInfo := h.Redis.FindCachedModelByName(req.Provider, req.ModelName)
-	if modelInfo == nil {
+	modelInfo, err := services.GetModelCollectionService().GetRandomModelFromCollection(req.ModelName)
+	if err != nil || modelInfo == nil || modelInfo.Provider == nil {
 		ctx_utils.CustomError(c, 404, "model not found")
 		return
 	}
 	modelConfig := modelInfo.Config
 	// 获取供应商 base_url 和 api_key
-	providerInfo := h.Redis.FindProviderByName(req.Provider)
+	providerInfo := h.Redis.FindProviderByName(modelInfo.Provider.Name)
 	if providerInfo == nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
@@ -202,7 +201,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 				BaseUrl: providerBaseUrl,
 				ApiKey:  providerKey.Key,
 			},
-			Model:                 req.ModelName,
+			Model:                 modelInfo.Name,
 			Messages:              chatMessages,
 			SystemPrompt:          systemPrompt,
 			CompletionModelConfig: getCompletionModelConfig(modelConfig),

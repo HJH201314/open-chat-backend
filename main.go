@@ -38,8 +38,10 @@ func main() {
 	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
 	go intervalCacheService.Start(cacheCtx, 10*time.Minute)
 	services.InitEncryptService()
-	services.InitPresetService(baseService) // 初始化预设缓存服务
-	services.InitMakeQuestionService(baseService)
+	services.InitPresetService(baseService)          // 初始化预设缓存服务
+	services.InitMakeQuestionService(baseService)    // 初始化题目生成服务
+	services.InitSystemConfigService(baseService)    // 初始化系统配置服务
+	services.InitModelCollectionService(baseService) // 初始化模型集合服务
 	//go services.GetMakeQuestionService().StartGenerate(context.Background(), 10*time.Second)
 
 	r := gin.Default()

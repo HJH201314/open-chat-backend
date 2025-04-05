@@ -36,7 +36,7 @@ func (s *GormStore) QueryProvider(providerId uint64) (*schema.Provider, error) {
 // QueryProviders 获取提供商（含关联数据）
 func (s *GormStore) QueryProviders() ([]schema.Provider, error) {
 	var providers []schema.Provider
-	return providers, s.Db.Preload("APIKeys").Preload("Models").Find(&providers).Error
+	return providers, s.Db.Preload("APIKeys").Preload("Models", "active = true").Find(&providers).Error
 }
 
 // DeleteProvider 删除提供商

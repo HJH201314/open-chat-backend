@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"encoding/json"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
+	"github.com/fcraft/open-chat/internal/entity"
 	_ "github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
 )
@@ -16,23 +19,20 @@ import (
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[[]schema.ModelCache]
+//	@Success		200	{object}	entity.CommonResponse[[]entity.ConfigChatModel]
 //	@Router			/chat/config/models [get]
 func (h *Handler) GetModelConfig(c *gin.Context) {
-	// 从缓存中查询
-	cacheModels, err := h.Redis.GetCachedModels()
+	config, err := services.GetSystemConfigService().GetConfig(services.ConfigAvailableChatModelCollection)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
-	// 将 config 隐藏
-	cacheModels = slice.Map(
-		cacheModels, func(_ int, item schema.ModelCache) schema.ModelCache {
-			item.Config = schema.ModelConfig{}
-			return item
-		},
-	)
-	ctx_utils.Success(c, cacheModels)
+	var modelConfig []entity.ConfigChatModel
+	if err := json.Unmarshal([]byte(config.Value), &modelConfig); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	ctx_utils.Success(c, modelConfig)
 }
 
 // GetBotConfig

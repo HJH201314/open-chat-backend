@@ -31,7 +31,7 @@ func NewUserHandler(h *handlers.BaseHandler) *Handler {
 //	@Router			/user/ping [post]
 func (h *Handler) Ping(c *gin.Context) {
 	if userId := ctx_utils.GetUserId(c); userId > 0 {
-		if user, err := h.Store.GetUser(userId); err == nil {
+		if user, err := h.Store.GetUserDetailed(userId); err == nil {
 			ctx_utils.Success(c, user)
 		} else {
 			ctx_utils.CustomError(c, 404, "user not found")
@@ -71,7 +71,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	}
 
 	// 3. 确认用户存在并重新签发
-	if user, err := h.Store.GetUser(refreshClaims.ID); err == nil {
+	if user, err := h.Store.GetUserDetailed(refreshClaims.ID); err == nil {
 		token, _ := signJwtTokenIntoHeader(c, user)
 		if err := h.Redis.CacheUserToken(user.ID, token, constants.RefreshTokenExpire); err != nil {
 			return
@@ -107,7 +107,7 @@ func signJwtTokenIntoHeader(c *gin.Context, user *schema.User) (string, string) 
 //	@Router			/user/current [get]
 func (h *Handler) Current(c *gin.Context) {
 	if userId := ctx_utils.GetUserId(c); userId > 0 {
-		if user, err := h.Store.GetUser(userId); err == nil {
+		if user, err := h.Store.GetUserDetailed(userId); err == nil {
 			user.Password = ""
 			ctx_utils.Success(c, user)
 		} else {
@@ -162,12 +162,19 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	// 获取详细用户信息
+	detailedUser, err := h.Store.GetUserDetailed(userRes.ID)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
 	// 签发并缓存 token
-	token, _ := signJwtTokenIntoHeader(c, &userRes)
+	token, _ := signJwtTokenIntoHeader(c, detailedUser)
 	if err := h.Redis.CacheUserToken(userRes.ID, token, constants.RefreshTokenExpire); err != nil {
 		return
 	}
-	ctx_utils.Success(c, userRes)
+	ctx_utils.Success(c, detailedUser)
 }
 
 // Logout

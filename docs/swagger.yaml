@@ -1,4 +1,18 @@
 definitions:
+  chat.ChatMessageListResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Message'
+        type: array
+      model_map:
+        additionalProperties:
+          type: string
+        description: 模型 ID -> 模型名称
+        type: object
+      next_page:
+        type: integer
+    type: object
   chat.CompletionStream.userInput:
     properties:
       bot_id:
@@ -6,10 +20,7 @@ definitions:
       enable_context:
         type: boolean
       model_name:
-        description: Model.Name 准确的模型名称
-        type: string
-      provider_name:
-        description: Provider.Name 准确的供应商名称
+        description: 模型集合名称
         type: string
       question:
         type: string
@@ -18,7 +29,6 @@ definitions:
         type: string
     required:
     - model_name
-    - provider_name
     - question
     type: object
   chat.ShareSession.ShareRequest:
@@ -49,7 +59,7 @@ definitions:
         description: 消息
         type: string
     type: object
-  entity.CommonResponse-array_schema_ModelCache:
+  entity.CommonResponse-array_entity_ConfigChatModel:
     properties:
       code:
         description: 代码
@@ -57,7 +67,7 @@ definitions:
       data:
         description: 数据
         items:
-          $ref: '#/definitions/schema.ModelCache'
+          $ref: '#/definitions/entity.ConfigChatModel'
         type: array
       msg:
         description: 消息
@@ -103,14 +113,14 @@ definitions:
         description: 消息
         type: string
     type: object
-  entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message:
+  entity.CommonResponse-chat_ChatMessageListResponse:
     properties:
       code:
         description: 代码
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/entity.PaginatedContinuationResponse-schema_Message'
+          - $ref: '#/definitions/chat.ChatMessageListResponse'
         description: 数据
       msg:
         description: 消息
@@ -517,13 +527,15 @@ definitions:
         description: 消息
         type: string
     type: object
-  entity.PaginatedContinuationResponse-schema_Message:
+  entity.ConfigChatModel:
     properties:
-      list:
-        items:
-          $ref: '#/definitions/schema.Message'
-        type: array
-      next_page:
+      display_name:
+        type: string
+      is_default:
+        type: boolean
+      name:
+        type: string
+      order:
         type: integer
     type: object
   entity.PaginatedContinuationResponse-schema_UserSession:
@@ -720,6 +732,15 @@ definitions:
         type: string
       score:
         type: integer
+    type: object
+  manage.UpdateSystemConfigParams:
+    properties:
+      name:
+        type: string
+      value:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   schema.APIKey:
     properties:
@@ -959,6 +980,9 @@ definitions:
     type: object
   schema.Model:
     properties:
+      active:
+        description: 是否启用
+        type: boolean
       config:
         allOf:
         - $ref: '#/definitions/schema.ModelConfig'
@@ -984,42 +1008,6 @@ definitions:
       provider_id:
         description: 关联的 Provider ID
         type: integer
-      updated_at:
-        type: string
-    type: object
-  schema.ModelCache:
-    properties:
-      config:
-        allOf:
-        - $ref: '#/definitions/schema.ModelConfig'
-        description: 使用 JSON 储存配置
-      created_at:
-        type: string
-      description:
-        description: 额外模型描述
-        type: string
-      display_name:
-        description: 对外展示模型名称
-        type: string
-      id:
-        description: 原始数据
-        type: integer
-      name:
-        description: 模型名称
-        type: string
-      provider:
-        allOf:
-        - $ref: '#/definitions/schema.Provider'
-        description: 组装数据
-      provider_display_name:
-        description: 关联的 Provider DisplayName
-        type: string
-      provider_id:
-        description: 关联的 Provider ID
-        type: integer
-      provider_name:
-        description: 关联的 Provider FileName
-        type: string
       updated_at:
         type: string
     type: object
@@ -1463,7 +1451,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-array_schema_ModelCache'
+            $ref: '#/definitions/entity.CommonResponse-array_entity_ConfigChatModel'
       summary: 获取模型配置
       tags:
       - config
@@ -1528,7 +1516,7 @@ paths:
         "200":
           description: 返回数据
           schema:
-            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message'
+            $ref: '#/definitions/entity.CommonResponse-chat_ChatMessageListResponse'
       summary: 获取消息
       tags:
       - Message

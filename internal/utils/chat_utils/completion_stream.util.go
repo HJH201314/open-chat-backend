@@ -154,6 +154,11 @@ streamingLoop:
 					}
 					res, err := tool.Handler(toolcall.Function.Arguments)
 					if err != nil || res == nil {
+						eventChan <- StreamEvent{
+							Type:    ErrorEventType,
+							Content: "tool_error",
+							Error:   err,
+						}
 						return
 					}
 					replaceMsg = res.ReplaceMessage

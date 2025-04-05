@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/openai/openai-go"
@@ -236,7 +237,7 @@ func MakeExamTool() chat_utils.CompletionTool {
 							"description": "the topic or the description of the exam",
 						},
 						"count": map[string]string{
-							"type":        "int",
+							"type":        "string",
 							"description": "the count of problems in the exam paper, between 3 ~ 5",
 						},
 					},
@@ -251,7 +252,7 @@ func MakeExamTool() chat_utils.CompletionTool {
 			}
 			params := struct {
 				Topic string `json:"topic"`
-				Count int    `json:"count"`
+				Count string `json:"count"`
 			}{}
 			err := json.Unmarshal([]byte(args[0].(string)), &params)
 			if err != nil {
@@ -269,8 +270,12 @@ func MakeExamTool() chat_utils.CompletionTool {
 			randomIndex := rand.Intn(len(problemTypes))
 			randomProblemType := problemTypes[randomIndex]
 
+			countInt, err := convertor.ToInt(params.Count)
+			if err != nil {
+				return nil, err
+			}
 			var questions []schema.Problem
-			for i := 0; i < params.Count; i++ {
+			for i := int64(0); i < countInt; i++ {
 				question, err := GetMakeQuestionService().MakeQuestion(randomProblemType, params.Topic)
 				if err != nil {
 					return nil, err

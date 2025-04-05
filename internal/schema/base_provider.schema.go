@@ -26,6 +26,7 @@ type Model struct {
 	DisplayName string      `gorm:"" json:"display_name"`                    // 对外展示模型名称
 	Description string      `gorm:"" json:"description"`                     // 额外模型描述
 	Config      ModelConfig `gorm:"type:json;serializer:json" json:"config"` // 使用 JSON 储存配置
+	Active      bool        `gorm:"default:true" json:"active"`              // 是否启用
 
 	// 组装数据
 	Provider *Provider `gorm:"foreignKey:ProviderID" json:"provider"`

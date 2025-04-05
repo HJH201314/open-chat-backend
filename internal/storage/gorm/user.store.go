@@ -10,10 +10,10 @@ func (s *GormStore) CreateUser(user *schema.User) error {
 	return s.Db.Create(user).Error
 }
 
-// GetUser 获取用户
-func (s *GormStore) GetUser(userId uint64) (*schema.User, error) {
+// GetUserDetailed 获取用户详细信息（屏蔽敏感信息：密码）
+func (s *GormStore) GetUserDetailed(userId uint64) (*schema.User, error) {
 	var user schema.User
-	return &user, s.Db.Preload("Roles").Where("id = ?", userId).First(&user).Error
+	return &user, s.Db.Preload("Roles").Omit("password").Where("id = ?", userId).First(&user).Error
 }
 
 // BindRolesToUser 绑定角色到用户

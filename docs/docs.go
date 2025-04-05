@@ -109,7 +109,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-array_schema_ModelCache"
+                            "$ref": "#/definitions/entity.CommonResponse-array_entity_ConfigChatModel"
                         }
                     }
                 }
@@ -168,7 +168,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message"
+                            "$ref": "#/definitions/entity.CommonResponse-chat_ChatMessageListResponse"
                         }
                     }
                 }
@@ -3038,11 +3038,31 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "chat.ChatMessageListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Message"
+                    }
+                },
+                "model_map": {
+                    "description": "模型 ID -\u003e 模型名称",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "next_page": {
+                    "type": "integer"
+                }
+            }
+        },
         "chat.CompletionStream.userInput": {
             "type": "object",
             "required": [
                 "model_name",
-                "provider_name",
                 "question"
             ],
             "properties": {
@@ -3053,11 +3073,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "model_name": {
-                    "description": "Model.Name 准确的模型名称",
-                    "type": "string"
-                },
-                "provider_name": {
-                    "description": "Provider.Name 准确的供应商名称",
+                    "description": "模型集合名称",
                     "type": "string"
                 },
                 "question": {
@@ -3111,7 +3127,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-array_schema_ModelCache": {
+        "entity.CommonResponse-array_entity_ConfigChatModel": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3122,7 +3138,7 @@ const docTemplate = `{
                     "description": "数据",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schema.ModelCache"
+                        "$ref": "#/definitions/entity.ConfigChatModel"
                     }
                 },
                 "msg": {
@@ -3188,7 +3204,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_Message": {
+        "entity.CommonResponse-chat_ChatMessageListResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3199,7 +3215,7 @@ const docTemplate = `{
                     "description": "数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entity.PaginatedContinuationResponse-schema_Message"
+                            "$ref": "#/definitions/chat.ChatMessageListResponse"
                         }
                     ]
                 },
@@ -3852,16 +3868,19 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.PaginatedContinuationResponse-schema_Message": {
+        "entity.ConfigChatModel": {
             "type": "object",
             "properties": {
-                "list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/schema.Message"
-                    }
+                "display_name": {
+                    "type": "string"
                 },
-                "next_page": {
+                "is_default": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
                     "type": "integer"
                 }
             }
@@ -4159,6 +4178,20 @@ const docTemplate = `{
                 },
                 "score": {
                     "type": "integer"
+                }
+            }
+        },
+        "manage.UpdateSystemConfigParams": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -4519,6 +4552,10 @@ const docTemplate = `{
         "schema.Model": {
             "type": "object",
             "properties": {
+                "active": {
+                    "description": "是否启用",
+                    "type": "boolean"
+                },
                 "config": {
                     "description": "使用 JSON 储存配置",
                     "allOf": [
@@ -4557,61 +4594,6 @@ const docTemplate = `{
                 "provider_id": {
                     "description": "关联的 Provider ID",
                     "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "schema.ModelCache": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "description": "使用 JSON 储存配置",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/schema.ModelConfig"
-                        }
-                    ]
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "description": "额外模型描述",
-                    "type": "string"
-                },
-                "display_name": {
-                    "description": "对外展示模型名称",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "原始数据",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "模型名称",
-                    "type": "string"
-                },
-                "provider": {
-                    "description": "组装数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/schema.Provider"
-                        }
-                    ]
-                },
-                "provider_display_name": {
-                    "description": "关联的 Provider DisplayName",
-                    "type": "string"
-                },
-                "provider_id": {
-                    "description": "关联的 Provider ID",
-                    "type": "integer"
-                },
-                "provider_name": {
-                    "description": "关联的 Provider FileName",
-                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

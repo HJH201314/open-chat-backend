@@ -38,6 +38,13 @@ type PaginatedContinuationResponse[T any] struct {
 	NextPage *int64 `json:"next_page"`
 }
 
+func NewPaginatedContinuationResponse[T any](list []T, nextPage *int64) *PaginatedContinuationResponse[T] {
+	return &PaginatedContinuationResponse[T]{
+		List:     list,
+		NextPage: nextPage,
+	}
+}
+
 // PaginatedSyncListResponse 用于基于游标的同步查询分页（支持连续获取下一页）
 type PaginatedSyncListResponse[T any] struct {
 	Updated  []T    `json:"updated"`
