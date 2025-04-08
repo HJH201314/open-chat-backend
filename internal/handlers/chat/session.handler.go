@@ -49,7 +49,7 @@ func (h *Handler) DeleteSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 	// 执行删除操作
@@ -78,7 +78,7 @@ func (h *Handler) GetSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 	// 查询会话
@@ -108,7 +108,7 @@ func (h *Handler) GetUserSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 	// 查询会话
@@ -123,6 +123,51 @@ func (h *Handler) GetUserSession(c *gin.Context) {
 		return
 	}
 	ctx_utils.Success(c, userSession)
+}
+
+// GetSharedSession
+//
+//	@Summary		获取已分享的用户会话信息
+//	@Description	获取已分享的用户会话信息（仅返回 Name）
+//	@Tags			Session
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string									true	"会话 ID"
+//	@Param			req			query		chat.GetSharedSession.Req				true	"请求参数"
+//	@Success		200			{object}	entity.CommonResponse[schema.Session]	"返回数据"
+//	@Router			/chat/session/{session_id}/shared [get]
+func (h *Handler) GetSharedSession(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	type Req struct {
+		Touch bool   `form:"touch" json:"touch"` // 尝试获取而不抛出错误
+		Code  string `form:"code" json:"code"`
+	}
+	var req Req
+	if err := c.BindQuery(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	session, err := h.Helper.GetSharedSession(uri.SessionId, req.Code)
+	if err != nil {
+		if !req.Touch {
+			ctx_utils.BizError(c, err) // 返回错误
+		} else {
+			ctx_utils.SuccessBizError(c, err) // 返回200但错误
+		}
+		return
+	}
+
+	// 优先使用共享会话的标题
+	if session.Session != nil && session.ShareInfo.Title != "" {
+		session.Session.Name = session.ShareInfo.Title
+	}
+
+	ctx_utils.Success(c, session.Session)
 }
 
 // GetSessions
@@ -213,8 +258,8 @@ func (h *Handler) SyncSessions(c *gin.Context) {
 //	@Tags			Session
 //	@Accept			json
 //	@Produce		json
-//	@Param			session_id	path		string			true	"会话 ID"
-//	@Param			req			body		schema.Session	true	"会话信息"
+//	@Param			session_id	path		string									true	"会话 ID"
+//	@Param			req			body		entity.ReqUpdateBody[schema.Session]	true	"会话信息"
 //	@Success		200			{object}	entity.CommonResponse[bool]
 //	@Router			/chat/session/update/{session_id} [post]
 func (h *Handler) UpdateSession(c *gin.Context) {
@@ -223,18 +268,19 @@ func (h *Handler) UpdateSession(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	var req schema.Session
+	var req entity.ReqUpdateBody[schema.Session]
 	if err := c.BindJSON(&req); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	req.ID = uri.SessionId
+	req.Data.ID = uri.SessionId
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
-	if err := h.Store.UpdateSession(&req); err != nil {
+	req.WithWhitelist("name", "system_prompt")
+	if err := h.Db.Omit("LastActive").Select(req.Updates).Updates(&req.Data).Error; err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update session")
 		return
 	}
@@ -272,7 +318,7 @@ func (h *Handler) UpdateSessionFlag(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 	if err := h.Db.Model(&schema.UserSession{}).Where(userKey).Updates(&updateData).Error; err != nil {
@@ -310,7 +356,7 @@ func (h *Handler) ShareSession(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 	// 停用分享时，清除邀请码和过期时间

@@ -13,5 +13,7 @@ func (e BizError) Error() string {
 }
 
 var (
-	ErrNoPermission = BizError{HttpCode: 400, BizCode: 10001, Msg: "no permission"}
+	BizErrNoPermission = BizError{HttpCode: 400, BizCode: 10001, Msg: "no permission"}
+	BizErrNoRecord     = BizError{HttpCode: 400, BizCode: 10002, Msg: "no record"}
+	BizErrOutdated     = BizError{HttpCode: 400, BizCode: 10003, Msg: "outdated"}
 )

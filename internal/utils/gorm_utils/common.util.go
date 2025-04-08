@@ -67,7 +67,7 @@ func Delete[T any](db *gorm.DB, entityOrId interface{}) error {
 //		error - 错误信息
 func GetByPageContinuous[T any](db *gorm.DB, param entity.PagingParam, sort entity.SortParam) ([]T, *int64, error) {
 	var results []T
-	pageNum, pageSize := param.GetPageSize(20, 100)
+	pageNum, pageSize := param.GetPage(20, 100)
 	offset := (pageNum - 1) * pageSize
 	// 多查询一条以判断是否存在下一页
 	limit := pageSize + 1
@@ -109,7 +109,7 @@ func GetByPageContinuous[T any](db *gorm.DB, param entity.PagingParam, sort enti
 //		error - 错误信息
 func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.SortParam) ([]T, *int64, error) {
 	var results []T
-	pageNum, pageSize := param.GetPageSize(20, 100)
+	pageNum, pageSize := param.GetPage(20, 100)
 	offset := (pageNum - 1) * pageSize
 	limit := pageSize
 

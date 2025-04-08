@@ -8,16 +8,35 @@ import (
 // Session 会话，一系列消息的集合
 type Session struct {
 	// 原始数据
-	ID            string    `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
-	Name          string    `json:"name"`
-	EnableContext bool      `json:"enable_context"` // 上下文开关
-	ContextSize   int       `json:"context_size"`   // 上下文大小
-	SystemPrompt  string    `json:"system_prompt"`  // 系统提示词
-	LastActive    time.Time `json:"last_active"`
+	ID            string          `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
+	Name          string          `json:"name"`
+	NameType      SessionNameType `gorm:"default:1" json:"name_type"` // 标题来源
+	EnableContext bool            `json:"enable_context"`             // 上下文开关
+	ContextSize   int             `json:"context_size"`               // 上下文大小
+	SystemPrompt  string          `json:"system_prompt"`              // 系统提示词
+	LastActive    time.Time       `json:"last_active"`
 	AutoCreateUpdateDeleteAt
 
 	// 组装数据
 	Messages []Message `gorm:"foreignKey:SessionID;references:ID" json:"messages"`
+}
+
+type SessionNameType int
+
+const (
+	SessionNameTypeWIP SessionNameType = iota + 1
+	SessionNameTypeSystem
+)
+
+func (u SessionNameType) MarshalJSON() ([]byte, error) {
+	var str string
+	switch u {
+	case SessionNameTypeWIP:
+		str = "WIP"
+	case SessionNameTypeSystem:
+		str = "SYSTEM"
+	}
+	return json.Marshal(str)
 }
 
 func (s *Session) TableName() string {
@@ -27,16 +46,16 @@ func (s *Session) TableName() string {
 type UserSessionType int
 
 const (
-	OWNER UserSessionType = iota + 1
-	INVITEE
+	UserSessionTypeOwner UserSessionType = iota + 1
+	UserSessionTypeInvitee
 )
 
 func (u UserSessionType) MarshalJSON() ([]byte, error) {
 	var str string
 	switch u {
-	case OWNER:
+	case UserSessionTypeOwner:
 		str = "owner"
-	case INVITEE:
+	case UserSessionTypeInvitee:
 		str = "invitee"
 	}
 	return json.Marshal(str)

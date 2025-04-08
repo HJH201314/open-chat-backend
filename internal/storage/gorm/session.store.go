@@ -35,7 +35,7 @@ func (s *GormStore) CreateSession(userId uint64, session *schema.Session) error 
 				userSession := schema.UserSession{
 					UserID:    userId,
 					SessionID: session.ID,
-					Type:      schema.OWNER,
+					Type:      schema.UserSessionTypeOwner,
 				}
 				if err := tx.Create(&userSession).Error; err != nil {
 					return err

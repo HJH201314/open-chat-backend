@@ -61,7 +61,7 @@ func PermissionMiddleware(helper *handlers.QueryHelper) gin.HandlerFunc {
 		}
 
 		if !hasPermission {
-			ctx_utils.BizError(c, constants.ErrNoPermission)
+			ctx_utils.BizError(c, constants.BizErrNoPermission)
 			return
 		}
 

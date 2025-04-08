@@ -47,7 +47,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 	}
 	// 验证用户对会话的所有权
 	if !h.Helper.CheckUserSession(ctx_utils.GetUserId(c), uri.SessionId) {
-		ctx_utils.BizError(c, constants.ErrNoPermission)
+		ctx_utils.BizError(c, constants.BizErrNoPermission)
 		return
 	}
 

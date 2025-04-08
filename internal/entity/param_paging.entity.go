@@ -2,7 +2,7 @@ package entity
 
 type PagingParam struct {
 	// 分页参数
-	PageNum  int `form:"page_num" json:"page_num" binding:"required"`
+	PageNum  int `form:"page_num" json:"page_num" binding:"-"`
 	PageSize int `form:"page_size" json:"page_size" binding:"-"`
 
 	// 内部参数
@@ -22,14 +22,21 @@ func (q *PagingParam) WithMaxSize(maxSize int) *PagingParam {
 	return q
 }
 
-func (q *PagingParam) GetPageSize(defaultSize int, maxSize int) (int, int) {
+func (q *PagingParam) GetPageNum() int {
+	if q.PageNum == 0 {
+		q.PageNum = 1
+	}
+	return q.PageNum
+}
+
+func (q *PagingParam) GetPage(defaultSize int, maxSize int) (int, int) {
 	if q.PageSize == 0 {
 		q.PageSize = defaultSize
 	}
 	if q.PageSize > maxSize {
 		q.PageSize = maxSize
 	}
-	return q.PageNum, q.PageSize
+	return q.GetPageNum(), q.PageSize
 }
 
 // PaginatedContinuationResponse 用于基于游标的分页（支持连续获取下一页）

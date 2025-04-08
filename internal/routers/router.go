@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -299,6 +300,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			)
 			router.registerRoute(
 				chatSessionGroup,
+				GET,
+				"/:session_id/shared",
+				"获取指定会话的已分享消息列表",
+
+				chatHandler.GetSharedSession,
+			)
+			router.registerRoute(
+				chatSessionGroup,
 				POST,
 				"/del/:session_id",
 				"删除指定的聊天会话",
@@ -315,6 +324,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"获取指定会话的消息列表",
 
 				chatHandler.GetMessages,
+			)
+			router.registerRoute(
+				chatMessageGroup,
+				GET,
+				"/list/:session_id/shared",
+				"获取指定会话的已分享消息列表",
+
+				chatHandler.GetSharedMessages,
 			)
 			router.registerRoute(
 				chatMessageGroup,
@@ -348,6 +365,9 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 		router.registerRoute(userGroup, GET, "/current", "当前用户信息", userHandler.Current)
 		router.registerRoute(userGroup, POST, "/logout", "用户登出接口", userHandler.Logout)
 		router.registerRoute(userGroup, POST, "/register", "新用户注册接口", userHandler.Register)
+		if os.Getenv("GO_ENV") == "dev" {
+			router.registerRoute(userGroup, POST, "/backdoor/login", "后台登录接口", userHandler.BackdoorLogin)
+		}
 	}
 
 	// routes for management

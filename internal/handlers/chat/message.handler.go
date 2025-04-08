@@ -45,12 +45,12 @@ func (h *Handler) GetMessages(c *gin.Context) {
 		return
 	}
 	modelMap := make(map[uint64]string)
-	for _, m := range messages {
+	for i, m := range messages {
 		if m.Model == nil {
 			continue
 		}
 		modelMap[m.ModelID] = m.Model.Name
-		m.Model = nil // 不直接返回模型信息
+		messages[i].Model = nil // 不直接返回模型信息
 	}
 	ctx_utils.Success(
 		c, &ChatMessageListResponse{
@@ -63,6 +63,62 @@ func (h *Handler) GetMessages(c *gin.Context) {
 type ChatMessageListResponse struct {
 	*entity.PaginatedContinuationResponse[schema.Message]
 	ModelMap map[uint64]string `json:"model_map"` // 模型 ID -> 模型名称
+}
+
+// GetSharedMessages
+//
+//	@Summary		获取分享过的消息
+//	@Description	获取分享过的消息
+//	@Tags			Message
+//	@Accept			json
+//	@Produce		json
+//	@Param			session_id	path		string											true	"会话 ID"
+//	@Param			req			query		chat.GetSharedMessages.Req						true	"分页参数"
+//	@Success		200			{object}	entity.CommonResponse[ChatMessageListResponse]	"返回数据"
+//	@Router			/chat/message/list/{session_id}/shared [get]
+func (h *Handler) GetSharedMessages(c *gin.Context) {
+	var uri PathParamSessionId
+	if err := c.BindUri(&uri); err != nil || uri.SessionId == "" {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	type Req struct {
+		entity.ParamPagingSort
+		Code string `form:"code" json:"code"`
+	}
+	var req Req
+	if err := c.BindQuery(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	// 验证是否分享及 Code 是否正确
+	if _, err := h.Helper.GetSharedSession(uri.SessionId, req.Code); err != nil {
+		ctx_utils.BizError(c, err)
+		return
+	}
+
+	// 查询消息
+	req.WithDefaultSize(20).WithMaxSize(50)
+	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.PagingParam, req.SortParam)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+	modelMap := make(map[uint64]string)
+	for i, m := range messages {
+		if m.Model == nil {
+			continue
+		}
+		modelMap[m.ModelID] = m.Model.Name
+		messages[i].Model = nil // 不直接返回模型信息
+	}
+	ctx_utils.Success(
+		c, &ChatMessageListResponse{
+			PaginatedContinuationResponse: entity.NewPaginatedContinuationResponse(messages, nextPage),
+			ModelMap:                      modelMap,
+		},
+	)
 }
 
 // UpdateMessage

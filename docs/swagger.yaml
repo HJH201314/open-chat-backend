@@ -120,7 +120,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/chat.ChatMessageListResponse'
+        - $ref: '#/definitions/chat.ChatMessageListResponse'
         description: 数据
       msg:
         description: 消息
@@ -693,6 +693,19 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/schema.Role'
+      updates:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - data
+    - updates
+    type: object
+  entity.ReqUpdateBody-schema_Session:
+    properties:
+      data:
+        $ref: '#/definitions/schema.Session'
       updates:
         items:
           type: string
@@ -1289,6 +1302,10 @@ definitions:
         type: array
       name:
         type: string
+      name_type:
+        allOf:
+        - $ref: '#/definitions/schema.SessionNameType'
+        description: 标题来源
       system_prompt:
         description: 系统提示词
         type: string
@@ -1301,6 +1318,14 @@ definitions:
         description: 标星
         type: boolean
     type: object
+  schema.SessionNameType:
+    enum:
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - SessionNameTypeWIP
+    - SessionNameTypeSystem
   schema.SessionShareInfo:
     properties:
       code:
@@ -1364,8 +1389,8 @@ definitions:
     - 2
     type: integer
     x-enum-varnames:
-    - OWNER
-    - INVITEE
+    - UserSessionTypeOwner
+    - UserSessionTypeInvitee
   user.Login.loginRequest:
     properties:
       password:
@@ -1499,7 +1524,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -1518,6 +1542,46 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-chat_ChatMessageListResponse'
       summary: 获取消息
+      tags:
+      - Message
+  /chat/message/list/{session_id}/shared:
+    get:
+      consumes:
+      - application/json
+      description: 获取分享过的消息
+      parameters:
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - in: query
+        name: code
+        type: string
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-chat_ChatMessageListResponse'
+      summary: 获取分享过的消息
       tags:
       - Message
   /chat/session/{session_id}:
@@ -1539,6 +1603,34 @@ paths:
           schema:
             $ref: '#/definitions/entity.CommonResponse-schema_Session'
       summary: 获取会话
+      tags:
+      - Session
+  /chat/session/{session_id}/shared:
+    get:
+      consumes:
+      - application/json
+      description: 获取已分享的用户会话信息（仅返回 Name）
+      parameters:
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - in: query
+        name: code
+        type: string
+      - description: 尝试获取而不抛出错误
+        in: query
+        name: touch
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回数据
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Session'
+      summary: 获取已分享的用户会话信息
       tags:
       - Session
   /chat/session/del/{session_id}:
@@ -1601,7 +1693,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -1678,7 +1769,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -1709,7 +1799,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/schema.Session'
+          $ref: '#/definitions/entity.ReqUpdateBody-schema_Session'
       produces:
       - application/json
       responses:
@@ -1844,7 +1934,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -1968,7 +2057,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2049,7 +2137,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2146,7 +2233,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2184,7 +2270,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2302,7 +2387,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2441,7 +2525,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2565,7 +2648,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2710,7 +2792,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -2915,7 +2996,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -3206,7 +3286,6 @@ paths:
       - description: 分页参数
         in: query
         name: page_num
-        required: true
         type: integer
       - in: query
         name: page_size
@@ -3249,6 +3328,28 @@ paths:
       summary: 创建题目
       tags:
       - Problem
+  /user/backdoor/login:
+    post:
+      consumes:
+      - application/json
+      description: 后门登录
+      parameters:
+      - description: 登录请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/user.Login.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: login successfully
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_User'
+      summary: 后门登录
+      tags:
+      - User
   /user/current:
     get:
       consumes:

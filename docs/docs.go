@@ -145,8 +145,70 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-chat_ChatMessageListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/message/list/{session_id}/shared": {
+            "get": {
+                "description": "获取分享过的消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Message"
+                ],
+                "summary": "获取分享过的消息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -311,8 +373,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -429,8 +490,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -475,7 +535,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schema.Session"
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_Session"
                         }
                     }
                 ],
@@ -553,6 +613,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/session/{session_id}/shared": {
+            "get": {
+                "description": "获取已分享的用户会话信息（仅返回 Name）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "获取已分享的用户会话信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "尝试获取而不抛出错误",
+                        "name": "touch",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回数据",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Session"
+                        }
+                    }
+                }
+            }
+        },
         "/manage/bucket/create": {
             "post": {
                 "description": "创建 储存桶",
@@ -610,8 +713,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -801,8 +903,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -999,8 +1100,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1149,8 +1249,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1208,8 +1307,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1349,8 +1447,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1531,8 +1628,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1722,8 +1818,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1913,8 +2008,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2301,8 +2395,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2706,8 +2799,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "分页参数",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2869,6 +2961,40 @@ const docTemplate = `{
                         "description": "更新成功与否",
                         "schema": {
                             "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/backdoor/login": {
+            "post": {
+                "description": "后门登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "后门登录",
+                "parameters": [
+                    {
+                        "description": "登录请求",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.Login.loginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "login successfully",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
                         }
                     }
                 }
@@ -4135,6 +4261,25 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.ReqUpdateBody-schema_Session": {
+            "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.Session"
+                },
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "exam.SubmitExamRequest": {
             "type": "object",
             "properties": {
@@ -4989,6 +5134,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "name_type": {
+                    "description": "标题来源",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.SessionNameType"
+                        }
+                    ]
+                },
                 "system_prompt": {
                     "description": "系统提示词",
                     "type": "string"
@@ -5006,6 +5159,17 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        },
+        "schema.SessionNameType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "SessionNameTypeWIP",
+                "SessionNameTypeSystem"
+            ]
         },
         "schema.SessionShareInfo": {
             "type": "object",
@@ -5102,8 +5266,8 @@ const docTemplate = `{
                 2
             ],
             "x-enum-varnames": [
-                "OWNER",
-                "INVITEE"
+                "UserSessionTypeOwner",
+                "UserSessionTypeInvitee"
             ]
         },
         "user.Login.loginRequest": {

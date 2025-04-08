@@ -177,6 +177,56 @@ func (h *Handler) Login(c *gin.Context) {
 	ctx_utils.Success(c, detailedUser)
 }
 
+// BackdoorLogin
+//
+//	@Summary		后门登录
+//	@Description	后门登录
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	body		user.Login.loginRequest				true	"登录请求"
+//	@Success		200	{object}	entity.CommonResponse[schema.User]	"login successfully"
+//	@Router			/user/backdoor/login [post]
+func (h *Handler) BackdoorLogin(c *gin.Context) {
+	type loginRequest struct {
+		Username string `json:"username" binding:"required"`
+	}
+	var req loginRequest
+	if err := c.BindJSON(&req); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	var userRes schema.User
+	if err := h.Db.Where(
+		"username = ?",
+		req.Username,
+	).First(&userRes).Error; err != nil {
+		ctx_utils.CustomError(c, 401, "username is incorrect")
+		return
+	}
+
+	// 刷新角色
+	if err := h.Redis.DeleteUserRolesCache(userRes.ID); err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
+	// 获取详细用户信息
+	detailedUser, err := h.Store.GetUserDetailed(userRes.ID)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
+		return
+	}
+
+	// 签发并缓存 token
+	token, _ := signJwtTokenIntoHeader(c, detailedUser)
+	if err := h.Redis.CacheUserToken(userRes.ID, token, constants.RefreshTokenExpire); err != nil {
+		return
+	}
+	ctx_utils.Success(c, detailedUser)
+}
+
 // Logout
 //
 //	@Summary		用户登出
