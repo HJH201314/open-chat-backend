@@ -10,7 +10,7 @@ type Session struct {
 	// 原始数据
 	ID            string          `gorm:"primaryKey;default:gen_random_uuid()" json:"id"`
 	Name          string          `json:"name"`
-	NameType      SessionNameType `gorm:"default:1" json:"name_type"` // 标题来源
+	NameType      SessionNameType `gorm:"default:0" json:"name_type"` // 标题来源
 	EnableContext bool            `json:"enable_context"`             // 上下文开关
 	ContextSize   int             `json:"context_size"`               // 上下文大小
 	SystemPrompt  string          `json:"system_prompt"`              // 系统提示词
@@ -24,20 +24,10 @@ type Session struct {
 type SessionNameType int
 
 const (
-	SessionNameTypeWIP SessionNameType = iota + 1
+	SessionNameTypeNone SessionNameType = iota
+	SessionNameTypeTemp
 	SessionNameTypeSystem
 )
-
-func (u SessionNameType) MarshalJSON() ([]byte, error) {
-	var str string
-	switch u {
-	case SessionNameTypeWIP:
-		str = "WIP"
-	case SessionNameTypeSystem:
-		str = "SYSTEM"
-	}
-	return json.Marshal(str)
-}
 
 func (s *Session) TableName() string {
 	return "sessions"

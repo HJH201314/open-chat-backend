@@ -1320,11 +1320,13 @@ definitions:
     type: object
   schema.SessionNameType:
     enum:
+      - 0
     - 1
     - 2
     type: integer
     x-enum-varnames:
-    - SessionNameTypeWIP
+      - SessionNameTypeNone
+      - SessionNameTypeTemp
     - SessionNameTypeSystem
   schema.SessionShareInfo:
     properties:

@@ -135,7 +135,6 @@ func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page enti
 	// 关闭排序
 	sort.WithForceOrder("")
 	sessionTable := (&schema.Session{}).TableName()
-	messageTable := (&schema.Message{}).TableName()
 	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
 		s.Db.Unscoped().Where("user_id = ?", userId).
 			// 使用手动 JOIN 查询到符合条件的 session
@@ -143,12 +142,6 @@ func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page enti
 				fmt.Sprintf(
 					"INNER JOIN %s AS session ON sessions_users.session_id = session.id",
 					sessionTable,
-				),
-			).
-			Joins(
-				fmt.Sprintf(
-					"LEFT JOIN %s AS message ON session.id = message.session_id AND message.id IN (SELECT MIN(m.id) FROM %s m GROUP BY m.session_id)",
-					messageTable, messageTable,
 				),
 			).
 			Where(
@@ -160,7 +153,12 @@ func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page enti
 			).
 			Order("COALESCE(sessions_users.deleted_at, sessions_users.updated_at, session.updated_at, sessions_users.created_at) DESC").
 			// 使用预加载读取会话和消息的数据
-			Preload("Session").Preload("Session.Messages"),
+			Preload("Session").Preload(
+			"Session.Messages", func(db *gorm.DB) *gorm.DB {
+				// 获取会话的第一条消息
+				return db.Where("id IN (SELECT MIN(id) FROM messages GROUP BY session_id)")
+			},
+		),
 		page,
 		sort,
 	)

@@ -1,6 +1,8 @@
 package chat
 
-import "github.com/fcraft/open-chat/internal/handlers"
+import (
+	"github.com/fcraft/open-chat/internal/handlers"
+)
 
 // PathParamSessionId 路径参数SessionId
 type PathParamSessionId struct {

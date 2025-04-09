@@ -39,8 +39,13 @@ func ConvertMessagesToSchema(chatMessages []Message, args ...interface{}) []sche
 			}
 		}
 		schemaMessage := schema.Message{
-			Role:    chatMessage.Role,
-			Content: strutil.TemplateReplace(chatMessage.Content, templateData),
+			Role: chatMessage.Role,
+		}
+		if len(templateData) > 0 {
+			// 若有模板数据，则替换模板变量
+			schemaMessage.Content = strutil.TemplateReplace(chatMessage.Content, templateData)
+		} else {
+			schemaMessage.Content = chatMessage.Content
 		}
 		schemaMessages = append(schemaMessages, schemaMessage)
 	}
@@ -65,8 +70,13 @@ func ConvertSchemaToMessages(schemaMessages []schema.Message, args ...interface{
 			}
 		}
 		chatMessage := Message{
-			Role:    schemaMessage.Role,
-			Content: strutil.TemplateReplace(schemaMessage.Content, templateData),
+			Role: schemaMessage.Role,
+		}
+		if len(templateData) > 0 {
+			// 若有模板数据，则替换模板变量
+			chatMessage.Content = strutil.TemplateReplace(schemaMessage.Content, templateData)
+		} else {
+			chatMessage.Content = schemaMessage.Content
 		}
 		chatMessages = append(chatMessages, chatMessage)
 	}

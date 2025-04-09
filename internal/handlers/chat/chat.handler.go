@@ -183,9 +183,35 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			if err := h.Store.SaveMessages(&messages); err != nil {
 				// do nothing
 			}
+
+			// 更新用户 usage
 			usageTokens := doneResp.Usage.PromptTokens + doneResp.Usage.CompletionTokens*4
 			if err := h.Store.UpdateUserUsage(ctx_utils.GetUserId(c), -usageTokens); err != nil {
 				// do nothing
+			}
+
+			if session.NameType == schema.SessionNameTypeNone {
+				// 1. 首次对话，更新标题为用户输入，并限制长度为 25，若大于 25，加上 ...
+				if len(req.Question) > 25 {
+					session.Name = req.Question[:25] + "..."
+				} else {
+					session.Name = req.Question
+				}
+				if err := h.Db.Model(&session).Updates(
+					map[string]any{
+						"name":      session.Name,
+						"name_type": schema.SessionNameTypeTemp,
+					},
+				); err != nil {
+					// do nothing
+				}
+				// 2. 执行标题生成
+				go func() {
+					err := services.GetChatService().GenerateTitleForSession(session.ID, 0, 1)
+					if err != nil {
+						// TODO: 记录错误
+					}
+				}()
 			}
 		} else {
 			// 无响应，删除预插入的消息

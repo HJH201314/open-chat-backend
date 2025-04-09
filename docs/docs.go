@@ -5163,11 +5163,13 @@ const docTemplate = `{
         "schema.SessionNameType": {
             "type": "integer",
             "enum": [
+                0,
                 1,
                 2
             ],
             "x-enum-varnames": [
-                "SessionNameTypeWIP",
+                "SessionNameTypeNone",
+                "SessionNameTypeTemp",
                 "SessionNameTypeSystem"
             ]
         },
