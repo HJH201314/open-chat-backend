@@ -146,11 +146,12 @@ func (s *SystemConfigService) RegisterSystemConfig(params RegisterConfigParams) 
 		"name = ?",
 		params.Name,
 	).First(&savedConfig).Error; err == nil && savedConfig.Value != "" {
-		// 检验现存配置的合法性
-		if err := s.validateAgainstSchema(savedConfig.Value, defaultValueStr); err != nil {
+		// 检验现存配置对于当前注册的 schema 的合法性
+		if err := s.validateAgainstSchema(savedConfig.Value, config.Schema); err != nil {
 			slog.Default().Error("Failed to validate existing config", "name", params.Name, "error", err.Error())
 			// 备份现存配置
 			savedConfig.Name = params.Name + "_backup_" + time.Now().Format("20060102150405")
+			savedConfig.AutoCreateUpdateDeleteAt = schema.AutoCreateUpdateDeleteAt{} // 清除查询所获取的时间数据
 			s.db.Create(&savedConfig)
 		}
 	}
@@ -254,8 +255,14 @@ func (s *SystemConfigService) SetConfig(name string, value any) error {
 
 // validateAgainstSchema 使用 gojsonschema 进行完整验证
 func (s *SystemConfigService) validateAgainstSchema(value interface{}, schemaDef string) error {
+	var valueLoader gojsonschema.JSONLoader
+	switch value.(type) {
+	case string:
+		valueLoader = gojsonschema.NewStringLoader(value.(string))
+	default:
+		valueLoader = gojsonschema.NewGoLoader(value)
+	}
 	schemaLoader := gojsonschema.NewStringLoader(schemaDef)
-	valueLoader := gojsonschema.NewGoLoader(value)
 
 	result, err := gojsonschema.Validate(schemaLoader, valueLoader)
 	if err != nil {

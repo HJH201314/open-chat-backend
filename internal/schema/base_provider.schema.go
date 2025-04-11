@@ -6,6 +6,7 @@ type Provider struct {
 	DisplayName string   `gorm:"" json:"display_name"`                  // 对外展示提供商名称
 	BaseURL     string   `gorm:"not null" json:"base_url"`              // API 的基本 URL
 	Description string   `gorm:"" json:"description"`                   // 额外提供商描述
+	Icon        string   `json:"icon"`                                  // 供应商图标
 	APIKeys     []APIKey `gorm:"foreignKey:ProviderID" json:"api_keys"` // 一对多关系，与 APIKey 模型关联
 	Models      []Model  `gorm:"foreignKey:ProviderID" json:"models"`   // 一对多关系，与 Model 模型关联
 	AutoCreateUpdateAt
@@ -25,6 +26,7 @@ type Model struct {
 	Name        string      `gorm:"not null" json:"name"`                    // 模型名称
 	DisplayName string      `gorm:"" json:"display_name"`                    // 对外展示模型名称
 	Description string      `gorm:"" json:"description"`                     // 额外模型描述
+	Icon        string      `json:"icon"`                                    // 模型图标
 	Config      ModelConfig `gorm:"type:json;serializer:json" json:"config"` // 使用 JSON 储存配置
 	Active      bool        `gorm:"default:true" json:"active"`              // 是否启用
 
@@ -67,6 +69,7 @@ type ModelCollection struct {
 	Name        string  `gorm:"not null;unique" json:"name"`                       // 唯一标识名称
 	DisplayName string  `json:"display_name"`                                      // 展示名称
 	Description string  `json:"description"`                                       // 额外描述
+	Icon        string  `json:"icon"`                                              // 图标
 	Models      []Model `gorm:"many2many:model_collections_models;" json:"models"` // 关联的模型
 	AutoCreateAt
 }

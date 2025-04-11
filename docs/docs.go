@@ -4000,6 +4000,9 @@ const docTemplate = `{
                 "display_name": {
                     "type": "string"
                 },
+                "icon": {
+                    "type": "string"
+                },
                 "is_default": {
                     "type": "boolean"
                 },
@@ -4720,6 +4723,10 @@ const docTemplate = `{
                     "description": "对外展示模型名称",
                     "type": "string"
                 },
+                "icon": {
+                    "description": "模型图标",
+                    "type": "string"
+                },
                 "id": {
                     "description": "原始数据",
                     "type": "integer"
@@ -4757,6 +4764,10 @@ const docTemplate = `{
                 },
                 "display_name": {
                     "description": "展示名称",
+                    "type": "string"
+                },
+                "icon": {
+                    "description": "图标",
                     "type": "string"
                 },
                 "id": {
@@ -4994,6 +5005,10 @@ const docTemplate = `{
                 },
                 "display_name": {
                     "description": "对外展示提供商名称",
+                    "type": "string"
+                },
+                "icon": {
+                    "description": "供应商图标",
                     "type": "string"
                 },
                 "id": {
