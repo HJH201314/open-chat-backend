@@ -28,7 +28,7 @@ func (h *Handler) GetModelConfig(c *gin.Context) {
 		return
 	}
 	var modelConfig []entity.ConfigChatModel
-	if err := json.Unmarshal([]byte(config.Value), &modelConfig); err != nil {
+	if err := json.Unmarshal(config.Value, &modelConfig); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}

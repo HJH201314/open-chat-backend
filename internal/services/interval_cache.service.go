@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"time"
 )
@@ -11,35 +10,30 @@ type CacheService struct {
 }
 
 func NewCacheService(baseService *BaseService) *CacheService {
-	return &CacheService{
+	cacheService := &CacheService{
 		BaseService: *baseService,
 	}
-}
-
-func (s *CacheService) Start(ctx context.Context, interval time.Duration) {
-	s.syncAll()
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			s.syncAll()
-		case <-ctx.Done():
-			s.Logger.Info("Cache Service stopped")
-			return
-		}
+	err := GetScheduleService().RegisterSchedule(
+		"cache_providers", "缓存接入点和模型", 10*time.Minute, func() error {
+			return cacheService.syncAll()
+		},
+	)
+	if err != nil {
+		return nil
 	}
+	return cacheService
 }
 
-func (s *CacheService) syncAll() {
+func (s *CacheService) syncAll() error {
 	if err := s.SyncCacheProviders(); err != nil {
-		// do nothing
+		return err
 	}
 
 	if err := s.CachePresets(); err != nil {
-		// do nothing
+		return err
 	}
+
+	return nil
 }
 
 // SyncCacheProviders 缓存 provider

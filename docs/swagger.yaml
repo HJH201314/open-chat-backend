@@ -19,6 +19,9 @@ definitions:
         type: integer
       enable_context:
         type: boolean
+      enable_search:
+        description: 是否启用搜索
+        type: boolean
       model_name:
         description: 模型集合名称
         type: string
@@ -269,6 +272,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_Schedule:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Schedule'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-entity_PaginatedTotalResponse-schema_User:
     properties:
       code:
@@ -476,6 +492,19 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-schema_Schedule:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+          - $ref: '#/definitions/schema.Schedule'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-schema_Session:
     properties:
       code:
@@ -643,6 +672,15 @@ definitions:
       total:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_Schedule:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.Schedule'
+        type: array
+      total:
+        type: integer
+    type: object
   entity.PaginatedTotalResponse-schema_User:
     properties:
       list:
@@ -703,6 +741,19 @@ definitions:
     required:
     - data
     - updates
+    type: object
+  entity.ReqUpdateBody-schema_Schedule:
+    properties:
+      data:
+        $ref: '#/definitions/schema.Schedule'
+      updates:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+      - data
+      - updates
     type: object
   entity.ReqUpdateBody-schema_Session:
     properties:
@@ -1274,6 +1325,34 @@ definitions:
       updated_at:
         type: string
     type: object
+  schema.Schedule:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      duration:
+        description: 执行间隔，单位：秒
+        type: integer
+      id:
+        type: integer
+      last_run_time:
+        type: integer
+      name:
+        type: string
+      status:
+        $ref: '#/definitions/schema.ScheduleStatus'
+    type: object
+  schema.ScheduleStatus:
+    enum:
+      - 0
+      - 1
+      - 2
+    type: integer
+    x-enum-varnames:
+      - ScheduleStatusStopped
+      - ScheduleStatusRunning
+      - ScheduleStatusPending
   schema.ScoreStatus:
     enum:
     - pending
@@ -1497,7 +1576,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 更新消息
+      description: 更新消息（仅 extra 字段的增量合并更新）
       parameters:
       - description: 消息 ID
         in: path
@@ -1774,6 +1853,9 @@ paths:
       - application/json
       description: 同步会话列表
       parameters:
+        - in: query
+          name: end_time
+          type: integer
       - description: 客户端上次同步时间戳
         in: query
         name: last_sync_time
@@ -1786,6 +1868,12 @@ paths:
       - in: query
         name: page_size
         type: integer
+        - in: query
+          name: sort_expr
+          type: string
+        - in: query
+          name: start_time
+          type: integer
       produces:
       - application/json
       responses:
@@ -1975,7 +2063,7 @@ paths:
       parameters:
       - description: ModelCollection ID
         in: path
-        name: collection_id
+        name: id
         required: true
         type: integer
       produces:
@@ -1996,7 +2084,7 @@ paths:
       parameters:
       - description: ModelCollection ID
         in: path
-        name: collection_id
+        name: id
         required: true
         type: integer
       produces:
@@ -2681,6 +2769,107 @@ paths:
       summary: 批量分页获取角色
       tags:
       - Role
+  /manage/schedule/{name}:
+    get:
+      consumes:
+        - application/json
+      description: 获取 定时任务
+      parameters:
+        - description: 定时任务 name
+          in: path
+          name: name
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 定时任务
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_Schedule'
+      summary: 获取 定时任务
+      tags:
+        - Schedule
+  /manage/schedule/{name}/run:
+    post:
+      consumes:
+        - application/json
+      description: 立即运行 定时任务
+      parameters:
+        - description: 定时任务 name
+          in: path
+          name: name
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 立即运行 定时任务
+      tags:
+        - Schedule
+  /manage/schedule/{name}/update:
+    post:
+      consumes:
+        - application/json
+      description: 更新 定时任务
+      parameters:
+        - description: 定时任务 name
+          in: path
+          name: name
+          required: true
+          type: string
+        - description: 定时任务参数
+          in: body
+          name: schedule
+          required: true
+          schema:
+            $ref: '#/definitions/entity.ReqUpdateBody-schema_Schedule'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 更新成功与否
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-bool'
+      summary: 更新 定时任务
+      tags:
+        - Schedule
+  /manage/schedule/list:
+    get:
+      consumes:
+        - application/json
+      description: 批量获取 定时任务
+      parameters:
+        - in: query
+          name: end_time
+          type: integer
+        - description: 分页参数
+          in: query
+          name: page_num
+          type: integer
+        - in: query
+          name: page_size
+          type: integer
+        - in: query
+          name: sort_expr
+          type: string
+        - in: query
+          name: start_time
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 定时任务列表
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Schedule'
+      summary: 批量获取 定时任务
+      tags:
+        - Schedule
   /manage/user/{id}:
     get:
       consumes:

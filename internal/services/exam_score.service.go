@@ -7,9 +7,9 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
-	"strings"
-
 	"gorm.io/gorm"
+	"strings"
+	"sync"
 
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/utils/chat_utils"
@@ -37,43 +37,57 @@ func (s *ExamScoreService) ScoreExam(ctx context.Context, recordID uint64) error
 	var totalScore uint64 = 0
 	var errorOccurred bool
 
+	// 并行打分
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+
 	// 处理每个题目的答案
 	for i, answer := range record.Answers {
-		// 查找题目信息
-		var problem schema.Problem
-		if err := s.db.First(&problem, answer.ProblemID).Error; err != nil {
-			record.Answers[i].Status = schema.StatusFailed
-			record.Answers[i].Comments = "题目信息获取失败"
-			errorOccurred = true
-			continue
-		}
+		wg.Add(1)
 
-		// 这里返回的 score 是 0-100 分
-		score, comments, err := s.ScoreProblemSync(ctx, problem.ID, record.UserID, answer.Answer)
+		go func() {
+			defer wg.Done()
 
-		if err != nil {
-			record.Answers[i].Status = schema.StatusFailed
-			record.Answers[i].Comments = fmt.Sprintf("评分失败: %s", err.Error())
-			errorOccurred = true
-		} else {
-			// 获取在 exam 中的分数
-			q, ok := slice.FindBy(
-				record.Exam.Problems, func(index int, item schema.ExamProblem) bool {
-					return item.ProblemID == problem.ID
-				},
-			)
-			if !ok {
-				err = fmt.Errorf("题目信息获取失败")
+			// 查找题目信息
+			var problem schema.Problem
+			if err := s.db.First(&problem, answer.ProblemID).Error; err != nil {
+				record.Answers[i].Status = schema.StatusFailed
+				record.Answers[i].Comments = "题目信息获取失败"
+				errorOccurred = true
+				return
 			}
-			// 按比例计算最终分数
-			finalScore := uint64(float64(q.Score) * float64(score) / 100)
 
-			record.Answers[i].Score = finalScore
-			record.Answers[i].Comments = comments
-			record.Answers[i].Status = schema.StatusCompleted
-			totalScore += finalScore
-		}
+			// 这里返回的 score 是 0-100 分
+			score, comments, err := s.ScoreProblemSync(ctx, problem.ID, record.UserID, answer.Answer)
+
+			if err != nil {
+				record.Answers[i].Status = schema.StatusFailed
+				record.Answers[i].Comments = fmt.Sprintf("评分失败: %s", err.Error())
+				errorOccurred = true
+			} else {
+				// 获取在 exam 中的分数
+				q, ok := slice.FindBy(
+					record.Exam.Problems, func(index int, item schema.ExamProblem) bool {
+						return item.ProblemID == problem.ID
+					},
+				)
+				if !ok {
+					err = fmt.Errorf("题目信息获取失败")
+				}
+				// 按比例计算最终分数
+				finalScore := uint64(float64(q.Score) * float64(score) / 100)
+
+				record.Answers[i].Score = finalScore
+				record.Answers[i].Comments = comments
+				record.Answers[i].Status = schema.StatusCompleted
+
+				mutex.Lock()
+				totalScore += finalScore
+				mutex.Unlock()
+			}
+		}()
 	}
+	wg.Wait()
 
 	// 更新评分状态和总分
 	finalStatus := schema.StatusCompleted

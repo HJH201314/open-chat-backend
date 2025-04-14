@@ -1,22 +1,19 @@
 package main
 
 import (
-	"context"
-	"github.com/fcraft/open-chat/internal/storage/helper"
-	"github.com/fcraft/open-chat/internal/utils/chat_utils"
-	"log"
-	"log/slog"
-	"os"
-	"time"
-
 	"github.com/MatusOllah/slogcolor"
 	"github.com/fcraft/open-chat/internal/middlewares"
 	"github.com/fcraft/open-chat/internal/routers"
 	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/storage/gorm"
+	"github.com/fcraft/open-chat/internal/storage/helper"
 	"github.com/fcraft/open-chat/internal/storage/redis"
+	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"log"
+	"log/slog"
+	"os"
 )
 
 func main() {
@@ -31,19 +28,17 @@ func main() {
 	rd := redis.NewRedisStore()
 	hp := helper.NewHandlerHelper(store, rd)
 
-	// 启动缓存服务
-	cacheCtx, cancelCache := context.WithCancel(context.Background())
-	defer cancelCache()
 	baseService := services.NewBaseService(store, rd, hp)         // 基础服务
+	services.InitPresetService(baseService)                       // 初始化预设缓存服务 !高优先级
+	services.InitScheduleService(baseService)                     // 初始化定时任务服务 !高优先级
+	services.InitSystemConfigService(baseService)                 // 初始化系统配置服务
 	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
-	go intervalCacheService.Start(cacheCtx, 10*time.Minute)
-	services.InitPresetService(baseService) // 初始化预设缓存服务 !高优先级
-	services.InitEncryptService()
-	services.InitChatService(baseService)            // 注册对话服务
-	services.InitMakeQuestionService(baseService)    // 初始化题目生成服务
-	services.InitSystemConfigService(baseService)    // 初始化系统配置服务
-	services.InitModelCollectionService(baseService) // 初始化模型集合服务
-	//go services.GetMakeQuestionService().StartGenerate(context.Background(), 10*time.Second)
+	go services.InitEncryptService()
+	go services.InitChatService(baseService)            // 注册对话服务
+	go services.InitMakeQuestionService(baseService)    // 初始化题目生成服务
+	go services.InitModelCollectionService(baseService) // 初始化模型集合服务
+
+	services.GetScheduleService().StartSchedule() // 启动定时任务
 
 	r := gin.Default()
 	// 初始化中间件

@@ -238,7 +238,7 @@ const docTemplate = `{
         },
         "/chat/message/{id}/update": {
             "post": {
-                "description": "更新消息",
+                "description": "更新消息（仅 extra 字段的增量合并更新）",
                 "consumes": [
                     "application/json"
                 ],
@@ -481,6 +481,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "客户端上次同步时间戳",
                         "name": "last_sync_time",
                         "in": "query",
@@ -495,6 +500,16 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
                         "in": "query"
                     }
                 ],
@@ -948,7 +963,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ModelCollection ID",
-                        "name": "collection_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -980,7 +995,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ModelCollection ID",
-                        "name": "collection_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1938,6 +1953,162 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/entity.ReqUpdateBody-schema_Role"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/schedule/list": {
+            "get": {
+                "description": "批量获取 定时任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "批量获取 定时任务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "定时任务列表",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Schedule"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/schedule/{name}": {
+            "get": {
+                "description": "获取 定时任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "获取 定时任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "定时任务 name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "定时任务",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_Schedule"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/schedule/{name}/run": {
+            "post": {
+                "description": "立即运行 定时任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "立即运行 定时任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "定时任务 name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功与否",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/manage/schedule/{name}/update": {
+            "post": {
+                "description": "更新 定时任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "更新 定时任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "定时任务 name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "定时任务参数",
+                        "name": "schedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqUpdateBody-schema_Schedule"
                         }
                     }
                 ],
@@ -3198,6 +3369,10 @@ const docTemplate = `{
                 "enable_context": {
                     "type": "boolean"
                 },
+                "enable_search": {
+                    "description": "是否启用搜索",
+                    "type": "boolean"
+                },
                 "model_name": {
                     "description": "模型集合名称",
                     "type": "string"
@@ -3582,6 +3757,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_Schedule": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Schedule"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedTotalResponse-schema_User": {
             "type": "object",
             "properties": {
@@ -3914,6 +4110,27 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-schema_Schedule": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Schedule"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-schema_Session": {
             "type": "object",
             "properties": {
@@ -4174,6 +4391,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_Schedule": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.Schedule"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_User": {
             "type": "object",
             "properties": {
@@ -4254,6 +4485,25 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/schema.Role"
+                },
+                "updates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.ReqUpdateBody-schema_Schedule": {
+            "type": "object",
+            "required": [
+                "data",
+                "updates"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schema.Schedule"
                 },
                 "updates": {
                     "type": "array",
@@ -5096,6 +5346,46 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "schema.Schedule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "description": "执行间隔，单位：秒",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_run_time": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/schema.ScheduleStatus"
+                }
+            }
+        },
+        "schema.ScheduleStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "ScheduleStatusStopped",
+                "ScheduleStatusRunning",
+                "ScheduleStatusPending"
+            ]
         },
         "schema.ScoreStatus": {
             "type": "string",

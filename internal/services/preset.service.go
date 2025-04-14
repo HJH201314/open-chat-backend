@@ -152,7 +152,7 @@ func (s *PresetService) RegisterBuiltinPresetsSimple(name string, desc string, v
 }
 
 // BuiltinPresetCompletion 内置预设补全
-func BuiltinPresetCompletion(presetName string, params map[string]string) (string, uint64, error) {
+func BuiltinPresetCompletion(presetName string, params map[string]string) (completion string, recordId uint64, err error) {
 	presetService := GetPresetService()
 	if presetService == nil {
 		return "", 0, errors.New("preset service not found")
@@ -183,8 +183,8 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (strin
 		context.Background(), chat_utils.GetCommonCompletionOptions(
 			&model, &chat_utils.CompletionOptions{
 				CompletionModelConfig: chat_utils.CompletionModelConfig{
-					MaxTokens:   1000, // 输出长度限制 TODO：跟随更新可配置后可自定义
-					Temperature: 1.6,  // 较高的温度，提高灵活性 TODO：跟随更新可配置后可自定义
+					//MaxTokens:   1000, // 输出长度限制 TODO：跟随更新可配置后可自定义
+					//Temperature: 1.6,  // 较高的温度，提高灵活性 TODO：跟随更新可配置后可自定义
 				},
 				SystemPrompt: preset.PromptSession.SystemPrompt,
 				Messages:     chat_utils.ConvertSchemaToMessages(preset.PromptSession.Messages, params),

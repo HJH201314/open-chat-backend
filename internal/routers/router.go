@@ -525,7 +525,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				manageCollectionGroup,
 				POST,
 				"/:id/update",
-				"创建新的模型集合",
+				"更新模型集合",
 
 				manageHandler.UpdateModelCollection,
 			)
@@ -552,6 +552,41 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"删除指定的AI模型",
 
 				manageHandler.DeleteModelCollection,
+			)
+		}
+		manageScheduleGroup := manageGroup.Group("/schedule")
+		{
+			router.registerRoute(
+				manageScheduleGroup,
+				GET,
+				"/list",
+				"分页获取所有定时任务列表",
+
+				manageHandler.GetSchedules,
+			)
+			router.registerRoute(
+				manageScheduleGroup,
+				GET,
+				"/:name",
+				"获取指定定时任务的详细信息",
+
+				manageHandler.GetSchedule,
+			)
+			router.registerRoute(
+				manageScheduleGroup,
+				POST,
+				"/:name/update",
+				"更新定时任务信息",
+
+				manageHandler.UpdateSchedule,
+			)
+			router.registerRoute(
+				manageScheduleGroup,
+				POST,
+				"/:name/run",
+				"立即运行定时任务",
+
+				manageHandler.RunSchedule,
 			)
 		}
 		manageUserGroup := manageGroup.Group("/user")

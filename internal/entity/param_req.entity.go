@@ -7,6 +7,11 @@ type PathParamId struct {
 	ID uint64 `uri:"id" binding:"required"`
 }
 
+// PathParamName 路径参数Name
+type PathParamName struct {
+	Name string `uri:"name" binding:"required"`
+}
+
 type ParamPagingSort struct {
 	SortParam
 	PagingParam

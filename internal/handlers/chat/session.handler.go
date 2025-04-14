@@ -187,7 +187,7 @@ func (h *Handler) GetSessions(c *gin.Context) {
 		return
 	}
 	// 查询消息
-	sessions, nextPage, err := h.Store.GetSessionsByPage(ctx_utils.GetUserId(c), req.PagingParam, req.SortParam)
+	sessions, nextPage, err := h.Store.GetSessionsByPage(ctx_utils.GetUserId(c), req)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
@@ -212,7 +212,7 @@ func (h *Handler) GetSessions(c *gin.Context) {
 //	@Router			/chat/session/sync [get]
 func (h *Handler) SyncSessions(c *gin.Context) {
 	type syncSessionParam struct {
-		entity.PagingParam
+		entity.ParamPagingSort
 		LastSyncTime entity.MilliTime `json:"last_sync_time" form:"last_sync_time" swaggertype:"primitive,integer" binding:"required"` // 客户端上次同步时间戳
 	}
 	var req syncSessionParam
@@ -224,8 +224,7 @@ func (h *Handler) SyncSessions(c *gin.Context) {
 	sessions, nextPage, err := h.Store.GetSessionsForSync(
 		ctx_utils.GetUserId(c),
 		req.LastSyncTime.Time,
-		req.PagingParam,
-		entity.SortParam{},
+		req.ParamPagingSort,
 	)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)

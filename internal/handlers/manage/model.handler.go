@@ -268,8 +268,8 @@ func (h *Handler) UpdateModelCollection(c *gin.Context) {
 //	@Tags			ModelCollection
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		uint64											true	"ModelCollection ID"
-//	@Success		200				{object}	entity.CommonResponse[schema.ModelCollection]	"模型"
+//	@Param			id	path		uint64											true	"ModelCollection ID"
+//	@Success		200	{object}	entity.CommonResponse[schema.ModelCollection]	"模型"
 //	@Router			/manage/collection/{id} [get]
 func (h *Handler) GetModelCollection(c *gin.Context) {
 	var uri entity.PathParamId
@@ -325,8 +325,8 @@ func (h *Handler) GetModelCollections(c *gin.Context) {
 //	@Tags			Model
 //	@Accept			json
 //	@Produce		json
-//	@Param			collection_id	path		uint64						true	"ModelCollection ID"
-//	@Success		200				{object}	entity.CommonResponse[bool]	"删除成功与否"
+//	@Param			id	path		uint64						true	"ModelCollection ID"
+//	@Success		200	{object}	entity.CommonResponse[bool]	"删除成功与否"
 //	@Router			/manage/collection/{id}/delete [post]
 func (h *Handler) DeleteModelCollection(c *gin.Context) {
 	var uri entity.PathParamId

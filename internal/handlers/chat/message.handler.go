@@ -39,7 +39,7 @@ func (h *Handler) GetMessages(c *gin.Context) {
 	}
 	// 查询消息
 	req.WithDefaultSize(20).WithMaxSize(50)
-	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.PagingParam, req.SortParam)
+	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
@@ -100,7 +100,7 @@ func (h *Handler) GetSharedMessages(c *gin.Context) {
 
 	// 查询消息
 	req.WithDefaultSize(20).WithMaxSize(50)
-	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.PagingParam, req.SortParam)
+	messages, nextPage, err := h.Store.GetMessagesByPage(uri.SessionId, req.ParamPagingSort)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
@@ -124,7 +124,7 @@ func (h *Handler) GetSharedMessages(c *gin.Context) {
 // UpdateMessage
 //
 //	@Summary		更新消息
-//	@Description	更新消息
+//	@Description	更新消息（仅 extra 字段的增量合并更新）
 //	@Tags			Message
 //	@Accept			json
 //	@Produce		json
@@ -158,6 +158,7 @@ func (h *Handler) UpdateMessage(c *gin.Context) {
 		return
 	}
 
+	// 仅支持更新消息的 Extra 字段，并且是增量合并
 	updateMessage := schema.Message{
 		Extra: datatypes.NewJSONType(maputil.Merge(message.Extra.Data(), req.Extra.Data())),
 	}

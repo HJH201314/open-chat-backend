@@ -156,12 +156,12 @@ func MakeQuestionTool(problemType schema.ProblemType) chat_utils.CompletionTool 
 					"type":        "object",
 					"description": "",
 					"properties": map[string]interface{}{
-						"topic": map[string]string{
+						"description": map[string]string{
 							"type":        "string",
-							"description": "the topic or the description of the question",
+							"description": "the description of the question",
 						},
 					},
-					"required": []string{"topic"},
+					"required": []string{"description"},
 				},
 			},
 		},
@@ -171,7 +171,7 @@ func MakeQuestionTool(problemType schema.ProblemType) chat_utils.CompletionTool 
 				return nil, nil
 			}
 			params := struct {
-				Topic string `json:"topic"`
+				Topic string `json:"description"`
 			}{}
 			err := json.Unmarshal([]byte(args[0].(string)), &params)
 			if err != nil {
@@ -234,14 +234,18 @@ func MakeExamTool() chat_utils.CompletionTool {
 					"properties": map[string]interface{}{
 						"topic": map[string]string{
 							"type":        "string",
-							"description": "the topic or the description of the exam",
+							"description": "the topic of the exam",
+						},
+						"description": map[string]string{
+							"type":        "string",
+							"description": "the description of the exam",
 						},
 						"count": map[string]string{
 							"type":        "string",
 							"description": "the count of problems in the exam paper, between 3 ~ 5",
 						},
 					},
-					"required": []string{"topic", "count"},
+					"required": []string{"topic", "description", "count"},
 				},
 			},
 		},
@@ -251,8 +255,9 @@ func MakeExamTool() chat_utils.CompletionTool {
 				return nil, nil
 			}
 			params := struct {
-				Topic string `json:"topic"`
-				Count string `json:"count"`
+				Topic       string `json:"topic"`
+				Description string `json:"description"`
+				Count       string `json:"count"`
 			}{}
 			err := json.Unmarshal([]byte(args[0].(string)), &params)
 			if err != nil {
@@ -266,22 +271,39 @@ func MakeExamTool() chat_utils.CompletionTool {
 				schema.ShortAnswer,
 				schema.TrueFalse,
 			}
-			// 随机选择一个类型
-			randomIndex := rand.Intn(len(problemTypes))
-			randomProblemType := problemTypes[randomIndex]
 
 			countInt, err := convertor.ToInt(params.Count)
 			if err != nil {
 				return nil, err
 			}
+
+			// 并发生成题目
 			var questions []schema.Problem
+			var wg sync.WaitGroup
+			var mutex sync.Mutex
+
 			for i := int64(0); i < countInt; i++ {
-				question, err := GetMakeQuestionService().MakeQuestion(randomProblemType, params.Topic)
-				if err != nil {
-					return nil, err
-				}
-				questions = append(questions, *question)
+				wg.Add(1) // 增加 WaitGroup 的计数器
+				go func() {
+					defer wg.Done() // 协程完成后减少计数器
+
+					// 随机选择一个类型
+					randomIndex := rand.Intn(len(problemTypes))
+					randomProblemType := problemTypes[randomIndex]
+
+					// 生成题目
+					question, err := GetMakeQuestionService().MakeQuestion(randomProblemType, params.Topic)
+					if err != nil {
+						return
+					}
+
+					mutex.Lock() // 加锁保护共享资源
+					questions = append(questions, *question)
+					mutex.Unlock() // 解锁
+				}()
 			}
+			wg.Wait() // 等待所有协程完成
+
 			examProblems := make([]schema.ExamProblem, len(questions))
 			for i, question := range questions {
 				examProblems[i] = schema.ExamProblem{
@@ -290,14 +312,15 @@ func MakeExamTool() chat_utils.CompletionTool {
 					SortOrder: i,
 				}
 			}
+
 			// Create the exam
 			exam := &schema.Exam{
 				Name:        params.Topic,
-				Description: params.Topic,
-				Subjects:    params.Topic,
+				Description: params.Description,
+				Subjects:    params.Topic, // ignore
 				Problems:    examProblems,
 				TotalScore:  uint64(len(examProblems) * 1000),
-				LimitTime:   600,
+				LimitTime:   120 * len(examProblems),
 			}
 			if err := GetMakeQuestionService().Gorm.Create(&exam).Error; err != nil {
 				return nil, err
@@ -368,12 +391,12 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionSingleChoicePresetName,
 				"TUE 单选题生成",
-				5,
+				6,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
 题目类型：单选
 题目数量：1
 题目主题：{TOPIC}
@@ -390,12 +413,12 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionMultipleChoicePresetName,
 				"TUE 多选题生成",
-				5,
+				6,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
 题目类型：多选
 题目数量：1
 题目主题：{TOPIC}
@@ -412,12 +435,12 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionTrueFalsePresetName,
 				"TUE 判断题生成",
-				5,
+				6,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
 题目类型：判断题
 题目数量：1
 题目主题：{TOPIC}
@@ -434,12 +457,12 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionFillBlankPresetName,
 				"TUE 填空题生成",
-				5,
+				6,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
 题目类型：填空题
 题目数量：1
 题目主题：{TOPIC}
@@ -456,12 +479,12 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionShortAnswerPresetName,
 				"TUE 简答题生成",
-				5,
+				6,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。请仔细阅读以下信息，并按照指示完成任务。
+你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
 题目类型：简答题
 题目数量：1
 题目主题：{TOPIC}

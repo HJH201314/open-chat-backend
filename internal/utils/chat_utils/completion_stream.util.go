@@ -13,10 +13,10 @@ import (
 )
 
 // CompletionStream 流式聊天
-func CompletionStream(ctx context.Context, opts CompletionOptions) (chan StreamEvent, error) {
+func CompletionStream(ctx context.Context, opts CompletionOptions, eventChan chan<- StreamEvent) error {
 	// 参数校验
 	if err := validateOptions(opts); err != nil {
-		return nil, fmt.Errorf("invalid options: %w", err)
+		return fmt.Errorf("invalid options: %w", err)
 	}
 
 	// 初始化客户端
@@ -25,13 +25,10 @@ func CompletionStream(ctx context.Context, opts CompletionOptions) (chan StreamE
 	// 构建请求消息
 	messages := buildMessages(opts)
 
-	// 创建事件通道（带缓冲避免阻塞）
-	eventChan := make(chan StreamEvent, 5)
-
 	// 启动协程处理流式请求
 	go processStreaming(ctx, &client, messages, opts, eventChan)
 
-	return eventChan, nil
+	return nil
 }
 
 // 参数校验逻辑

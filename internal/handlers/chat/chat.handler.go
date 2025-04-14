@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
@@ -14,6 +15,10 @@ import (
 	"gorm.io/datatypes"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // CompletionStream
@@ -33,6 +38,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		Question      string  `json:"question" binding:"required"`
 		ModelName     string  `json:"model_name" binding:"required"` // 模型集合名称
 		EnableContext *bool   `json:"enable_context" binding:"-"`
+		EnableSearch  *bool   `json:"enable_search" binding:"-"` // 是否启用搜索
 		BotID         *uint64 `json:"bot_id" binding:"-"`
 		SystemPrompt  *string `json:"system_prompt" binding:"-"` // 系统提示词
 	}
@@ -166,6 +172,24 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to create messages")
 		return
 	}
+
+	// 设置流式响应头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	chatEventChan := make(chan chat_utils.StreamEvent, 10)
+
+	// 发送事件 - ID
+	chatEventChan <- chat_utils.StreamEvent{
+		Type:    chat_utils.CommandEventType,
+		Content: "ID",
+		Metadata: map[string]uint64{
+			"q": messages[0].ID,
+			"a": messages[1].ID,
+		},
+	}
+
 	// 执行结束后，根据是否有回答进行操作
 	var doneResp *chat_utils.DoneResponse
 	defer func() {
@@ -177,10 +201,26 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			messages[1].ReasoningContent = doneResp.ReasoningContent
 			messages[1].TokenUsage = doneResp.Usage.CompletionTokens
 			messages[1].Extra = datatypes.NewJSONType[map[string]any](doneResp.Extra)
+			messages[1].CreatedAt = time.Now()
 			if bot != nil {
 				messages[1].PresetID = bot.ID
 			}
-			if err := h.Store.SaveMessages(&messages); err != nil {
+			// 更新预插入了的消息
+			if err := h.Store.UpdateMessages(
+				&messages,
+				"content",
+				"token_usage",
+				"reasoning_content",
+				"preset_id",
+				"extra",
+				"created_at",
+			); err != nil {
+				// do nothing
+			}
+			// 更新 session
+			if err := h.Db.Model(&schema.Session{}).Where("id = ?", session.ID).Update(
+				"last_active", time.Now(),
+			); err != nil {
 				// do nothing
 			}
 
@@ -221,43 +261,61 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 		}
 	}()
 
-	eventChan, err := chat_utils.CompletionStream(
-		c.Request.Context(), chat_utils.CompletionOptions{
-			Provider: chat_utils.Provider{
-				BaseUrl: providerBaseUrl,
-				ApiKey:  providerKey.Key,
-			},
-			Model:                 modelInfo.Name,
-			Messages:              chatMessages,
-			SystemPrompt:          systemPrompt,
-			CompletionModelConfig: getCompletionModelConfig(modelConfig),
-			Tools: []chat_utils.CompletionTool{
-				services.MakeQuestionTool(schema.SingleChoice), services.MakeQuestionTool(schema.MultipleChoice),
-				services.MakeQuestionTool(schema.TrueFalse), services.MakeQuestionTool(schema.ShortAnswer),
-				services.MakeQuestionTool(schema.FillBlank), services.EveryDayQuestionTool(), services.MakeExamTool(),
-			},
-		},
-	)
-	if err != nil {
-		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
-	}
-	sendStreamCommandEvent(
-		c, "ID", map[string]uint64{
-			"q": messages[0].ID,
-			"a": messages[1].ID,
-		},
-	)
+	go func() {
+		err := func() error {
+			// 搜索
+			if req.EnableSearch != nil && *req.EnableSearch == true {
+				chatEventChan <- chat_utils.StreamEvent{
+					Type:     chat_utils.CommandEventType,
+					Content:  "searching",
+					Metadata: "",
+				}
+				result, err := searchFromInternet(req.Question)
+				if err == nil && result != "" {
+					chatMessages = append(
+						chatMessages,
+						chat_utils.UserMessage("通过联网查询，你获得了这些信息："+result+"也许你可以参考这些信息解答我的问题"),
+					)
+				}
+			}
 
-	// 设置流式响应头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
+			err = chat_utils.CompletionStream(
+				c.Request.Context(), chat_utils.CompletionOptions{
+					Provider: chat_utils.Provider{
+						BaseUrl: providerBaseUrl,
+						ApiKey:  providerKey.Key,
+					},
+					Model:                 modelInfo.Name,
+					Messages:              chatMessages,
+					SystemPrompt:          systemPrompt,
+					CompletionModelConfig: getCompletionModelConfig(modelConfig),
+					Tools: []chat_utils.CompletionTool{
+						services.MakeQuestionTool(schema.SingleChoice),
+						services.MakeQuestionTool(schema.MultipleChoice),
+						services.MakeQuestionTool(schema.TrueFalse), services.MakeQuestionTool(schema.ShortAnswer),
+						services.MakeQuestionTool(schema.FillBlank), services.EveryDayQuestionTool(),
+						services.MakeExamTool(),
+					},
+				},
+				chatEventChan,
+			)
+			if err != nil {
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			chatEventChan <- chat_utils.StreamEvent{
+				Type:  chat_utils.ErrorEventType,
+				Error: err,
+			}
+		}
+	}()
 
 	// 流式输出
 	c.Stream(
 		func(w io.Writer) bool {
-			event, ok := <-eventChan
+			event, ok := <-chatEventChan
 			if !ok {
 				return false
 			}
@@ -342,4 +400,74 @@ func getCompletionModelConfig(config schema.ModelConfig) chat_utils.CompletionMo
 		Temperature: temperature,
 		MaxTokens:   maxTokens,
 	}
+}
+
+func unescapeUnicode(raw []byte) (string, error) {
+	str, err := strconv.Unquote(strings.Replace(strconv.Quote(string(raw)), `\\u`, `\u`, -1))
+	if err != nil {
+		return "", err
+	}
+	return str, nil
+}
+func searchFromInternet(rawMessage string) (result string, err error) {
+	// 1. 提取搜索关键词
+	completion, _, err := services.BuiltinPresetCompletion(
+		services.ChatSearchKeywordGeneratePresetName, map[string]string{
+			"CONTENT": rawMessage,
+		},
+	)
+	if err != nil {
+		return
+	}
+	keyword := chat_utils.ExtractTagContent(completion, "search")
+	if keyword == "" {
+		return "", nil
+	}
+
+	// 2. 请求搜索服务
+	// 读取配置
+	config, err := services.GetSystemConfigService().GetConfig(services.ChatOnlineSearchServiceBaseURL)
+	if err != nil {
+		return "", err
+	}
+	var baseUrls []string
+	err = json.Unmarshal(config.Value, &baseUrls)
+	if err != nil || len(baseUrls) < 1 {
+		return "", err
+	}
+	baseUrl, _ := slice.Random(baseUrls)
+	// 创建 HTTP 请求
+	resp, err := http.Get(
+		fmt.Sprintf("%s/search?format=json&q=%s", baseUrl, url.QueryEscape(keyword)),
+	)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	// 3. 读取响应内容，将 unicode编码 转为文本
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	result, err = unescapeUnicode(body)
+
+	// 4. 解析结果并返回
+	type searchResType struct {
+		Query  string `json:"query"`
+		Result []struct {
+			Title         string `json:"title"`
+			Url           string `json:"url"`
+			Content       string `json:"content"`
+			PublishedData string `json:"publishedDate"`
+			Engine        string `json:"engine"`
+		} `json:"results"`
+	}
+	var searchRes searchResType
+	err = json.Unmarshal([]byte(result), &searchRes)
+	if err != nil {
+		return "", err
+	}
+	resByte, _ := json.Marshal(searchRes)
+	return string(resByte), nil
 }

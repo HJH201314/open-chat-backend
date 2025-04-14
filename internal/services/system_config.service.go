@@ -91,6 +91,7 @@ func InitSystemConfigService(base *BaseService) *SystemConfigService {
 					"required": []string{"name", "display_name"},
 				},
 			},
+			Default:  []string{},
 			IsPublic: true,
 		},
 	); err != nil {
@@ -127,17 +128,20 @@ func (s *SystemConfigService) RegisterSystemConfig(params RegisterConfigParams) 
 	if err != nil {
 		return err
 	}
+	config := schema.SystemConfig{
+		Name:        params.Name,
+		DisplayName: params.DisplayName,
+		Schema:      schemaByte,
+		Description: params.Description,
+		IsPublic:    params.IsPublic,
+	}
+	// 默认值，需要校验是否合法
 	defaultValueStr, err := convertor.ToJson(params.Default)
 	if err != nil {
 		return err
 	}
-	config := schema.SystemConfig{
-		Name:        params.Name,
-		DisplayName: params.DisplayName,
-		Schema:      string(schemaByte),
-		Default:     defaultValueStr,
-		Description: params.Description,
-		IsPublic:    params.IsPublic,
+	if defaultValueStr != "" && json.Valid([]byte(defaultValueStr)) {
+		config.Default = datatypes.JSON(params.Description)
 	}
 
 	// 尝试获取数据库中已有配置
@@ -145,13 +149,14 @@ func (s *SystemConfigService) RegisterSystemConfig(params RegisterConfigParams) 
 	if err := s.db.Where(
 		"name = ?",
 		params.Name,
-	).First(&savedConfig).Error; err == nil && savedConfig.Value != "" {
+	).First(&savedConfig).Error; err == nil && savedConfig.Value.String() != "" {
 		// 检验现存配置对于当前注册的 schema 的合法性
-		if err := s.validateAgainstSchema(savedConfig.Value, config.Schema); err != nil {
+		if err := s.validateAgainstSchema(savedConfig.Value, config.Schema.String()); err != nil {
 			slog.Default().Error("Failed to validate existing config", "name", params.Name, "error", err.Error())
 			// 备份现存配置
 			savedConfig.Name = params.Name + "_backup_" + time.Now().Format("20060102150405")
-			savedConfig.AutoCreateUpdateDeleteAt = schema.AutoCreateUpdateDeleteAt{} // 清除查询所获取的时间数据
+			// 清除查询所获取的时间数据
+			savedConfig.AutoCreateUpdateDeleteAt = schema.AutoCreateUpdateDeleteAt{}
 			s.db.Create(&savedConfig)
 		}
 	}
@@ -167,7 +172,7 @@ func (s *SystemConfigService) RegisterSystemConfig(params RegisterConfigParams) 
 		return result.Error
 	}
 	// 保存默认值
-	if config.Value == "" && config.Default != "" {
+	if config.Value.String() == "" && config.Default.String() != "" {
 		if err := s.SetConfig(params.Name, params.Default); err != nil {
 			return err
 		}
@@ -232,7 +237,7 @@ func (s *SystemConfigService) SetConfig(name string, value any) error {
 	}
 
 	// 2. 校验value是否符合schema
-	if err := s.validateAgainstSchema(value, config.Schema); err != nil {
+	if err := s.validateAgainstSchema(value, config.Schema.String()); err != nil {
 		return err
 	}
 
@@ -241,7 +246,7 @@ func (s *SystemConfigService) SetConfig(name string, value any) error {
 	if err != nil {
 		return err
 	}
-	config.Value = valueStr
+	config.Value = datatypes.JSON(valueStr)
 	if err := s.db.Where("name = ?", name).Save(config).Error; err != nil {
 		return err
 	}

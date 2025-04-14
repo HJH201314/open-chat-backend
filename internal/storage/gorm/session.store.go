@@ -116,9 +116,9 @@ func filterUserSessions(userSessions []schema.UserSession) []schema.UserSession 
 }
 
 // GetSessionsByPage 分页获取会话
-func (s *GormStore) GetSessionsByPage(userId uint64, page entity.PagingParam, sort entity.SortParam) ([]schema.UserSession, *int64, error) {
+func (s *GormStore) GetSessionsByPage(userId uint64, param entity.ParamPagingSort) ([]schema.UserSession, *int64, error) {
 	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
-		s.Db.Scopes(ScopeWithUserId(userId), ScopePreloadSessionWithOneMessage), page, sort,
+		s.Db.Scopes(ScopeWithUserId(userId), ScopePreloadSessionWithOneMessage), param,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -131,9 +131,9 @@ func (s *GormStore) GetSessionsByPage(userId uint64, page entity.PagingParam, so
 }
 
 // GetSessionsForSync 分页获取用于同步数据的会话
-func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page entity.PagingParam, sort entity.SortParam) ([]schema.UserSession, *int64, error) {
+func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, param entity.ParamPagingSort) ([]schema.UserSession, *int64, error) {
 	// 关闭排序
-	sort.WithForceOrder("")
+	param.SortParam.WithForceOrder("")
 	sessionTable := (&schema.Session{}).TableName()
 	userSessions, nextPage, err := gorm_utils.GetByPageContinuous[schema.UserSession](
 		s.Db.Unscoped().Where("user_id = ?", userId).
@@ -159,8 +159,7 @@ func (s *GormStore) GetSessionsForSync(userId uint64, since time.Time, page enti
 				return db.Where("id IN (SELECT MIN(id) FROM messages GROUP BY session_id)")
 			},
 		),
-		page,
-		sort,
+		param,
 	)
 
 	if err != nil {
@@ -185,9 +184,14 @@ func (s *GormStore) CreateMessages(msg *[]schema.Message) error {
 	return s.Db.Create(msg).Error
 }
 
-// SaveMessages 批量保存消息
-func (s *GormStore) SaveMessages(msg *[]schema.Message) error {
-	return s.Db.Save(msg).Error
+// UpdateMessages 批量保存消息（）
+func (s *GormStore) UpdateMessages(msgs *[]schema.Message, columns ...string) error {
+	for _, msg := range *msgs {
+		if err := s.Db.Model(&msg).Select(columns).Updates(msg).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DeleteMessages 批量删除消息
@@ -206,10 +210,9 @@ func (s *GormStore) GetLatestMessages(sessionID string, limit int) ([]schema.Mes
 }
 
 // GetMessagesByPage 分页获取消息
-func (s *GormStore) GetMessagesByPage(sessionID string, page entity.PagingParam, sort entity.SortParam) ([]schema.Message, *int64, error) {
+func (s *GormStore) GetMessagesByPage(sessionID string, param entity.ParamPagingSort) ([]schema.Message, *int64, error) {
 	return gorm_utils.GetByPageContinuous[schema.Message](
 		s.Db.Preload("Model").Where("session_id = ?", sessionID),
-		page,
-		sort,
+		param,
 	)
 }

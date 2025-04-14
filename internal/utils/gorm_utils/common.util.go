@@ -17,6 +17,17 @@ func GetByID[T any](db *gorm.DB, id uint64) (*T, error) {
 	return &result, err
 }
 
+// GetByName 通用获取实体方法
+//
+//	Parameters:
+//		db - 数据库连接
+//		name - 实体 name
+func GetByName[T any](db *gorm.DB, name string) (*T, error) {
+	var result T
+	err := db.Where("name = ?", name).First(&result).Error
+	return &result, err
+}
+
 // Save 通用保存（完全保存）实体方法
 //
 //	Parameters:
@@ -65,9 +76,13 @@ func Delete[T any](db *gorm.DB, entityOrId interface{}) error {
 //		[]T - 实体列表
 //		*int - 下一页页码
 //		error - 错误信息
-func GetByPageContinuous[T any](db *gorm.DB, param entity.PagingParam, sort entity.SortParam) ([]T, *int64, error) {
+func GetByPageContinuous[T any](db *gorm.DB, param entity.ParamPagingSort) ([]T, *int64, error) {
+	sort := param.SortParam
+	paging := param.PagingParam
+	timeRange := param.TimeRangeParam
+
 	var results []T
-	pageNum, pageSize := param.GetPage(20, 100)
+	pageNum, pageSize := paging.GetPage(20, 100)
 	offset := (pageNum - 1) * pageSize
 	// 多查询一条以判断是否存在下一页
 	limit := pageSize + 1
@@ -75,6 +90,12 @@ func GetByPageContinuous[T any](db *gorm.DB, param entity.PagingParam, sort enti
 	tx := db
 	if sort.SafeExpr() != "" {
 		tx = db.Order(sort.SafeExpr())
+	}
+	if timeRange.StartTime > 0 {
+		tx.Where(db.Where("created_at >= ?", timeRange.StartTime))
+	}
+	if timeRange.EndTime > 0 {
+		tx.Where(db.Where("created_at <= ?", timeRange.EndTime))
 	}
 	err := tx.
 		Offset(offset).
