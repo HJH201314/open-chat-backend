@@ -119,7 +119,7 @@ func (s *GormStore) GetCourses(pageParam entity.PagingParam, sortParam entity.So
 		)
 	}
 
-	return courses, *total, nil
+	return courses, total, nil
 }
 
 // CreateCourse 全新创建课程

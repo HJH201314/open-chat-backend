@@ -86,13 +86,13 @@ func (h *Handler) GetPermission(c *gin.Context) {
 //	@Tags			Permission
 //	@Accept			json
 //	@Produce		json
-//	@Param			id			path		uint64						true	"权限 ID"
+//	@Param			name		path		string						true	"权限 name"
 //	@Param			permission	body		schema.Permission			true	"权限参数"
 //	@Success		200			{object}	entity.CommonResponse[bool]	"更新成功与否"
-//	@Router			/manage/permission/{id}/update [post]
+//	@Router			/manage/permission/{name}/update [post]
 func (h *Handler) UpdatePermission(c *gin.Context) {
-	var uri entity.PathParamId
-	if err := c.BindUri(&uri); err != nil || uri.ID == 0 {
+	var uri entity.PathParamName
+	if err := c.BindUri(&uri); err != nil || uri.Name == "" {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
@@ -101,12 +101,12 @@ func (h *Handler) UpdatePermission(c *gin.Context) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
-	permission.ID = uri.ID
+	permission.Name = uri.Name
 	updatePermission := schema.Permission{
-		ID:     permission.ID,
+		Name:   permission.Name,
 		Active: permission.Active, // 更新时，只更新 Active 字段
 	}
-	if err := h.Db.Select("Active").Updates(&updatePermission); err != nil {
+	if err := h.Db.Where("name = ?", uri.Name).Select("Active").Updates(&updatePermission); err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update permission")
 		return
 	}

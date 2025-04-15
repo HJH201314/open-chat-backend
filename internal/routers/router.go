@@ -14,7 +14,6 @@ import (
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/handlers/chat"
 	"github.com/fcraft/open-chat/internal/handlers/course"
-	"github.com/fcraft/open-chat/internal/handlers/exam"
 	"github.com/fcraft/open-chat/internal/handlers/manage"
 	"github.com/fcraft/open-chat/internal/handlers/user"
 	"github.com/fcraft/open-chat/internal/schema"
@@ -139,7 +138,7 @@ func (r *Router) saveRoutesToDB() error {
 	// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
 	if err := r.store.Db.Clauses(
 		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "name"}},
+			Columns:   []clause.Column{{Name: "path"}},
 			UpdateAll: true,
 		},
 	).CreateInBatches(&permissions, 100).Error; err != nil {
@@ -817,7 +816,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(tueExamGroup, POST, "/create", "创建新的考试", tueHandler.CreateExam)
 			router.registerRoute(tueExamGroup, POST, "/random", "随机测验", tueHandler.RandomExam)
 			// 考试提交
-			examHandler := exam.NewExamHandler(baseHandler)
+			examHandler := course.NewExamHandler(baseHandler)
 			router.registerRoute(
 				tueExamGroup,
 				POST,
@@ -828,14 +827,14 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				tueExamGroup,
 				GET,
-				"/:id/records",
+				"/record/:id",
 				"获取考试结果",
 				examHandler.GetExamResult,
 			)
 			router.registerRoute(
 				tueExamGroup,
 				POST,
-				"/:id/rescore",
+				"/record/:id/rescore",
 				"重新评分考试",
 				examHandler.RescoreExam,
 			)

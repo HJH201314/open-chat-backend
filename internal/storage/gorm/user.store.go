@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/schema"
 	"gorm.io/gorm"
 )
@@ -89,36 +90,39 @@ func (s *GormStore) DelPermission(permissionId uint64) error {
 }
 
 // BindPermissionsToRole 绑定权限到角色
-func (s *GormStore) BindPermissionsToRole(roleId uint64, permissionIds []uint64) error {
-	var rolePermissions []schema.RolePermission
-	for _, permissionId := range permissionIds {
-		rolePermissions = append(
-			rolePermissions, schema.RolePermission{
-				RoleID:       roleId,
-				PermissionID: permissionId,
-			},
-		)
-	}
-	return s.Db.Create(&rolePermissions).Error
+func (s *GormStore) BindPermissionsToRole(roleId uint64, permissionPaths []string) error {
+	permissions := slice.Map(
+		permissionPaths, func(index int, item string) schema.Permission {
+			return schema.Permission{
+				Path: item,
+			}
+		},
+	)
+	return s.Db.Model(&schema.Role{}).Where("id = ?", roleId).Association("Permissions").Append(permissions)
 }
 
 // UnbindPermissionsFromRole 解绑权限从角色
-func (s *GormStore) UnbindPermissionsFromRole(roleId uint64, permissionIds []uint64) error {
-	return s.Db.Where(
-		"role_id = ? AND permission_id in (?)",
-		roleId,
-		permissionIds,
-	).Delete(&schema.RolePermission{}).Error
+func (s *GormStore) UnbindPermissionsFromRole(roleId uint64, permissionPaths []string) error {
+	permissions := slice.Map(
+		permissionPaths, func(index int, item string) schema.Permission {
+			return schema.Permission{
+				Path: item,
+			}
+		},
+	)
+	return s.Db.Model(&schema.Role{}).Where("id = ?", roleId).Association("Permissions").Delete(permissions)
 }
 
 // UpdateRolePermissions 更新角色权限
-func (s *GormStore) UpdateRolePermissions(roleId uint64, permissionIds []uint64) error {
-	// 先删除角色所有权限
-	if err := s.Db.Where("role_id = ?", roleId).Delete(&schema.RolePermission{}).Error; err != nil {
-		return err
-	}
-	// 再绑定新的权限
-	return s.BindPermissionsToRole(roleId, permissionIds)
+func (s *GormStore) UpdateRolePermissions(roleId uint64, permissionPaths []string) error {
+	permissions := slice.Map(
+		permissionPaths, func(index int, item string) schema.Permission {
+			return schema.Permission{
+				Path: item,
+			}
+		},
+	)
+	return s.Db.Model(&schema.Role{}).Where("id = ?", roleId).Association("Permissions").Replace(permissions)
 }
 
 // GetUserUsage 获取用户用量

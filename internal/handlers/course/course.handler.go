@@ -146,7 +146,7 @@ func (h *Handler) GetCourses(c *gin.Context) {
 	ctx_utils.Success(
 		c, &entity.PaginatedTotalResponse[schema.Course]{
 			List:  courses,
-			Total: &total,
+			Total: total,
 		},
 	)
 }

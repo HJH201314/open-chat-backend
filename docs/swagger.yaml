@@ -51,6 +51,37 @@ definitions:
     - description
     - type
     type: object
+  course.SubmitExamRequest:
+    properties:
+      answers:
+        description: 答案列表
+        items:
+          $ref: '#/definitions/course.SubmitExamRequestAnswer'
+        minItems: 1
+        type: array
+      time_spent:
+        description: 答题用时（秒）
+        type: integer
+    type: object
+  course.SubmitExamRequestAnswer:
+    properties:
+      answer: {}
+      problem_id:
+        type: integer
+    type: object
+  course.SubmitExamResponse:
+    properties:
+      record_id:
+        description: 记录ID
+        type: integer
+    type: object
+  course.SubmitProblemResponse:
+    properties:
+      comment:
+        type: string
+      score:
+        type: integer
+    type: object
   entity.CommonResponse-any:
     properties:
       code:
@@ -129,6 +160,32 @@ definitions:
         description: 消息
         type: string
     type: object
+  entity.CommonResponse-course_SubmitExamResponse:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/course.SubmitExamResponse'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-course_SubmitProblemResponse:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/course.SubmitProblemResponse'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
   entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession:
     properties:
       code:
@@ -189,6 +246,19 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Course'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_ExamUserRecord'
         description: 数据
       msg:
         description: 消息
@@ -279,7 +349,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Schedule'
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Schedule'
         description: 数据
       msg:
         description: 消息
@@ -293,32 +363,6 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_User'
-        description: 数据
-      msg:
-        description: 消息
-        type: string
-    type: object
-  entity.CommonResponse-exam_SubmitExamResponse:
-    properties:
-      code:
-        description: 代码
-        type: integer
-      data:
-        allOf:
-        - $ref: '#/definitions/exam.SubmitExamResponse'
-        description: 数据
-      msg:
-        description: 消息
-        type: string
-    type: object
-  entity.CommonResponse-exam_SubmitProblemResponse:
-    properties:
-      code:
-        description: 代码
-        type: integer
-      data:
-        allOf:
-        - $ref: '#/definitions/exam.SubmitProblemResponse'
         description: 数据
       msg:
         description: 消息
@@ -499,7 +543,7 @@ definitions:
         type: integer
       data:
         allOf:
-          - $ref: '#/definitions/schema.Schedule'
+        - $ref: '#/definitions/schema.Schedule'
         description: 数据
       msg:
         description: 消息
@@ -618,6 +662,15 @@ definitions:
       total:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_ExamUserRecord:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.ExamUserRecord'
+        type: array
+      total:
+        type: integer
+    type: object
   entity.PaginatedTotalResponse-schema_Model:
     properties:
       list:
@@ -690,6 +743,20 @@ definitions:
       total:
         type: integer
     type: object
+  entity.ParamPagingSort:
+    properties:
+      end_time:
+        type: integer
+      page_num:
+        description: 分页参数
+        type: integer
+      page_size:
+        type: integer
+      sort_expr:
+        type: string
+      start_time:
+        type: integer
+    type: object
   entity.ReqUpdateBody-schema_Bucket:
     properties:
       data:
@@ -752,8 +819,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - data
-      - updates
+    - data
+    - updates
     type: object
   entity.ReqUpdateBody-schema_Session:
     properties:
@@ -767,37 +834,6 @@ definitions:
     required:
     - data
     - updates
-    type: object
-  exam.SubmitExamRequest:
-    properties:
-      answers:
-        description: 答案列表
-        items:
-          $ref: '#/definitions/exam.SubmitExamRequestAnswer'
-        minItems: 1
-        type: array
-      time_spent:
-        description: 答题用时（秒）
-        type: integer
-    type: object
-  exam.SubmitExamRequestAnswer:
-    properties:
-      answer: {}
-      problem_id:
-        type: integer
-    type: object
-  exam.SubmitExamResponse:
-    properties:
-      record_id:
-        description: 记录ID
-        type: integer
-    type: object
-  exam.SubmitProblemResponse:
-    properties:
-      comment:
-        type: string
-      score:
-        type: integer
     type: object
   manage.UpdateSystemConfigParams:
     properties:
@@ -1134,8 +1170,6 @@ definitions:
       description:
         description: 权限描述
         type: string
-      id:
-        type: integer
       module:
         description: 所属模块（handler名称）
         type: string
@@ -1345,14 +1379,14 @@ definitions:
     type: object
   schema.ScheduleStatus:
     enum:
-      - 0
-      - 1
-      - 2
+    - 0
+    - 1
+    - 2
     type: integer
     x-enum-varnames:
-      - ScheduleStatusStopped
-      - ScheduleStatusRunning
-      - ScheduleStatusPending
+    - ScheduleStatusStopped
+    - ScheduleStatusRunning
+    - ScheduleStatusPending
   schema.ScoreStatus:
     enum:
     - pending
@@ -1410,13 +1444,13 @@ definitions:
     type: object
   schema.SessionNameType:
     enum:
-      - 0
+    - 0
     - 1
     - 2
     type: integer
     x-enum-varnames:
-      - SessionNameTypeNone
-      - SessionNameTypeTemp
+    - SessionNameTypeNone
+    - SessionNameTypeTemp
     - SessionNameTypeSystem
   schema.SessionShareInfo:
     properties:
@@ -1721,7 +1755,7 @@ paths:
         "200":
           description: 返回数据
           schema:
-            $ref: '#/definitions/entity.CommonResponse-schema_Session'
+            $ref: '#/definitions/entity.CommonResponse-schema_UserSession'
       summary: 获取已分享的用户会话信息
       tags:
       - Session
@@ -1853,9 +1887,9 @@ paths:
       - application/json
       description: 同步会话列表
       parameters:
-        - in: query
-          name: end_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
       - description: 客户端上次同步时间戳
         in: query
         name: last_sync_time
@@ -1868,12 +1902,12 @@ paths:
       - in: query
         name: page_size
         type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
       - application/json
       responses:
@@ -2449,17 +2483,17 @@ paths:
       summary: 获取权限
       tags:
       - Permission
-  /manage/permission/{id}/update:
+  /manage/permission/{name}/update:
     post:
       consumes:
       - application/json
       description: 更新权限
       parameters:
-      - description: 权限 ID
+      - description: 权限 name
         in: path
-        name: id
+        name: name
         required: true
-        type: integer
+        type: string
       - description: 权限参数
         in: body
         name: permission
@@ -2772,16 +2806,16 @@ paths:
   /manage/schedule/{name}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 获取 定时任务
       parameters:
-        - description: 定时任务 name
-          in: path
-          name: name
-          required: true
-          type: string
+      - description: 定时任务 name
+        in: path
+        name: name
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 定时任务
@@ -2789,20 +2823,20 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-schema_Schedule'
       summary: 获取 定时任务
       tags:
-        - Schedule
+      - Schedule
   /manage/schedule/{name}/run:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 立即运行 定时任务
       parameters:
-        - description: 定时任务 name
-          in: path
-          name: name
-          required: true
-          type: string
+      - description: 定时任务 name
+        in: path
+        name: name
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 成功与否
@@ -2810,26 +2844,26 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 立即运行 定时任务
       tags:
-        - Schedule
+      - Schedule
   /manage/schedule/{name}/update:
     post:
       consumes:
-        - application/json
+      - application/json
       description: 更新 定时任务
       parameters:
-        - description: 定时任务 name
-          in: path
-          name: name
-          required: true
-          type: string
-        - description: 定时任务参数
-          in: body
-          name: schedule
-          required: true
-          schema:
-            $ref: '#/definitions/entity.ReqUpdateBody-schema_Schedule'
+      - description: 定时任务 name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 定时任务参数
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/entity.ReqUpdateBody-schema_Schedule'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 更新成功与否
@@ -2837,31 +2871,31 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-bool'
       summary: 更新 定时任务
       tags:
-        - Schedule
+      - Schedule
   /manage/schedule/list:
     get:
       consumes:
-        - application/json
+      - application/json
       description: 批量获取 定时任务
       parameters:
-        - in: query
-          name: end_time
-          type: integer
-        - description: 分页参数
-          in: query
-          name: page_num
-          type: integer
-        - in: query
-          name: page_size
-          type: integer
-        - in: query
-          name: sort_expr
-          type: string
-        - in: query
-          name: start_time
-          type: integer
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 定时任务列表
@@ -2869,7 +2903,7 @@ paths:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_Schedule'
       summary: 批量获取 定时任务
       tags:
-        - Schedule
+      - Schedule
   /manage/user/{id}:
     get:
       consumes:
@@ -3265,38 +3299,22 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取用户的考试评分结果
+      description: 分页获取用户的考试评分结果
       parameters:
-      - description: 考试记录ID
-        in: path
-        name: id
+      - description: 分页信息
+        in: body
+        name: req
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/entity.ParamPagingSort'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
-      summary: 获取考试结果
-      tags:
-      - 考试
-  /tue/exam/{id}/rescore:
-    post:
-      consumes:
-      - application/json
-      description: 管理员重新评分考试
-      parameters:
-      - description: 考试记录ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      summary: 重新评分考试
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord'
+      summary: 分页获取考试结果
       tags:
       - 考试
   /tue/exam/{id}/submit:
@@ -3315,14 +3333,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/exam.SubmitExamRequest'
+          $ref: '#/definitions/course.SubmitExamRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-exam_SubmitExamResponse'
+            $ref: '#/definitions/entity.CommonResponse-course_SubmitExamResponse'
       summary: 提交考试答案
       tags:
       - 考试
@@ -3363,6 +3381,44 @@ paths:
       summary: 随机测验
       tags:
       - Exam
+  /tue/exam/record/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户的考试评分结果
+      parameters:
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
+      summary: 获取考试结果
+      tags:
+      - 考试
+  /tue/exam/record/{id}/rescore:
+    post:
+      consumes:
+      - application/json
+      description: 管理员重新评分考试
+      parameters:
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: 重新评分考试
+      tags:
+      - 考试
   /tue/exam/single-problem/submit:
     post:
       consumes:
@@ -3374,14 +3430,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/exam.SubmitExamRequest'
+          $ref: '#/definitions/course.SubmitExamRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-exam_SubmitProblemResponse'
+            $ref: '#/definitions/entity.CommonResponse-course_SubmitProblemResponse'
       summary: 提交单个问题并验证答案
       tags:
       - Exam

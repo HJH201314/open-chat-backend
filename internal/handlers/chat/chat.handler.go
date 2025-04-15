@@ -266,9 +266,11 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 			// 搜索
 			if req.EnableSearch != nil && *req.EnableSearch == true {
 				chatEventChan <- chat_utils.StreamEvent{
-					Type:     chat_utils.CommandEventType,
-					Content:  "searching",
-					Metadata: "",
+					Type:    chat_utils.CommandEventType,
+					Content: "tooltip",
+					Metadata: map[string]string{
+						"tooltip": "联网搜索中...",
+					},
 				}
 				result, err := searchFromInternet(req.Question)
 				if err == nil && result != "" {

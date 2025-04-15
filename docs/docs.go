@@ -665,7 +665,7 @@ const docTemplate = `{
                     "200": {
                         "description": "返回数据",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-schema_Session"
+                            "$ref": "#/definitions/entity.CommonResponse-schema_UserSession"
                         }
                     }
                 }
@@ -1522,7 +1522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/manage/permission/{id}/update": {
+        "/manage/permission/{name}/update": {
             "post": {
                 "description": "更新权限",
                 "consumes": [
@@ -1537,9 +1537,9 @@ const docTemplate = `{
                 "summary": "更新权限",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "权限 ID",
-                        "name": "id",
+                        "type": "string",
+                        "description": "权限 name",
+                        "name": "name",
                         "in": "path",
                         "required": true
                     },
@@ -2749,6 +2749,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/tue/exam/record/{id}": {
+            "get": {
+                "description": "获取用户的考试评分结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "获取考试结果",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/exam/record/{id}/rescore": {
+            "post": {
+                "description": "管理员重新评分考试",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "重新评分考试",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/tue/exam/single-problem/submit": {
             "post": {
                 "description": "提交单个问题并验证答案",
@@ -2769,7 +2826,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/exam.SubmitExamRequest"
+                            "$ref": "#/definitions/course.SubmitExamRequest"
                         }
                     }
                 ],
@@ -2777,7 +2834,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-exam_SubmitProblemResponse"
+                            "$ref": "#/definitions/entity.CommonResponse-course_SubmitProblemResponse"
                         }
                     }
                 }
@@ -2817,7 +2874,7 @@ const docTemplate = `{
         },
         "/tue/exam/{id}/records": {
             "get": {
-                "description": "获取用户的考试评分结果",
+                "description": "分页获取用户的考试评分结果",
                 "consumes": [
                     "application/json"
                 ],
@@ -2827,49 +2884,26 @@ const docTemplate = `{
                 "tags": [
                     "考试"
                 ],
-                "summary": "获取考试结果",
+                "summary": "分页获取考试结果",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "考试记录ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "分页信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ParamPagingSort"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord"
                         }
                     }
                 }
-            }
-        },
-        "/tue/exam/{id}/rescore": {
-            "post": {
-                "description": "管理员重新评分考试",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "考试"
-                ],
-                "summary": "重新评分考试",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "考试记录ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
             }
         },
         "/tue/exam/{id}/submit": {
@@ -2899,7 +2933,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/exam.SubmitExamRequest"
+                            "$ref": "#/definitions/course.SubmitExamRequest"
                         }
                     }
                 ],
@@ -2907,7 +2941,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-exam_SubmitExamResponse"
+                            "$ref": "#/definitions/entity.CommonResponse-course_SubmitExamResponse"
                         }
                     }
                 }
@@ -3412,6 +3446,52 @@ const docTemplate = `{
                 }
             }
         },
+        "course.SubmitExamRequest": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "description": "答案列表",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/course.SubmitExamRequestAnswer"
+                    }
+                },
+                "time_spent": {
+                    "description": "答题用时（秒）",
+                    "type": "integer"
+                }
+            }
+        },
+        "course.SubmitExamRequestAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {},
+                "problem_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "course.SubmitExamResponse": {
+            "type": "object",
+            "properties": {
+                "record_id": {
+                    "description": "记录ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "course.SubmitProblemResponse": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.CommonResponse-any": {
             "type": "object",
             "properties": {
@@ -3526,6 +3606,48 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CommonResponse-course_SubmitExamResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/course.SubmitExamResponse"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-course_SubmitProblemResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/course.SubmitProblemResponse"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
         "entity.CommonResponse-entity_PaginatedContinuationResponse-schema_UserSession": {
             "type": "object",
             "properties": {
@@ -3622,6 +3744,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Course"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_ExamUserRecord"
                         }
                     ]
                 },
@@ -3790,48 +3933,6 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_User"
-                        }
-                    ]
-                },
-                "msg": {
-                    "description": "消息",
-                    "type": "string"
-                }
-            }
-        },
-        "entity.CommonResponse-exam_SubmitExamResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "代码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/exam.SubmitExamResponse"
-                        }
-                    ]
-                },
-                "msg": {
-                    "description": "消息",
-                    "type": "string"
-                }
-            }
-        },
-        "entity.CommonResponse-exam_SubmitProblemResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "代码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/exam.SubmitProblemResponse"
                         }
                     ]
                 },
@@ -4307,6 +4408,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_ExamUserRecord": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ExamUserRecord"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_Model": {
             "type": "object",
             "properties": {
@@ -4415,6 +4530,27 @@ const docTemplate = `{
                     }
                 },
                 "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.ParamPagingSort": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "integer"
+                },
+                "page_num": {
+                    "description": "分页参数",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "sort_expr": {
+                    "type": "string"
+                },
+                "start_time": {
                     "type": "integer"
                 }
             }
@@ -4530,52 +4666,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "exam.SubmitExamRequest": {
-            "type": "object",
-            "properties": {
-                "answers": {
-                    "description": "答案列表",
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/exam.SubmitExamRequestAnswer"
-                    }
-                },
-                "time_spent": {
-                    "description": "答题用时（秒）",
-                    "type": "integer"
-                }
-            }
-        },
-        "exam.SubmitExamRequestAnswer": {
-            "type": "object",
-            "properties": {
-                "answer": {},
-                "problem_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "exam.SubmitExamResponse": {
-            "type": "object",
-            "properties": {
-                "record_id": {
-                    "description": "记录ID",
-                    "type": "integer"
-                }
-            }
-        },
-        "exam.SubmitProblemResponse": {
-            "type": "object",
-            "properties": {
-                "comment": {
-                    "type": "string"
-                },
-                "score": {
-                    "type": "integer"
                 }
             }
         },
@@ -5078,9 +5168,6 @@ const docTemplate = `{
                 "description": {
                     "description": "权限描述",
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "module": {
                     "description": "所属模块（handler名称）",

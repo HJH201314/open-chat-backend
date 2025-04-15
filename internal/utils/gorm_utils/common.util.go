@@ -128,18 +128,17 @@ func GetByPageContinuous[T any](db *gorm.DB, param entity.ParamPagingSort) ([]T,
 //		[]T - 实体列表
 //		*int - 最后一页页码
 //		error - 错误信息
-func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.SortParam) ([]T, *int64, error) {
+func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.SortParam) (list []T, total int64, err error) {
 	var results []T
 	pageNum, pageSize := param.GetPage(20, 100)
 	offset := (pageNum - 1) * pageSize
 	limit := pageSize
 
 	// 查询 total
-	var total int64
 	var model T
-
-	if err := db.Model(&model).Count(&total).Error; err != nil {
-		return nil, nil, err
+	var count int64
+	if err := db.Model(&model).Count(&count).Error; err != nil {
+		return nil, 0, err
 	}
 
 	tx := db
@@ -150,9 +149,9 @@ func GetByPageTotal[T any](db *gorm.DB, param entity.PagingParam, sort entity.So
 		Offset(offset).
 		Limit(limit).
 		Find(&results).Error; err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	// 分页逻辑处理
-	return results, &total, nil
+	return results, count, nil
 }

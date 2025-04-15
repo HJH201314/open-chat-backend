@@ -1,9 +1,10 @@
-package exam
+package course
 
 import (
 	"context"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
+	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"strconv"
@@ -173,7 +174,7 @@ func (h *ExamHandler) SubmitProblem(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path		int	true	"考试记录ID"
 //	@Success		200	{object}	entity.CommonResponse[schema.ExamUserRecord]
-//	@Router			/tue/exam/{id}/records [get]
+//	@Router			/tue/exam/record/{id} [get]
 func (h *ExamHandler) GetExamResult(c *gin.Context) {
 	// 获取记录ID
 	recordIDStr := c.Param("id")
@@ -201,6 +202,48 @@ func (h *ExamHandler) GetExamResult(c *gin.Context) {
 	ctx_utils.Success(c, record)
 }
 
+// GetExamResults 分页获取考试结果
+//
+//	@Summary		分页获取考试结果
+//	@Description	分页获取用户的考试评分结果
+//	@Tags			考试
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	body		entity.ParamPagingSort	true	"分页信息"
+//	@Success		200	{object}	entity.CommonResponse[entity.PaginatedTotalResponse[schema.ExamUserRecord]]
+//	@Router			/tue/exam/{id}/records [get]
+func (h *ExamHandler) GetExamResults(c *gin.Context) {
+	var param entity.ParamPagingSort
+	if err := c.ShouldBindJSON(&param); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	// 获取用户ID
+	userID := ctx_utils.GetUserId(c)
+
+	// 查询考试记录
+	userRecords, total, err := gorm_utils.GetByPageTotal[schema.ExamUserRecord](
+		h.Db.Preload("Exam").Preload("Answers").Where(
+			"user_id = ?",
+			userID,
+		),
+		param.PagingParam,
+		param.SortParam,
+	)
+	if err != nil {
+		return
+	}
+
+	// 返回记录
+	ctx_utils.Success(
+		c, entity.PaginatedTotalResponse[schema.ExamUserRecord]{
+			List:  userRecords,
+			Total: total,
+		},
+	)
+}
+
 // RescoreExam 重新评分
 //
 //	@Summary		重新评分考试
@@ -209,7 +252,7 @@ func (h *ExamHandler) GetExamResult(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	int	true	"考试记录ID"
-//	@Router			/tue/exam/{id}/rescore [post]
+//	@Router			/tue/exam/record/{id}/rescore [post]
 func (h *ExamHandler) RescoreExam(c *gin.Context) {
 	// 获取记录ID
 	recordIDStr := c.Param("id")

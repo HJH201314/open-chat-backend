@@ -132,9 +132,9 @@ func (h *Handler) GetUserSession(c *gin.Context) {
 //	@Tags			Session
 //	@Accept			json
 //	@Produce		json
-//	@Param			session_id	path		string									true	"会话 ID"
-//	@Param			req			query		chat.GetSharedSession.Req				true	"请求参数"
-//	@Success		200			{object}	entity.CommonResponse[schema.Session]	"返回数据"
+//	@Param			session_id	path		string										true	"会话 ID"
+//	@Param			req			query		chat.GetSharedSession.Req					true	"请求参数"
+//	@Success		200			{object}	entity.CommonResponse[schema.UserSession]	"返回数据"
 //	@Router			/chat/session/{session_id}/shared [get]
 func (h *Handler) GetSharedSession(c *gin.Context) {
 	var uri PathParamSessionId
@@ -167,7 +167,11 @@ func (h *Handler) GetSharedSession(c *gin.Context) {
 		session.Session.Name = session.ShareInfo.Title
 	}
 
-	ctx_utils.Success(c, session.Session)
+	finalSession := schema.UserSession{
+		Session: session.Session,
+		UserID:  session.UserID,
+	}
+	ctx_utils.Success(c, finalSession)
 }
 
 // GetSessions
