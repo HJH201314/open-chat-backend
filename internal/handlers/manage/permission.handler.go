@@ -1,7 +1,6 @@
 package manage
 
 import (
-	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
@@ -33,13 +32,7 @@ func (h *Handler) GetPermissions(c *gin.Context) {
 	permissions, total, err := gorm_utils.GetByPageTotal[schema.Permission](
 		h.Db.Preload(clause.Associations),
 		param.PagingParam,
-		param.SortParam,
-	)
-	// 过滤掉密码
-	permissions = slice.Map(
-		permissions, func(index int, permission schema.Permission) schema.Permission {
-			return permission
-		},
+		*param.SortParam.WithDefault("name ASC", "name"),
 	)
 
 	if err != nil {

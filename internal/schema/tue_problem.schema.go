@@ -53,8 +53,9 @@ type ProblemUserRecord struct {
 	Answer    ProblemAnswer `gorm:"type:json;serializer:json;not null" json:"answer"`
 	Score     uint64        `gorm:"not null;default:0" json:"score"`
 	Comment   string        `json:"comment"`
-
 	AutoCreateAt
+	// 组装
+	Problem Problem `json:"problem"`
 }
 
 func (r *ProblemUserRecord) TableName() string {

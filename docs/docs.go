@@ -2692,6 +2692,122 @@ const docTemplate = `{
                 }
             }
         },
+        "/tue/exam-record/list": {
+            "post": {
+                "description": "分页获取用户的考试评分结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "分页获取考试结果",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "description": "查询信息",
+                        "name": "search",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/course.GetExamResults.Search"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/exam-record/{id}": {
+            "get": {
+                "description": "获取用户的考试评分结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "获取考试结果",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+                        }
+                    }
+                }
+            }
+        },
+        "/tue/exam-record/{id}/rescore": {
+            "post": {
+                "description": "管理员重新评分考试",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "考试"
+                ],
+                "summary": "重新评分考试",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "考试记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/tue/exam/create": {
             "post": {
                 "description": "保存单个测验",
@@ -2749,9 +2865,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/tue/exam/record/{id}": {
-            "get": {
-                "description": "获取用户的考试评分结果",
+        "/tue/exam/single-problem-record/list": {
+            "post": {
+                "description": "获取单个问题结果列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -2759,51 +2875,53 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "考试"
+                    "Exam"
                 ],
-                "summary": "获取考试结果",
+                "summary": "获取单个问题结果列表",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "考试记录ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "description": "查询信息",
+                        "name": "search",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/course.GetProblemResults.Search"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.CommonResponse-schema_ExamUserRecord"
+                            "$ref": "#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ProblemUserRecord"
                         }
                     }
                 }
-            }
-        },
-        "/tue/exam/record/{id}/rescore": {
-            "post": {
-                "description": "管理员重新评分考试",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "考试"
-                ],
-                "summary": "重新评分考试",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "考试记录ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
             }
         },
         "/tue/exam/single-problem/submit": {
@@ -2872,9 +2990,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/tue/exam/{id}/records": {
+        "/tue/exam/{id}/my-records": {
             "get": {
-                "description": "分页获取用户的考试评分结果",
+                "description": "分页获取用户的考试评分结果（单个考试）",
                 "consumes": [
                     "application/json"
                 ],
@@ -2884,16 +3002,40 @@ const docTemplate = `{
                 "tags": [
                     "考试"
                 ],
-                "summary": "分页获取考试结果",
+                "summary": "分页获取考试结果（单个考试）",
                 "parameters": [
                     {
-                        "description": "分页信息",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ParamPagingSort"
-                        }
+                        "type": "string",
+                        "description": "考试 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页参数",
+                        "name": "page_num",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort_expr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "start_time",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3431,6 +3573,30 @@ const docTemplate = `{
                 }
             }
         },
+        "course.ExamRecordSearch": {
+            "type": "object",
+            "properties": {
+                "everything": {
+                    "type": "string"
+                }
+            }
+        },
+        "course.GetExamResults.Search": {
+            "type": "object",
+            "properties": {
+                "search_data": {
+                    "$ref": "#/definitions/course.ExamRecordSearch"
+                }
+            }
+        },
+        "course.GetProblemResults.Search": {
+            "type": "object",
+            "properties": {
+                "search_data": {
+                    "$ref": "#/definitions/course.ProblemRecordSearch"
+                }
+            }
+        },
         "course.MakeQuestionRequest": {
             "type": "object",
             "required": [
@@ -3443,6 +3609,14 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/schema.ProblemType"
+                }
+            }
+        },
+        "course.ProblemRecordSearch": {
+            "type": "object",
+            "properties": {
+                "everything": {
+                    "type": "string"
                 }
             }
         },
@@ -3849,6 +4023,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_Problem"
+                        }
+                    ]
+                },
+                "msg": {
+                    "description": "消息",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CommonResponse-entity_PaginatedTotalResponse-schema_ProblemUserRecord": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.PaginatedTotalResponse-schema_ProblemUserRecord"
                         }
                     ]
                 },
@@ -4478,6 +4673,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.PaginatedTotalResponse-schema_ProblemUserRecord": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.ProblemUserRecord"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.PaginatedTotalResponse-schema_Provider": {
             "type": "object",
             "properties": {
@@ -4530,27 +4739,6 @@ const docTemplate = `{
                     }
                 },
                 "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.ParamPagingSort": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "integer"
-                },
-                "page_num": {
-                    "description": "分页参数",
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "sort_expr": {
-                    "type": "string"
-                },
-                "start_time": {
                     "type": "integer"
                 }
             }
@@ -5318,6 +5506,40 @@ const docTemplate = `{
                 "ShortAnswer",
                 "TrueFalse"
             ]
+        },
+        "schema.ProblemUserRecord": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/schema.ProblemAnswer"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "problem": {
+                    "description": "组装",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Problem"
+                        }
+                    ]
+                },
+                "problem_id": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
         },
         "schema.Provider": {
             "type": "object",

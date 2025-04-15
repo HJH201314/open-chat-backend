@@ -41,6 +41,21 @@ definitions:
       share_info:
         $ref: '#/definitions/schema.SessionShareInfo'
     type: object
+  course.ExamRecordSearch:
+    properties:
+      everything:
+        type: string
+    type: object
+  course.GetExamResults.Search:
+    properties:
+      search_data:
+        $ref: '#/definitions/course.ExamRecordSearch'
+    type: object
+  course.GetProblemResults.Search:
+    properties:
+      search_data:
+        $ref: '#/definitions/course.ProblemRecordSearch'
+    type: object
   course.MakeQuestionRequest:
     properties:
       description:
@@ -50,6 +65,11 @@ definitions:
     required:
     - description
     - type
+    type: object
+  course.ProblemRecordSearch:
+    properties:
+      everything:
+        type: string
     type: object
   course.SubmitExamRequest:
     properties:
@@ -311,6 +331,19 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_Problem'
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+  entity.CommonResponse-entity_PaginatedTotalResponse-schema_ProblemUserRecord:
+    properties:
+      code:
+        description: 代码
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/entity.PaginatedTotalResponse-schema_ProblemUserRecord'
         description: 数据
       msg:
         description: 消息
@@ -707,6 +740,15 @@ definitions:
       total:
         type: integer
     type: object
+  entity.PaginatedTotalResponse-schema_ProblemUserRecord:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/schema.ProblemUserRecord'
+        type: array
+      total:
+        type: integer
+    type: object
   entity.PaginatedTotalResponse-schema_Provider:
     properties:
       list:
@@ -741,20 +783,6 @@ definitions:
           $ref: '#/definitions/schema.User'
         type: array
       total:
-        type: integer
-    type: object
-  entity.ParamPagingSort:
-    properties:
-      end_time:
-        type: integer
-      page_num:
-        description: 分页参数
-        type: integer
-      page_size:
-        type: integer
-      sort_expr:
-        type: string
-      start_time:
         type: integer
     type: object
   entity.ReqUpdateBody-schema_Bucket:
@@ -1278,6 +1306,27 @@ definitions:
     - FillBlank
     - ShortAnswer
     - TrueFalse
+  schema.ProblemUserRecord:
+    properties:
+      answer:
+        $ref: '#/definitions/schema.ProblemAnswer'
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      problem:
+        allOf:
+        - $ref: '#/definitions/schema.Problem'
+        description: 组装
+      problem_id:
+        type: integer
+      score:
+        type: integer
+      user_id:
+        type: integer
+    type: object
   schema.Provider:
     properties:
       api_keys:
@@ -3274,6 +3323,81 @@ paths:
       summary: 更新课程
       tags:
       - Course
+  /tue/exam-record/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户的考试评分结果
+      parameters:
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
+      summary: 获取考试结果
+      tags:
+      - 考试
+  /tue/exam-record/{id}/rescore:
+    post:
+      consumes:
+      - application/json
+      description: 管理员重新评分考试
+      parameters:
+      - description: 考试记录ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: 重新评分考试
+      tags:
+      - 考试
+  /tue/exam-record/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页获取用户的考试评分结果
+      parameters:
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      - description: 查询信息
+        in: body
+        name: search
+        schema:
+          $ref: '#/definitions/course.GetExamResults.Search'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord'
+      summary: 分页获取考试结果
+      tags:
+      - 考试
   /tue/exam/{id}:
     get:
       consumes:
@@ -3295,18 +3419,33 @@ paths:
       summary: 获取单个测验
       tags:
       - Exam
-  /tue/exam/{id}/records:
+  /tue/exam/{id}/my-records:
     get:
       consumes:
       - application/json
-      description: 分页获取用户的考试评分结果
+      description: 分页获取用户的考试评分结果（单个考试）
       parameters:
-      - description: 分页信息
-        in: body
-        name: req
+      - description: 考试 ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/entity.ParamPagingSort'
+        type: string
+      - in: query
+        name: end_time
+        type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
       produces:
       - application/json
       responses:
@@ -3314,7 +3453,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ExamUserRecord'
-      summary: 分页获取考试结果
+      summary: 分页获取考试结果（单个考试）
       tags:
       - 考试
   /tue/exam/{id}/submit:
@@ -3381,44 +3520,43 @@ paths:
       summary: 随机测验
       tags:
       - Exam
-  /tue/exam/record/{id}:
-    get:
+  /tue/exam/single-problem-record/list:
+    post:
       consumes:
       - application/json
-      description: 获取用户的考试评分结果
+      description: 获取单个问题结果列表
       parameters:
-      - description: 考试记录ID
-        in: path
-        name: id
-        required: true
+      - in: query
+        name: end_time
         type: integer
+      - description: 分页参数
+        in: query
+        name: page_num
+        type: integer
+      - in: query
+        name: page_size
+        type: integer
+      - in: query
+        name: sort_expr
+        type: string
+      - in: query
+        name: start_time
+        type: integer
+      - description: 查询信息
+        in: body
+        name: search
+        schema:
+          $ref: '#/definitions/course.GetProblemResults.Search'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.CommonResponse-schema_ExamUserRecord'
-      summary: 获取考试结果
+            $ref: '#/definitions/entity.CommonResponse-entity_PaginatedTotalResponse-schema_ProblemUserRecord'
+      summary: 获取单个问题结果列表
       tags:
-      - 考试
-  /tue/exam/record/{id}/rescore:
-    post:
-      consumes:
-      - application/json
-      description: 管理员重新评分考试
-      parameters:
-      - description: 考试记录ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses: {}
-      summary: 重新评分考试
-      tags:
-      - 考试
+      - Exam
   /tue/exam/single-problem/submit:
     post:
       consumes:

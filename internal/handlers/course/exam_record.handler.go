@@ -8,6 +8,7 @@ import (
 	"github.com/fcraft/open-chat/internal/handlers"
 	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"strconv"
+	"strings"
 
 	_ "github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
@@ -165,6 +166,72 @@ func (h *ExamHandler) SubmitProblem(c *gin.Context) {
 	)
 }
 
+// GetProblemResults 获取单个问题结果列表
+//
+//	@Summary		获取单个问题结果列表
+//	@Description	获取单个问题结果列表
+//	@Tags			Exam
+//	@Accept			json
+//	@Produce		json
+//	@Param			req		query		entity.ParamPagingSort			true	"分页信息"
+//	@Param			search	body		course.GetProblemResults.Search	false	"查询信息"
+//	@Success		200		{object}	entity.CommonResponse[entity.PaginatedTotalResponse[schema.ProblemUserRecord]]
+//	@Router			/tue/exam/single-problem-record/list [post]
+func (h *ExamHandler) GetProblemResults(c *gin.Context) {
+	var param entity.ParamPagingSort
+	if err := c.BindQuery(&param); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	type Search struct {
+		entity.SearchParam[ProblemRecordSearch]
+	}
+	var search Search
+	if err := c.ShouldBindJSON(&search); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	// 获取用户ID
+	userID := ctx_utils.GetUserId(c)
+
+	// 构建查询
+	db := h.Db.Preload("Problem").Where(
+		"user_id = ?",
+		userID,
+	).Joins("LEFT JOIN tue_problems as problem ON problem.id = tue_problem_user_records.problem_id")
+	if search.SearchData.Everything != "" {
+		str := strings.ToLower(search.SearchData.Everything)
+		db = db.Where(
+			"TRIM(LOWER(problem.description)) LIKE ? OR TRIM(LOWER(problem.explanation)) LIKE ? OR TRIM(LOWER(problem.subject)) = ?",
+			"%"+str+"%",
+			"%"+str+"%",
+			str,
+		)
+	}
+	// 查询考试记录
+	userRecords, total, err := gorm_utils.GetByPageTotal[schema.ProblemUserRecord](
+		db,
+		param.PagingParam,
+		param.SortParam,
+	)
+	if err != nil {
+		return
+	}
+
+	// 返回记录
+	ctx_utils.Success(
+		c, entity.PaginatedTotalResponse[schema.ProblemUserRecord]{
+			List:  userRecords,
+			Total: total,
+		},
+	)
+}
+
+type ProblemRecordSearch struct {
+	Everything string `json:"everything"`
+}
+
 // GetExamResult 获取考试结果
 //
 //	@Summary		获取考试结果
@@ -174,7 +241,7 @@ func (h *ExamHandler) SubmitProblem(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path		int	true	"考试记录ID"
 //	@Success		200	{object}	entity.CommonResponse[schema.ExamUserRecord]
-//	@Router			/tue/exam/record/{id} [get]
+//	@Router			/tue/exam-record/{id} [get]
 func (h *ExamHandler) GetExamResult(c *gin.Context) {
 	// 获取记录ID
 	recordIDStr := c.Param("id")
@@ -202,17 +269,23 @@ func (h *ExamHandler) GetExamResult(c *gin.Context) {
 	ctx_utils.Success(c, record)
 }
 
-// GetExamResults 分页获取考试结果
+// GetExamResultsByExam 分页获取考试结果（单个考试）
 //
-//	@Summary		分页获取考试结果
-//	@Description	分页获取用户的考试评分结果
+//	@Summary		分页获取考试结果（单个考试）
+//	@Description	分页获取用户的考试评分结果（单个考试）
 //	@Tags			考试
 //	@Accept			json
 //	@Produce		json
-//	@Param			req	body		entity.ParamPagingSort	true	"分页信息"
+//	@Param			id	path		string					true	"考试 ID"
+//	@Param			req	query		entity.ParamPagingSort	true	"分页信息"
 //	@Success		200	{object}	entity.CommonResponse[entity.PaginatedTotalResponse[schema.ExamUserRecord]]
-//	@Router			/tue/exam/{id}/records [get]
-func (h *ExamHandler) GetExamResults(c *gin.Context) {
+//	@Router			/tue/exam/{id}/my-records [get]
+func (h *ExamHandler) GetExamResultsByExam(c *gin.Context) {
+	var uri entity.PathParamId
+	if err := c.BindUri(&uri); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
 	var param entity.ParamPagingSort
 	if err := c.ShouldBindJSON(&param); err != nil {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
@@ -225,7 +298,8 @@ func (h *ExamHandler) GetExamResults(c *gin.Context) {
 	// 查询考试记录
 	userRecords, total, err := gorm_utils.GetByPageTotal[schema.ExamUserRecord](
 		h.Db.Preload("Exam").Preload("Answers").Where(
-			"user_id = ?",
+			"exam_id = ? AND user_id = ?",
+			uri.ID,
 			userID,
 		),
 		param.PagingParam,
@@ -244,6 +318,72 @@ func (h *ExamHandler) GetExamResults(c *gin.Context) {
 	)
 }
 
+// GetExamResults 分页获取考试结果
+//
+//	@Summary		分页获取考试结果
+//	@Description	分页获取用户的考试评分结果
+//	@Tags			考试
+//	@Accept			json
+//	@Produce		json
+//	@Param			req		query		entity.ParamPagingSort			true	"分页信息"
+//	@Param			search	body		course.GetExamResults.Search	false	"查询信息"
+//	@Success		200		{object}	entity.CommonResponse[entity.PaginatedTotalResponse[schema.ExamUserRecord]]
+//	@Router			/tue/exam-record/list [post]
+func (h *ExamHandler) GetExamResults(c *gin.Context) {
+	var param entity.ParamPagingSort
+	if err := c.BindQuery(&param); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+	type Search struct {
+		entity.SearchParam[ExamRecordSearch]
+	}
+	var search Search
+	if err := c.ShouldBindJSON(&search); err != nil {
+		ctx_utils.HttpError(c, constants.ErrBadRequest)
+		return
+	}
+
+	// 获取用户ID
+	userID := ctx_utils.GetUserId(c)
+
+	// 构建查询
+	db := h.Db.Preload("Exam").Where(
+		"user_id = ?",
+		userID,
+	).Joins("LEFT JOIN tue_exams as exam ON exam.id = tue_exam_user_records.exam_id")
+	if search.SearchData.Everything != "" {
+		str := strings.ToLower(search.SearchData.Everything)
+		db = db.Where(
+			"TRIM(LOWER(exam.name)) LIKE ? OR TRIM(LOWER(exam.description)) LIKE ? OR TRIM(LOWER(exam.subjects)) = ?",
+			"%"+str+"%",
+			"%"+str+"%",
+			str,
+		)
+	}
+	// 查询考试记录
+	userRecords, total, err := gorm_utils.GetByPageTotal[schema.ExamUserRecord](
+		db,
+		param.PagingParam,
+		param.SortParam,
+	)
+	if err != nil {
+		return
+	}
+
+	// 返回记录
+	ctx_utils.Success(
+		c, entity.PaginatedTotalResponse[schema.ExamUserRecord]{
+			List:  userRecords,
+			Total: total,
+		},
+	)
+}
+
+type ExamRecordSearch struct {
+	Everything string `json:"everything"`
+}
+
 // RescoreExam 重新评分
 //
 //	@Summary		重新评分考试
@@ -252,7 +392,7 @@ func (h *ExamHandler) GetExamResults(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	int	true	"考试记录ID"
-//	@Router			/tue/exam/record/{id}/rescore [post]
+//	@Router			/tue/exam-record/{id}/rescore [post]
 func (h *ExamHandler) RescoreExam(c *gin.Context) {
 	// 获取记录ID
 	recordIDStr := c.Param("id")

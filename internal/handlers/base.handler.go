@@ -6,8 +6,6 @@ import (
 	gormstore "github.com/fcraft/open-chat/internal/storage/gorm"
 	storehelper "github.com/fcraft/open-chat/internal/storage/helper"
 	redisstore "github.com/fcraft/open-chat/internal/storage/redis"
-	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -27,16 +25,4 @@ func NewBaseHandler(store *gormstore.GormStore, redis *redisstore.RedisStore, he
 		Cache:  cache,
 		Helper: helper,
 	}
-}
-
-// GetPublicKey
-//
-//	@Summary		获取公钥
-//	@Description	获取公钥
-//	@Tags			Base
-//	@Produce		json
-//	@Success		200	{object}	entity.CommonResponse[string]	"RSA 公钥"
-//	@Router			/base/public-key [get]
-func (h *BaseHandler) GetPublicKey(c *gin.Context) {
-	ctx_utils.Success(c, services.GetEncryptService().PublicKeyPEM)
 }

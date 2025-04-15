@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"github.com/fcraft/open-chat/internal/handlers/base"
+	"gorm.io/gorm"
 	"os"
 	"reflect"
 	"runtime"
@@ -18,7 +20,7 @@ import (
 	"github.com/fcraft/open-chat/internal/handlers/user"
 	"github.com/fcraft/open-chat/internal/schema"
 	"github.com/fcraft/open-chat/internal/services"
-	"github.com/fcraft/open-chat/internal/storage/gorm"
+	gormStore "github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/fcraft/open-chat/internal/storage/redis"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -36,7 +38,7 @@ type RouteInfo struct {
 
 type Router struct {
 	Engine     *gin.Engine
-	store      *gorm.GormStore
+	store      *gormStore.GormStore
 	routeInfos []RouteInfo
 }
 
@@ -93,61 +95,101 @@ func getModuleName(handler gin.HandlerFunc) string {
 }
 
 // registerRoute 收集路由信息并注册路由
-func (r *Router) registerRoute(group *gin.RouterGroup, method, path string, description string, handler gin.HandlerFunc) {
-	// 注册路由
-	switch method {
-	case GET:
-		group.GET(path, handler)
-	case POST:
-		group.POST(path, handler)
-	case PUT:
-		group.PUT(path, handler)
-	case DELETE:
-		group.DELETE(path, handler)
-	case PATCH:
-		group.PATCH(path, handler)
+func (r *Router) registerRoute(group *gin.RouterGroup, method any, path string, description string, handler gin.HandlerFunc) {
+	// 1. 分析 method
+	var methods []string
+	switch method.(type) {
+	case string:
+		methods = []string{method.(string)}
+	case []string:
+		methods = method.([]string)
 	}
 
-	// 收集路由信息
-	moduleName := getModuleName(handler)
-	funcName := getHandlerName(handler)
-	r.routeInfos = append(
-		r.routeInfos, RouteInfo{
-			Method:      method,
-			Path:        group.BasePath() + path,
-			Name:        strings.Join([]string{moduleName, funcName}, "."),
-			Description: description,
-			Module:      moduleName,
+	for _, m := range methods {
+		// 2. 注册路由
+		switch m {
+		case GET:
+			group.GET(path, handler)
+		case POST:
+			group.POST(path, handler)
+		case PUT:
+			group.PUT(path, handler)
+		case DELETE:
+			group.DELETE(path, handler)
+		case PATCH:
+			group.PATCH(path, handler)
+		}
+
+		// 3. 收集路由信息
+		moduleName := getModuleName(handler)
+		funcName := getHandlerName(handler)
+		r.routeInfos = append(
+			r.routeInfos, RouteInfo{
+				Method:      m,
+				Path:        group.BasePath() + path,
+				Name:        strings.Join([]string{moduleName, funcName}, ".") + "." + strings.ToLower(m),
+				Description: description,
+				Module:      moduleName,
+			},
+		)
+	}
+}
+
+// saveRoutesToDB 将收集到的路由信息保存到数据库，并维护权限关联
+func (r *Router) saveRoutesToDB() error {
+	// 获取当前批次的所有权限路径
+	currentNames := make([]string, 0, len(r.routeInfos))
+	permissions := make([]schema.Permission, 0, len(r.routeInfos))
+
+	// 准备批量操作数据
+	for _, route := range r.routeInfos {
+		pathKey := route.Method + ":" + route.Path
+		currentNames = append(currentNames, route.Name)
+
+		permissions = append(
+			permissions, schema.Permission{
+				Name:        route.Name,
+				Path:        pathKey,
+				Description: route.Description,
+				Module:      route.Module,
+				Active:      true, // 确保新权限默认激活
+			},
+		)
+	}
+
+	// 使用事务保证原子性
+	return r.store.Db.Transaction(
+		func(tx *gorm.DB) error {
+			// 1. 批量更新或创建权限（保持路径不变）
+			if err := tx.Clauses(
+				clause.OnConflict{
+					Columns: []clause.Column{{Name: "name"}}, // 根据路径判断冲突
+					DoUpdates: clause.AssignmentColumns(
+						[]string{
+							"path",
+							"description",
+							"module",
+							"active",     // 保持激活状态
+							"updated_at", // 更新时间
+						},
+					),
+				},
+			).CreateInBatches(permissions, 100).Error; err != nil {
+				return err
+			}
+
+			// 2. 删除已失效的权限（不在当前路由中的权限）
+			if err := tx.Where("name NOT IN (?)", currentNames).
+				Delete(&schema.Permission{}).Error; err != nil {
+				return err
+			}
+
+			return nil
 		},
 	)
 }
 
-// saveRoutesToDB 将收集到的路由信息保存到数据库
-func (r *Router) saveRoutesToDB() error {
-	var permissions []schema.Permission
-	for _, route := range r.routeInfos {
-		permissions = append(
-			permissions, schema.Permission{
-				Name:        route.Name,
-				Path:        route.Method + ":" + route.Path,
-				Description: route.Description,
-				Module:      route.Module,
-			},
-		)
-	}
-	// 使用 Upsert 功能，当 Path 已存在时更新，不存在时创建
-	if err := r.store.Db.Clauses(
-		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "path"}},
-			UpdateAll: true,
-		},
-	).CreateInBatches(&permissions, 100).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
-func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, helper *helper.QueryHelper, cache *services.CacheService) Router {
+func InitRouter(r *gin.Engine, store *gormStore.GormStore, redis *redis.RedisStore, helper *helper.QueryHelper, cache *services.CacheService) Router {
 	router := Router{
 		Engine: r,
 		store:  store,
@@ -157,6 +199,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 
 	baseHandler := handlers.NewBaseHandler(store, redis, helper, cache)
 
+	keyHandler := base.NewKeyHandler(baseHandler)
 	baseGroup := r.Group("/base")
 	{
 		router.registerRoute(
@@ -165,7 +208,7 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			"/public-key",
 			"获取 RSA 加密公钥",
 
-			baseHandler.GetPublicKey,
+			keyHandler.GetPublicKey,
 		)
 	}
 
@@ -810,13 +853,13 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				problemHandler.MakeQuestion,
 			)
 		}
+		// 考试提交
+		examHandler := course.NewExamHandler(baseHandler)
 		tueExamGroup := tueGroup.Group("/exam")
 		{
 			router.registerRoute(tueExamGroup, GET, "/:id", "获取指定考试的详细信息", tueHandler.GetExam)
 			router.registerRoute(tueExamGroup, POST, "/create", "创建新的考试", tueHandler.CreateExam)
 			router.registerRoute(tueExamGroup, POST, "/random", "随机测验", tueHandler.RandomExam)
-			// 考试提交
-			examHandler := course.NewExamHandler(baseHandler)
 			router.registerRoute(
 				tueExamGroup,
 				POST,
@@ -827,16 +870,9 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 			router.registerRoute(
 				tueExamGroup,
 				GET,
-				"/record/:id",
-				"获取考试结果",
-				examHandler.GetExamResult,
-			)
-			router.registerRoute(
-				tueExamGroup,
-				POST,
-				"/record/:id/rescore",
-				"重新评分考试",
-				examHandler.RescoreExam,
+				"/:id/my-records",
+				"分页获取考试结果（单个考试）",
+				examHandler.GetExamResultsByExam,
 			)
 			router.registerRoute(
 				tueExamGroup,
@@ -844,6 +880,37 @@ func InitRouter(r *gin.Engine, store *gorm.GormStore, redis *redis.RedisStore, h
 				"/single-problem/submit",
 				"提交单个问题答案",
 				examHandler.SubmitProblem,
+			)
+			router.registerRoute(
+				tueExamGroup,
+				POST,
+				"/single-problem-record/list",
+				"获取单个问题结果列表",
+				examHandler.GetProblemResults,
+			)
+		}
+		tueExamRecordGroup := tueGroup.Group("/exam-record")
+		{
+			router.registerRoute(
+				tueExamRecordGroup,
+				GET,
+				"/:id",
+				"获取考试结果",
+				examHandler.GetExamResult,
+			)
+			router.registerRoute(
+				tueExamRecordGroup,
+				POST,
+				"/list",
+				"分页获取考试结果",
+				examHandler.GetExamResults,
+			)
+			router.registerRoute(
+				tueExamRecordGroup,
+				POST,
+				"/:id/rescore",
+				"重新评分考试",
+				examHandler.RescoreExam,
 			)
 		}
 		tueCourseGroup := tueGroup.Group("/course")
