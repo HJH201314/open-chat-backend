@@ -7,7 +7,7 @@ import (
 )
 
 // GetCommonCompletionOptions returns the common completion options for the given provider model.
-func GetCommonCompletionOptions(providerModel *schema.Model, options *CompletionOptions) CompletionOptions {
+func GetCommonCompletionOptions(providerModel schema.Model, options CompletionOptions) CompletionOptions {
 	completionOptions := CompletionOptions{}
 	err := convertor.CopyProperties(&completionOptions, options)
 	if err != nil || providerModel.Provider == nil || len(providerModel.Provider.APIKeys) < 1 {

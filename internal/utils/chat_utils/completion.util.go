@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/duke-git/lancet/v2/slice"
-	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
 
@@ -41,11 +40,20 @@ func Completion(ctx context.Context, opts CompletionOptions) (*CompletionRespons
 		},
 	)
 	params := openai.ChatCompletionNewParams{
-		Messages:    reqMessages,
-		Model:       opts.Model,
-		Temperature: openai.Opt(opts.Temperature),
-		MaxTokens:   openai.Opt(opts.MaxTokens),
-		Tools:       availableTools,
+		Messages: reqMessages,
+		Model:    opts.Model,
+	}
+	if opts.Temperature > 0 {
+		params.Temperature = openai.Opt(opts.Temperature)
+	}
+	if opts.MaxTokens > 0 {
+		params.MaxTokens = openai.Opt(opts.MaxTokens)
+	}
+	if len(opts.Tools) > 0 {
+		params.Tools = availableTools
+		params.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{
+			OfAuto: openai.Opt("auto"),
+		}
 	}
 
 	// 发送请求

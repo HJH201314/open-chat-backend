@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fcraft/open-chat/internal/schema"
 	"sync"
 	"time"
@@ -57,6 +58,7 @@ func (s *ModelCollectionService) GetCollectionByName(name string) (*schema.Model
 	if err := s.BaseService.Gorm.
 		Preload("Models").
 		Preload("Models.Provider").
+		Preload("Models.Provider.APIKeys").
 		Where("name = ?", name).
 		First(&collection).Error; err != nil {
 		return nil, err
@@ -81,7 +83,9 @@ func (s *ModelCollectionService) GetRandomModelFromCollection(collectionName str
 		return nil, gorm.ErrRecordNotFound
 	}
 
+	model, _ := slice.Random(collection.Models)
+
 	// 简单实现：返回第一个模型
 	// 实际应用中可以实现更复杂的负载均衡逻辑
-	return &collection.Models[0], nil
+	return &model, nil
 }

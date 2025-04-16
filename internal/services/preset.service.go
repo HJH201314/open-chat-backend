@@ -159,13 +159,10 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (compl
 	}
 	preset := presetService.GetBuiltinPreset(presetName)
 
-	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置聚合 API
-	var model schema.Model
-	if err := presetService.Gorm.Model(&model).Preload("Provider").Preload("Provider.APIKeys").Where(
-		"id = ?",
-		19,
-	).First(&model).Error; err != nil {
-		return "", 0, fmt.Errorf("failed to get default AI provider: %w", err)
+	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置
+	modelInfo, err := GetModelCollectionService().GetRandomModelFromCollection("deepseek-v3-chat")
+	if err != nil || modelInfo == nil || modelInfo.Provider == nil {
+		return "", 0, errors.New("default AI provider not found")
 	}
 
 	// 记录调用
@@ -181,7 +178,7 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (compl
 	// 调用AI接口进行补全
 	resp, err := chat_utils.Completion(
 		context.Background(), chat_utils.GetCommonCompletionOptions(
-			&model, &chat_utils.CompletionOptions{
+			*modelInfo, chat_utils.CompletionOptions{
 				CompletionModelConfig: chat_utils.CompletionModelConfig{
 					//MaxTokens:   1000, // 输出长度限制 TODO：跟随更新可配置后可自定义
 					//Temperature: 1.6,  // 较高的温度，提高灵活性 TODO：跟随更新可配置后可自定义
@@ -195,16 +192,19 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (compl
 	// 更新记录
 	defer func() {
 		var status constants.CommonStatus
-		if err != nil || resp.Content == "" {
+		var content string
+		if err != nil || resp == nil || resp.Content == "" {
 			// 失败
 			status = constants.StatusFailed
+			content = err.Error()
 		} else {
 			// 成功
 			status = constants.StatusCompleted
+			content = resp.Content
 		}
 		if err := presetService.Gorm.Model(&presetRecord).Updates(
 			schema.PresetCompletionRecord{
-				Content: resp.Content,
+				Content: content,
 				Status:  status,
 			},
 		).Error; err != nil {
