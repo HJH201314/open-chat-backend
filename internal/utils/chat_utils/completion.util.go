@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
 

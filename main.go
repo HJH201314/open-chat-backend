@@ -8,7 +8,6 @@ import (
 	"github.com/fcraft/open-chat/internal/storage/gorm"
 	"github.com/fcraft/open-chat/internal/storage/helper"
 	"github.com/fcraft/open-chat/internal/storage/redis"
-	"github.com/fcraft/open-chat/internal/utils/chat_utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
@@ -17,7 +16,6 @@ import (
 )
 
 func main() {
-	chat_utils.TestExtractTagContent()
 	slog.SetDefault(slog.New(slogcolor.NewHandler(os.Stdout, slogcolor.DefaultOptions)))
 
 	// 加载环境变量
@@ -63,11 +61,11 @@ func loadEnv() {
 		env = "development"
 	}
 	// .env.{TUE_ENV}.local
-	_ = godotenv.Load(".env." + env + ".local")
+	_ = godotenv.Load("./conf/.env." + env + ".local")
 	// .env.local
-	_ = godotenv.Load(".env.local")
+	_ = godotenv.Load("./conf/.env.local")
 	// .env.{TUE_ENV}
-	_ = godotenv.Load(".env." + env)
+	_ = godotenv.Load("./conf/.env." + env)
 	// .env
-	_ = godotenv.Load()
+	_ = godotenv.Load("./conf/.env")
 }
