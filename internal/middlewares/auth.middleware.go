@@ -14,7 +14,7 @@ import (
 
 var ignorePaths = []string{
 	"/swagger", "/base/public-key", "/user/refresh", "/user/login", "/user/backdoor/login", "/user/logout",
-	"/user/register",
+	"/user/register", "/auth",
 }
 
 // AuthMiddleware 鉴权中间件

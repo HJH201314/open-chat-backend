@@ -1522,6 +1522,8 @@ definitions:
         type: string
       id:
         type: integer
+      nickname:
+        type: string
       password:
         type: string
       roles:
@@ -1576,6 +1578,16 @@ definitions:
     - password
     - username
     type: object
+  user.LoginByOAuthReq:
+    properties:
+      code:
+        type: string
+      state:
+        type: string
+    required:
+      - code
+      - state
+    type: object
   user.Register.registerRequest:
     properties:
       password:
@@ -1589,6 +1601,54 @@ definitions:
 info:
   contact: {}
 paths:
+  /auth/{name}/do:
+    post:
+      consumes:
+        - application/json
+      description: OAuth 回调登录
+      parameters:
+        - description: OAuth 名称
+          in: path
+          name: name
+          required: true
+          type: string
+        - description: OAuth 回调登录信息
+          in: body
+          name: req
+          required: true
+          schema:
+            $ref: '#/definitions/user.LoginByOAuthReq'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 用户信息
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-schema_User'
+      summary: OAuth 回调登录
+      tags:
+        - User
+  /auth/{name}/url:
+    get:
+      consumes:
+        - application/json
+      description: 前往 OAuth 认证
+      parameters:
+        - description: OAuth 名称
+          in: path
+          name: name
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OAuth 认证地址
+          schema:
+            $ref: '#/definitions/entity.CommonResponse-string'
+      summary: 前往 OAuth 认证
+      tags:
+        - User
   /base/public-key:
     get:
       description: 获取公钥

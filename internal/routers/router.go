@@ -411,6 +411,11 @@ func InitRouter(r *gin.Engine, store *gormStore.GormStore, redis *redis.RedisSto
 			router.registerRoute(userGroup, POST, "/backdoor/login", "后台登录接口", userHandler.BackdoorLogin)
 		}
 	}
+	authGroup := r.Group("/auth")
+	{
+		router.registerRoute(authGroup, GET, "/:name/url", "获取 OAuth 重定向地址", userHandler.GetAuthUrl)
+		router.registerRoute(authGroup, POST, "/:name/do", "OAuth 回调登录", userHandler.LoginByOAuth)
+	}
 
 	// routes for management
 	manageHandler := manage.NewManageHandler(baseHandler)

@@ -26,7 +26,7 @@ func (h *Handler) GetExam(c *gin.Context) {
 		return
 	}
 
-	exam, err := h.Store.GetExamWithDetails(param.ID)
+	exam, err := h.Helper.GetExam(param.ID)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrNotFound)
 		return

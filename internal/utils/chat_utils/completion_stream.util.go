@@ -58,7 +58,7 @@ func buildMessages(opts CompletionOptions) []Message {
 
 	// 添加上下文消息
 	messages = append(messages, opts.Messages...)
-	slog.Default().Info("messages: %v", messages)
+	slog.Default().Info("messages: ", messages)
 	return messages
 }
 

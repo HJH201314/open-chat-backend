@@ -9,6 +9,7 @@ import (
 	"github.com/fcraft/open-chat/internal/utils/auth_utils"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type Handler struct {
@@ -150,31 +151,14 @@ func (h *Handler) Login(c *gin.Context) {
 		ctx_utils.CustomError(c, 401, "username or password is incorrect")
 		return
 	}
-	// 赠送用量
-	if _, err := h.Store.CreateUserUsage(userRes.ID, 100000); err != nil {
-		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
-	}
 
-	// 刷新角色
-	if err := h.Redis.DeleteUserRolesCache(userRes.ID); err != nil {
-		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
-	}
-
-	// 获取详细用户信息
-	detailedUser, err := h.Store.GetUserDetailed(userRes.ID)
+	user, err := h.doUserLogin(c, userRes.ID)
 	if err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
 
-	// 签发并缓存 token
-	token, _ := signJwtTokenIntoHeader(c, detailedUser)
-	if err := h.Redis.CacheUserToken(userRes.ID, token, constants.RefreshTokenExpire); err != nil {
-		return
-	}
-	ctx_utils.Success(c, detailedUser)
+	ctx_utils.Success(c, user)
 }
 
 // BackdoorLogin
@@ -257,7 +241,10 @@ func (h *Handler) Register(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	var req registerRequest
-	if err := c.BindJSON(&req); err != nil {
+	if err := c.BindJSON(&req); err != nil || req.Username == "" || req.Password == "" || strings.Contains(
+		req.Username,
+		"_",
+	) {
 		ctx_utils.HttpError(c, constants.ErrBadRequest)
 		return
 	}
@@ -274,15 +261,52 @@ func (h *Handler) Register(c *gin.Context) {
 	user := schema.User{
 		Username: req.Username,
 		Password: pwd,
+		Type:     schema.UserTypeNormal,
 	}
 	if err := h.Store.CreateUser(&user); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
 	}
-	// 赠送用量
-	if _, err := h.Store.CreateUserUsage(user.ID, 100000); err != nil {
+
+	if err := h.doUserRegister(user.ID); err != nil {
 		ctx_utils.HttpError(c, constants.ErrInternal)
 		return
+	}
+
+	ctx_utils.Success(c, true)
+}
+
+// userLogin 用户登录处理，包含 角色授权、token 签发；返回用户数据
+func (h *Handler) doUserLogin(c *gin.Context, userId uint64) (*schema.User, error) {
+	// 赠送用量
+	if _, err := h.Store.CreateUserUsage(userId, 100000); err != nil {
+		return nil, err
+	}
+
+	// 刷新角色
+	if err := h.Redis.DeleteUserRolesCache(userId); err != nil {
+		return nil, err
+	}
+
+	// 获取详细用户信息
+	detailedUser, err := h.Store.GetUserDetailed(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 签发并缓存 token
+	token, _ := signJwtTokenIntoHeader(c, detailedUser)
+	if err := h.Redis.CacheUserToken(userId, token, constants.RefreshTokenExpire); err != nil {
+		return nil, err
+	}
+
+	return detailedUser, nil
+}
+
+func (h *Handler) doUserRegister(userId uint64) error {
+	// 赠送用量
+	if _, err := h.Store.CreateUserUsage(userId, 100000); err != nil {
+		return err
 	}
 
 	// 添加默认USER角色
@@ -294,15 +318,13 @@ func (h *Handler) Register(c *gin.Context) {
 			Description: "普通用户",
 		}
 		if err := h.Db.Create(&userRole).Error; err != nil {
-			ctx_utils.HttpError(c, constants.ErrInternal)
-			return
+			return err
 		}
 	}
 	// 绑定USER角色到新用户
-	if err := h.Helper.BindRolesToUser(user.ID, []uint64{userRole.ID}); err != nil {
-		ctx_utils.HttpError(c, constants.ErrInternal)
-		return
+	if err := h.Helper.BindRolesToUser(userId, []uint64{userRole.ID}); err != nil {
+		return err
 	}
 
-	ctx_utils.Success(c, true)
+	return nil
 }

@@ -32,6 +32,7 @@ func main() {
 	services.InitSystemConfigService(baseService)                 // 初始化系统配置服务
 	intervalCacheService := services.NewCacheService(baseService) // 定时缓存服务
 	go services.InitEncryptService()
+	go services.InitOAuthService(baseService)           // 注册OAuth服务
 	go services.InitChatService(baseService)            // 注册对话服务
 	go services.InitMakeQuestionService(baseService)    // 初始化题目生成服务
 	go services.InitModelCollectionService(baseService) // 初始化模型集合服务

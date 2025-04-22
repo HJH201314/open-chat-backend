@@ -15,6 +15,79 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/{name}/do": {
+            "post": {
+                "description": "OAuth 回调登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "OAuth 回调登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth 名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "OAuth 回调登录信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.LoginByOAuthReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-schema_User"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/{name}/url": {
+            "get": {
+                "description": "前往 OAuth 认证",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "前往 OAuth 认证",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth 名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OAuth 认证地址",
+                        "schema": {
+                            "$ref": "#/definitions/entity.CommonResponse-string"
+                        }
+                    }
+                }
+            }
+        },
         "/base/public-key": {
             "get": {
                 "description": "获取公钥",
@@ -5817,6 +5890,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "nickname": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
@@ -5897,6 +5973,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.LoginByOAuthReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "state"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }

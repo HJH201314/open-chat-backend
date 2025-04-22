@@ -52,6 +52,7 @@ func NewGormStore() *GormStore {
 	// 自动迁移表结构
 	if err := db.AutoMigrate(
 		&schema.Bucket{}, &schema.File{},
+		&schema.OAuthProvider{}, &schema.OAuthUser{},
 		&schema.Session{},
 		&schema.Message{},
 		&schema.User{},
