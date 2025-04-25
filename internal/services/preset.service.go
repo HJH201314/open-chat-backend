@@ -160,7 +160,7 @@ func BuiltinPresetCompletion(presetName string, params map[string]string) (compl
 	preset := presetService.GetBuiltinPreset(presetName)
 
 	// 查询配置，获取默认的AI模型提供商 TODO：目前临时使用 deepseek-v3，后续更新可配置
-	modelInfo, err := GetModelCollectionService().GetRandomModelFromCollection("gpt-4.1")
+	modelInfo, err := GetModelCollectionService().GetRandomModelFromCollection("gpt-any")
 	if err != nil || modelInfo == nil || modelInfo.Provider == nil {
 		return "", 0, errors.New("default AI provider not found")
 	}

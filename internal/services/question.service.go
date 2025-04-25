@@ -140,6 +140,18 @@ func ParseProblemFromCompletion(completion string) (*schema.Problem, error) {
 	return problem, nil
 }
 
+func GetQuestionTools() []chat_utils.CompletionTool {
+	return []chat_utils.CompletionTool{
+		MakeExamTool(),
+		MakeQuestionTool(schema.SingleChoice),
+		MakeQuestionTool(schema.MultipleChoice),
+		MakeQuestionTool(schema.TrueFalse),
+		MakeQuestionTool(schema.ShortAnswer),
+		MakeQuestionTool(schema.FillBlank),
+		EveryDayQuestionTool(),
+	}
+}
+
 // MakeQuestionTool 生成题目 Tool Call 工具
 func MakeQuestionTool(problemType schema.ProblemType) chat_utils.CompletionTool {
 	return chat_utils.CompletionTool{
@@ -242,7 +254,7 @@ func MakeExamTool() chat_utils.CompletionTool {
 						},
 						"count": map[string]string{
 							"type":        "string",
-							"description": "the count of problems in the exam paper, between 3 ~ 5",
+							"description": "the count of problems in the exam paper, between 5 ~ 10",
 						},
 					},
 					"required": []string{"topic", "description", "count"},
@@ -264,13 +276,13 @@ func MakeExamTool() chat_utils.CompletionTool {
 				return nil, err
 			}
 			// 定义常量集合
-			problemTypes := []schema.ProblemType{
-				schema.SingleChoice,
-				schema.MultipleChoice,
-				schema.FillBlank,
-				schema.ShortAnswer,
-				schema.TrueFalse,
-			}
+			//problemTypes := []schema.ProblemType{
+			//	schema.SingleChoice,
+			//	schema.MultipleChoice,
+			//	schema.FillBlank,
+			//	schema.ShortAnswer,
+			//	schema.TrueFalse,
+			//}
 
 			countInt, err := convertor.ToInt(params.Count)
 			if err != nil {
@@ -288,11 +300,14 @@ func MakeExamTool() chat_utils.CompletionTool {
 					defer wg.Done() // 协程完成后减少计数器
 
 					// 随机选择一个类型
-					randomIndex := rand.Intn(len(problemTypes))
-					randomProblemType := problemTypes[randomIndex]
+					//randomIndex := rand.Intn(len(problemTypes))
+					//randomProblemType := problemTypes[randomIndex]
 
 					// 生成题目
-					question, err := GetMakeQuestionService().MakeQuestion(randomProblemType, params.Topic)
+					question, err := GetMakeQuestionService().MakeQuestion(
+						schema.AnyProblemType,
+						params.Topic+","+params.Description,
+					)
 					if err != nil {
 						return
 					}
@@ -369,6 +384,7 @@ const (
 	MakeQuestionTrueFalsePresetName      = "tue_make_question_" + string(schema.TrueFalse)
 	MakeQuestionFillBlankPresetName      = "tue_make_question_" + string(schema.FillBlank)
 	MakeQuestionShortAnswerPresetName    = "tue_make_question_" + string(schema.ShortAnswer)
+	MakeQuestionAnyPresetName            = "tue_make_question_" + string(schema.AnyProblemType)
 )
 
 // MakeQuestionService 考试评分服务
@@ -494,6 +510,30 @@ func InitMakeQuestionService(base *BaseService) {
 3. 答案为参考答案，列出答案的要点即可。
 4. 解析应清晰地进行分析。
 请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
+`,
+					),
+				},
+			)
+			presetService.RegisterBuiltinPresetsSimple(
+				MakeQuestionAnyPresetName,
+				"TUE 任意题目生成",
+				1,
+				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
+				[]chat_utils.Message{
+					chat_utils.UserMessage(
+						`
+你的任务是根据给定的题目描述进行出题，同时提供答案和解析。
+题目类型：根据描述决定，仅可为（单选题、多选题、判断题、填空题、简答题）
+题目数量：1
+题目描述：{TOPIC}
+在出题时，按照题目类型的不同，请遵循以下指南：
+1. 题目应与给定的描述相关。
+2.1. 单选题/多选题的答案选项需使用结构化 JSON 格式，格式：[{"id":1,"content":"选项 1","correct":true},{"id":2,"content":"选项 2","correct":false},{"id":3,"content":"选项 3","correct":false}]
+2.2. 判断题的答案为文本，true 或 false
+2.3. 填空题的答案为结构化数组格式：["关键词 1","关键词 2","关键词 3"]
+2.4. 简答题的答案为参考答案，列出要点。
+3. 解析应清晰地进行分析。
+请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案或选项，在<explanation></explanation>标签内写下解析，标签中禁止换行。
 `,
 					),
 				},

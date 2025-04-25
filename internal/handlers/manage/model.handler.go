@@ -4,6 +4,7 @@ import (
 	"github.com/fcraft/open-chat/internal/constants"
 	"github.com/fcraft/open-chat/internal/entity"
 	"github.com/fcraft/open-chat/internal/schema"
+	"github.com/fcraft/open-chat/internal/services"
 	"github.com/fcraft/open-chat/internal/utils/ctx_utils"
 	"github.com/fcraft/open-chat/internal/utils/gorm_utils"
 	"github.com/gin-gonic/gin"
@@ -246,7 +247,7 @@ func (h *Handler) UpdateModelCollection(c *gin.Context) {
 		return
 	}
 	role.Data.ID = uri.ID
-	// 更新权限列表
+	// 更新模型列表
 	if role.Data.Models != nil {
 		if err := h.Db.Model(&role.Data).Association("Models").Replace(role.Data.Models); err != nil {
 			ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update collection models")
@@ -257,6 +258,11 @@ func (h *Handler) UpdateModelCollection(c *gin.Context) {
 	if err := h.Db.Select(role.Updates).Omit("Models").Updates(&role.Data).Error; err != nil {
 		ctx_utils.CustomError(c, http.StatusInternalServerError, "failed to update collection")
 		return
+	}
+	// 更新缓存
+	_, err := services.GetModelCollectionService().LoadCollectionById(uri.ID)
+	if err != nil {
+		ctx_utils.HttpError(c, constants.ErrInternal)
 	}
 	ctx_utils.Success(c, true)
 }

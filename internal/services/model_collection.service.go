@@ -26,6 +26,14 @@ func InitModelCollectionService(base *BaseService) *ModelCollectionService {
 			modelCollectionServiceInstance = &ModelCollectionService{
 				BaseService: base,
 			}
+			err := GetScheduleService().RegisterSchedule(
+				"detect_model_connection", "检测模型连接", 10*time.Minute, func() error {
+					return nil
+				},
+			)
+			if err != nil {
+				return
+			}
 		},
 	)
 	return modelCollectionServiceInstance
@@ -44,7 +52,7 @@ const (
 func (s *ModelCollectionService) GetCollectionByName(name string) (*schema.ModelCollection, error) {
 	cacheKey := modelCollectionCacheKeyPrefix + name
 
-	// 尝试从Redis获取
+	// 1. 尝试从Redis获取
 	cachedData, err := s.BaseService.Redis.Get(context.Background(), cacheKey).Bytes()
 	if err == nil {
 		var collection schema.ModelCollection
@@ -53,7 +61,34 @@ func (s *ModelCollectionService) GetCollectionByName(name string) (*schema.Model
 		}
 	}
 
-	// 从数据库获取
+	// 2. 从数据库获取
+	collection, err := s.LoadCollectionByName(name)
+
+	return collection, nil
+}
+
+func (s *ModelCollectionService) LoadCollectionById(id uint64) (*schema.ModelCollection, error) {
+	var collection schema.ModelCollection
+	if err := s.BaseService.Gorm.
+		Preload("Models").
+		Preload("Models.Provider").
+		Preload("Models.Provider.APIKeys").
+		Where("id = ?", id).
+		First(&collection).Error; err != nil {
+		return nil, err
+	}
+	if data, err := json.Marshal(collection); err == nil {
+		s.BaseService.Redis.Set(
+			context.Background(),
+			modelCollectionCacheKeyPrefix+collection.Name,
+			data,
+			cacheExpiration,
+		)
+	}
+	return &collection, nil
+}
+
+func (s *ModelCollectionService) LoadCollectionByName(name string) (*schema.ModelCollection, error) {
 	var collection schema.ModelCollection
 	if err := s.BaseService.Gorm.
 		Preload("Models").
@@ -63,12 +98,9 @@ func (s *ModelCollectionService) GetCollectionByName(name string) (*schema.Model
 		First(&collection).Error; err != nil {
 		return nil, err
 	}
-
-	// 存入Redis
 	if data, err := json.Marshal(collection); err == nil {
-		s.BaseService.Redis.Set(context.Background(), cacheKey, data, cacheExpiration)
+		s.BaseService.Redis.Set(context.Background(), modelCollectionCacheKeyPrefix+name, data, cacheExpiration)
 	}
-
 	return &collection, nil
 }
 

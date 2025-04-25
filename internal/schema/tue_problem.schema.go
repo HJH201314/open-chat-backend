@@ -9,6 +9,7 @@ const (
 	FillBlank      ProblemType = "fill_blank"
 	ShortAnswer    ProblemType = "short_answer"
 	TrueFalse      ProblemType = "true_false"
+	AnyProblemType ProblemType = "any" // 任意，仅内部使用
 )
 
 // ProblemOption 题目选项结构

@@ -281,6 +281,15 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 				}
 			}
 
+			// 意图识别引入工具
+			var tools []chat_utils.CompletionTool
+			if slice.Some(
+				[]string{"考", "测", "验", "题"},
+				func(i int, s string) bool { return strings.Contains(req.Question, s) },
+			) {
+				tools = append(tools, services.GetQuestionTools()...)
+			}
+
 			err = chat_utils.CompletionStream(
 				c.Request.Context(), chat_utils.CompletionOptions{
 					Provider: chat_utils.Provider{
@@ -291,13 +300,7 @@ func (h *Handler) CompletionStream(c *gin.Context) {
 					Messages:              chatMessages,
 					SystemPrompt:          systemPrompt,
 					CompletionModelConfig: getCompletionModelConfig(modelConfig),
-					Tools: []chat_utils.CompletionTool{
-						services.MakeQuestionTool(schema.SingleChoice),
-						services.MakeQuestionTool(schema.MultipleChoice),
-						services.MakeQuestionTool(schema.TrueFalse), services.MakeQuestionTool(schema.ShortAnswer),
-						services.MakeQuestionTool(schema.FillBlank), services.EveryDayQuestionTool(),
-						services.MakeExamTool(),
-					},
+					Tools:                 tools,
 				},
 				chatEventChan,
 			)
