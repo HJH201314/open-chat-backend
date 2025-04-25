@@ -130,7 +130,7 @@ func (h *Handler) Current(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	type loginRequest struct {
 		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Password string `json:"password" binding:"required"  validate:"min=1"`
 	}
 	var req loginRequest
 	if err := c.BindJSON(&req); err != nil {

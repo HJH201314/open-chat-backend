@@ -108,6 +108,25 @@ func (h *Handler) LoginByOAuth(c *gin.Context) {
 			ctx_utils.HttpError(c, constants.ErrInternal)
 		}
 		uniqueID = "github_" + convertor.ToString(user.ID)
+	case "google":
+		client := config.Client(context.Background(), token)
+		get, err := client.Get("https://openidconnect.googleapis.com/v1/userinfo")
+		if err != nil {
+			ctx_utils.HttpError(c, constants.ErrInternal)
+			return
+		}
+		defer get.Body.Close()
+		// 解析用户信息
+		var user struct {
+			OpenID string `json:"sub"`
+			Name   string `json:"name"`
+			Email  string `json:"email"`
+		}
+		body, err := io.ReadAll(get.Body)
+		if err := json.Unmarshal(body, &user); err != nil {
+			ctx_utils.HttpError(c, constants.ErrInternal)
+		}
+		uniqueID = "google_" + convertor.ToString(user.OpenID)
 	}
 	if uniqueID == "" {
 		ctx_utils.HttpError(c, constants.ErrInternal)
@@ -129,6 +148,7 @@ func (h *Handler) LoginByOAuth(c *gin.Context) {
 	if oauthUser.ID == 0 {
 		// 没有数据，则创建用户
 		user := schema.User{
+			Username: uniqueID, // 平台注册限制了 username 不可包含下划线，因此这里使用 uniqueID 是安全的
 			Nickname: uniqueID,
 			Type:     schema.UserTypeThirdParty,
 		}
@@ -138,7 +158,7 @@ func (h *Handler) LoginByOAuth(c *gin.Context) {
 			return
 		}
 		// 后续注册步骤
-		if err := h.doUserRegister(oauthUser.UserID); err != nil {
+		if err := h.doUserRegister(user.ID); err != nil {
 			ctx_utils.HttpError(c, constants.ErrInternal)
 			return
 		}
