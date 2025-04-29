@@ -407,21 +407,23 @@ func InitMakeQuestionService(base *BaseService) {
 			presetService.RegisterBuiltinPresetsSimple(
 				MakeQuestionSingleChoicePresetName,
 				"TUE 单选题生成",
-				6,
+				7,
 				"你是一个出题专家，请根据要求和客观事实输出高质量题目。",
 				[]chat_utils.Message{
 					chat_utils.UserMessage(
 						`
-你的任务是根据给定的题目类型和主题进行出题，同时提供答案和解析。
-题目类型：单选
-题目数量：1
+你的任务是根据给定的题目类型和主题出1道单选题，并提供结构化答案和详细解析。
 题目主题：{TOPIC}
-在出题时，请遵循以下指南：
-1. 根据题目类型出题。
-2. 题目应与给定的主题相关。
-3. 选项需使用结构化格式，格式：[{"id":1,"content":"北京","correct":true},{"id":2,"content":"上海","correct":false},{"id":3,"content":"广州","correct":false}]。
-4. 解析应清晰地说明每个选项正确或错误的原因。
-请在<question></question>标签内写下问题，在<answers></answers>标签内写下答案，在<explanation></explanation>标签内写下解析，标签中禁止换行。
+要求如下：
+1. 题目必须紧扣主题，内容需体现主题核心知识点或常见考点。
+2. 选项为JSON数组结构，格式为：[{"id":1,"content":"选项内容","correct":true/false},...]
+3. 每题提供4个选项，且只有一个选项correct为true。选项内容不得重复且均为合理干扰项。
+4. 在<question>标签内写题目，<answers>标签内写答案数组，<explanation>标签内写解析。
+5. 标签内容中禁止直接换行和多余空格，输出需紧凑，使用<br>标识换行。
+6. 解析需逐一说明每个选项正误，编号与答案数组id一致，解释简明扼要。
+
+输出格式示例：
+<question>中国的首都是哪座城市？</question><answers>[{"id":1,"content":"北京","correct":true},{"id":2,"content":"上海","correct":false},{"id":3,"content":"广州","correct":false},{"id":4,"content":"深圳","correct":false}]</answers><explanation>1. 北京是中国的首都，正确。<br>2. 上海是中国的大城市，但不是首都，错误。<br>3. 广州是中国的大城市，但不是首都，错误。<br>4. 深圳是中国的大城市，但不是首都，错误。</explanation>
 `,
 					),
 				},

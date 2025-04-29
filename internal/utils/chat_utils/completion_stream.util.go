@@ -83,21 +83,31 @@ func processStreaming(ctx context.Context, client *openai.Client, messages []Mes
 		},
 	)
 	toolsMap := ConvertToolsToMap(opts.Tools)
+
+	// 构造参数，非必要不传递
+	params := openai.ChatCompletionNewParams{
+		Messages: reqMessages,
+		Model:    opts.Model,
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Opt(true),
+		},
+	}
+	if opts.Temperature > 0 {
+		params.Temperature = openai.Opt(opts.Temperature)
+	}
+	if opts.MaxTokens > 0 {
+		params.MaxTokens = openai.Opt(opts.MaxTokens)
+	}
+	if len(opts.Tools) > 0 {
+		params.Tools = availableTools
+		params.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{
+			OfAuto: openai.Opt("auto"),
+		}
+	}
+
 	// 获取提供商的流式响应
 	stream := client.Chat.Completions.NewStreaming(
-		ctx, openai.ChatCompletionNewParams{
-			Messages:    reqMessages,
-			Model:       opts.Model,
-			Temperature: openai.Opt(opts.Temperature),
-			MaxTokens:   openai.Opt(opts.MaxTokens),
-			StreamOptions: openai.ChatCompletionStreamOptionsParam{
-				IncludeUsage: openai.Opt(true),
-			},
-			Tools: availableTools,
-			ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
-				OfAuto: openai.Opt("auto"),
-			},
-		},
+		ctx, params,
 	)
 	if stream.Err() != nil {
 		sendError(eventChan, fmt.Errorf("failed to create stream: %w", stream.Err()))
